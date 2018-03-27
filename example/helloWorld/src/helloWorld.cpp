@@ -24,6 +24,9 @@
 
 #include <iostream>
 
+//? It is possible to allow host pointers in kernels when using Unified Memory which relies on Unified Virtual Address Space
+//? but it requires Tesla GPU + Linux 64bit application. There are runtime functions to get pointer location.
+
 //#############################################################################
 //! Hello World Kernel
 //!
@@ -45,6 +48,10 @@ struct HelloWorldKernel
         auto const globalThreadIdx = alpaka::idx::getIdx<alpaka::Grid, alpaka::Threads>(acc);
         auto const globalThreadExtent = alpaka::workdiv::getWorkDiv<alpaka::Grid, alpaka::Threads>(acc);
 
+        // If you require the block id or the block-local thread-id
+        auto const localThreadIdx = alpaka::idx::getIdx<alpaka::Block, alpaka::Threads>(acc);
+        auto const blockIdx = alpaka::idx::getIdx<alpaka::Grid, alpaka::Blocks>(acc);
+
         // Map the three dimensional thread index into a
         // one dimensional thread index space. We call it
         // linearize the thread index.
@@ -58,14 +65,22 @@ struct HelloWorldKernel
         // Mind, that alpaka uses the mathematical index
         // order [z][y][x] where the last index is the fast one.
         printf(
-            "[z:%u, y:%u, x:%u][linear:%u] Hello World\n",
+            "[z:%u, y:%u, x:%u][linear:%u][t=z:%u,y:%u,x:%u][b=z:%u,y:%u,x:%u] Hello World\n",
             static_cast<unsigned>(globalThreadIdx[0u]),
             static_cast<unsigned>(globalThreadIdx[1u]),
             static_cast<unsigned>(globalThreadIdx[2u]),
-            static_cast<unsigned>(linearizedGlobalThreadIdx[0u]));
+            static_cast<unsigned>(linearizedGlobalThreadIdx[0u]),
+            static_cast<unsigned>(localThreadIdx[0u]),
+            static_cast<unsigned>(localThreadIdx[1u]),
+            static_cast<unsigned>(localThreadIdx[2u]),
+            static_cast<unsigned>(blockIdx[0u]),
+            static_cast<unsigned>(blockIdx[1u]),
+            static_cast<unsigned>(blockIdx[2u])
+          );
     }
 };
 
+//? return-type convention for all funcs?
 auto main()
 -> int
 {
@@ -102,10 +117,10 @@ auto main()
     //
     // The accelerator only defines how something should be
     // parallized, but a device is the real entity which will
-    // run the parallel programm. The device can be choosen
+    // run the parallel programm. The device can be chosen
     // by id (0 to the number of devices minus 1) or you
     // can also retrieve all devices in a vector (getDevs()).
-    // In this example the first devices is choosen.
+    // In this example the first devices is chosen.
     DevAcc const devAcc(alpaka::pltf::getDevByIdx<PltfAcc>(0u));
     DevHost const devHost(alpaka::pltf::getDevByIdx<PltfHost>(0u));
 
@@ -117,7 +132,7 @@ auto main()
     // executors will be executed. Streams are provided in
     // async and sync variants.
     // The example stream is a sync stream to a cpu device,
-    // but it also exists an async stream for this
+    // but there is also an async stream for this
     // device (StreamCpuAsync).
     Stream stream(devAcc);
 
@@ -160,9 +175,9 @@ auto main()
         static_cast<Size>(1));
 
     alpaka::vec::Vec<Dim, Size> const blocksPerGrid(
+        static_cast<Size>(2),
         static_cast<Size>(4),
-        static_cast<Size>(8),
-        static_cast<Size>(16));
+        static_cast<Size>(8));
 
     WorkDiv const workdiv(
         blocksPerGrid,

@@ -200,3 +200,30 @@
 #else
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT
 #endif
+
+//-----------------------------------------------------------------------------
+//! This macro defines whether a host compiler is running or not.
+//!
+//! Example:
+//! #if ALPAKA_STAGE_HOST
+//!     return __builtin_popcount(v); // only compiled by host compiler
+//! #endif
+//!
+//! When using two-stage compile process, e.g. nvcc, platform-specific code
+//! may cause compile errors that e.g. host functions cannot be called within
+//! device function (as the the alpaka kernel itself is supposed to be platform
+//! independent). To resolve this, one has to detect, if the host or the device
+//! compiler is running.
+#ifdef __CUDA_ARCH__
+#define ALPAKA_STAGE_HOST (__CUDA_ARCH__==0)
+#elif defined(__HIP_ARCH__)
+// see https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md#hip_arch-defines
+#define ALPAKA_STAGE_HOST (__HIP_ARCH__==0)
+#else
+#define ALPAKA_STAGE_HOST (1)
+#endif
+//-----------------------------------------------------------------------------
+//! This macro defines whether the device compiler is running or not.
+//
+//! \see ALPAKA_STAGE_HOST
+#define ALPAKA_STAGE_DEVICE !ALPAKA_STAGE_HOST

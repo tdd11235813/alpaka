@@ -62,11 +62,11 @@ namespace alpaka
         //! Executes the given operation atomically.
         //!
         //! \tparam TOp The operation type.
-        //! \tparam T The value type.
         //! \tparam TAtomic The atomic implementation type.
+        //! \tparam T The value type.
+        //! \param atomic The atomic implementation.
         //! \param addr The value to change atomically.
         //! \param value The value used in the atomic operation.
-        //! \param atomic The atomic implementation.
         ALPAKA_NO_HOST_ACC_WARNING
         template<
             typename TOp,

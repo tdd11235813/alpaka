@@ -105,6 +105,18 @@ Examples of how to utilize alpaka within CMake can be found in the `example` fol
 The whole alpaka library can be included with: `#include <alpaka/alpaka.hpp>`
 Code that is not intended to be utilized by the user is hidden in the `detail` namespace.
 
+Examples
+--------
+
+```
+git clone https://github.com/tdd11235813/alpaka.git
+cd alpaka
+mkdir release
+cd release
+cmake ..          # may take a while
+make helloWorld   # may take a while
+./examples/helloWorld/helloWorld
+```
 
 Introduction
 ------------
