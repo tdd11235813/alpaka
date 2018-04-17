@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <typeinfo>
+#include <random>
 
 //#############################################################################
 //! A vector addition kernel.
@@ -83,11 +84,19 @@ auto main()
     using Dim = alpaka::dim::DimInt<1u>;
     using Idx = std::size_t;
 
-    // Define the accelerator
+#ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
+    using Acc = alpaka::acc::AccGpuCudaRt<Dim, Idx>;
+    using QueueAcc = alpaka::stream::StreamCudaRtSync;
+#elif ALPAKA_ACC_GPU_HIP_ENABLED
+    using Acc = alpaka::acc::AccGpuHipRt<Dim, Idx>;
+    using QueueAcc = alpaka::queue::QueueHipRtSync;
+#else
     using Acc = alpaka::acc::AccCpuSerial<Dim, Idx>;
+    using QueueAcc = alpaka::queue::QueueCpuSync;
+#endif
     using DevAcc = alpaka::dev::Dev<Acc>;
     using PltfAcc = alpaka::pltf::Pltf<DevAcc>;
-    using QueueAcc = alpaka::queue::QueueCpuSync;
+    using PltfHost = alpaka::pltf::PltfCpu;
 
     // Select a device
     DevAcc const devAcc(alpaka::pltf::getDevByIdx<PltfAcc>(0u));
@@ -162,6 +171,7 @@ auto main()
     alpaka::mem::view::copy(queue, bufHostC, bufAccC, extent);
 
     bool resultCorrect(true);
+
     for(Idx i(0u);
         i < numElements;
         ++i)
@@ -170,7 +180,7 @@ auto main()
         Data const correctResult(pBufHostA[i] + pBufHostB[i]);
         if(val != correctResult)
         {
-            std::cout << "C[" << i << "] == " << val << " != " << correctResult << std::endl;
+            std::cerr << "C[" << i << "] == " << val << " != " << correctResult << std::endl;
             resultCorrect = false;
         }
     }
