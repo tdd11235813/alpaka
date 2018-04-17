@@ -125,6 +125,9 @@ OPTION(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE "Enable the OpenMP 2.0 CPU grid block 
 OPTION(ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE "Enable the OpenMP 2.0 CPU block thread back-end" ${ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE_DEFAULT})
 OPTION(ALPAKA_ACC_CPU_BT_OMP4_ENABLE "Enable the OpenMP 4.0 CPU block and block thread back-end" ${ALPAKA_ACC_CPU_BT_OMP4_ENABLE_DEFAULT})
 
+# Option for HIP back-end (CUDA and HIP cannot be enabled both at the same time)
+OPTION(ALPAKA_ACC_GPU_HIP_ENABLE "Enable the HIP GPU back-end" OFF)
+
 IF(ALPAKA_ACC_GPU_CUDA_ONLY_MODE AND
     (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE OR
     ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE OR
@@ -315,22 +318,23 @@ IF(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR A
         SET(ALPAKA_ACC_CPU_BT_OMP4_ENABLE OFF CACHE BOOL "Enable the OpenMP 4.0 CPU block and thread back-end" FORCE)
 
     ELSE()
+        IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE) # hip/hcc does not like fopenmp as it forwards it to nvcc
+            LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
+            IF(NOT MSVC)
+                LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
+            ENDIF()
+
+            # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
+            IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+                IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
+                    LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
+                    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
+                ENDIF()
+            ENDIF()
+        ENDIF()
         # CUDA requires some special handling
         IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-        ENDIF()
-
-        LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
-        IF(NOT MSVC)
-            LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
-        ENDIF()
-
-        # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
-        IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
-                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
-                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
-            ENDIF()
         ENDIF()
     ENDIF()
 ENDIF()
@@ -546,6 +550,151 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
 ENDIF()
 
 #-------------------------------------------------------------------------------
+# Find HIP.
+#-------------------------------------------------------------------------------
+IF(ALPAKA_ACC_GPU_HIP_ENABLE)
+
+    IF(NOT DEFINED ALPAKA_HIP_VERSION)
+        SET(ALPAKA_HIP_VERSION 1.2.0)
+    ENDIF()
+
+    IF(ALPAKA_HIP_VERSION VERSION_LESS 1.2.0)
+        MESSAGE(WARNING "HIP < 1.2.0 is not supported!")
+        SET(_ALPAKA_FOUND FALSE)
+
+    ELSE()
+      #check if find package requires version for HIP
+      #FIND_PACKAGE(HIP "${ALPAKA_HIP_VERSION}")
+      FIND_PACKAGE(HIP MODULE)
+      IF(NOT HIP_FOUND)
+          MESSAGE(WARNING "Optional alpaka dependency HIP could not be found! HIP back-end disabled!")
+          SET(ALPAKA_ACC_GPU_HIP_ENABLE OFF CACHE BOOL "Enable the HIP GPU back-end" FORCE)
+
+      ELSE()
+          SET(ALPAKA_HIP_VERSION "${HIP_VERSION}")
+          SET(ALPAKA_HIP_ARCH sm_20 CACHE STRING "GPU architecture")
+          STRING(COMPARE EQUAL "${ALPAKA_HIP_ARCH}" "sm_10" IS_HIP_ARCH_UNSUPPORTED)
+          STRING(COMPARE EQUAL "${ALPAKA_HIP_ARCH}" "sm_11" IS_HIP_ARCH_UNSUPPORTED)
+          STRING(COMPARE EQUAL "${ALPAKA_HIP_ARCH}" "sm_12" IS_HIP_ARCH_UNSUPPORTED)
+          STRING(COMPARE EQUAL "${ALPAKA_HIP_ARCH}" "sm_13" IS_HIP_ARCH_UNSUPPORTED)
+
+          IF(IS_HIP_ARCH_UNSUPPORTED)
+              MESSAGE(WARNING "Unsupported HIP architecture ${ALPAKA_HIP_ARCH} specified. SM 2.0 or higher is required for HIP/CUDA 7.0. Using sm_20 instead.")
+              SET(ALPAKA_HIP_ARCH sm_20 CACHE STRING "Set GPU architecture" FORCE)
+          ENDIF(IS_HIP_ARCH_UNSUPPORTED)
+
+          SET(ALPAKA_HIP_COMPILER "hipcc" CACHE STRING "HIP compiler")
+          SET_PROPERTY(CACHE ALPAKA_HIP_COMPILER PROPERTY STRINGS "hipcc")
+          # the ;clang was removed from the property value list for the above function
+          OPTION(ALPAKA_HIP_FAST_MATH "Enable fast-math" ON)
+          OPTION(ALPAKA_HIP_FTZ "Set flush to zero for GPU" OFF)
+          OPTION(ALPAKA_HIP_SHOW_REGISTER "Show kernel registers and create PTX" OFF)
+          OPTION(ALPAKA_HIP_KEEP_FILES "Keep all intermediate files that are generated during internal compilation steps (folder: nvcc_tmp)" OFF)
+
+#------------------------
+#no clang support for HIP. not today.
+#------------------------
+#            IF(ALPAKA_CUDA_COMPILER MATCHES "clang")
+#                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "--cuda-gpu-arch=${ALPAKA_CUDA_ARCH}")
+#
+#                # This flag silences the warning produced by the Dummy.cpp files:
+#                # clang: warning: argument unused during compilation: '--cuda-gpu-arch=sm_XX'
+#                # This seems to be a false positive as all flags are 'unused' for an empty file.
+#                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-Qunused-arguments")
+#
+#                # Silences warnings that are produced by boost because clang is not correctly identified.
+#                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-Wno-unused-local-typedef")
+
+#                IF(ALPAKA_CUDA_FAST_MATH)
+#                    # -ffp-contract=fast enables the usage of FMA
+#                   LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ffast-math" "-ffp-contract=fast")
+#               ENDIF()
+#
+#                IF(ALPAKA_CUDA_FTZ)
+#                    LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fcuda-flush-denormals-to-zero")
+#               ENDIF()
+
+#             IF(ALPAKA_CUDA_SHOW_REGISTER)
+#                  LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-Xcuda-ptxas=-v")
+#               ENDIF()
+#
+#              IF(ALPAKA_CUDA_KEEP_FILES)
+#                   LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-save-temps")
+#                ENDIF()
+
+#            ELSE()
+
+                IF(CUDA_VERSION VERSION_EQUAL 8.0)
+                    LIST(APPEND HIP_HIPCC_FLAGS "-Wno-deprecated-gpu-targets")
+                ENDIF()
+
+                IF(NOT CUDA_VERSION VERSION_LESS 7.5)
+                    LIST(APPEND HIP_HIPCC_FLAGS "--expt-extended-lambda")
+                ENDIF()
+
+                LIST(APPEND HIP_HIPCC_FLAGS "-arch=${ALPAKA_HIP_ARCH}")
+
+                IF(NOT MSVC)
+                    LIST(APPEND HIP_HIPCC_FLAGS "-std=c++11")
+#not compiler flag
+                    SET(HIP_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
+                ENDIF()
+
+                if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+                    LIST(APPEND HIP_HIPCC_FLAGS "-g" "-G")
+                ENDIF()
+
+                IF(ALPAKA_HIP_FAST_MATH)
+                    LIST(APPEND HIP_HIPCC_FLAGS "--use_fast_math")
+                ENDIF()
+
+                IF(ALPAKA_HIP_FTZ)
+                    LIST(APPEND HIP_HIPCC_FLAGS "--ftz=true")
+                ELSE()
+                    LIST(APPEND HIP_HIPCC_FLAGS "--ftz=false")
+                ENDIF()
+
+                IF(ALPAKA_HIP_SHOW_REGISTER)
+                    LIST(APPEND HIP_HIPCC_FLAGS "-Xptxas=-v")
+                ENDIF()
+
+                IF(ALPAKA_HIP_KEEP_FILES)
+                    MAKE_DIRECTORY("${PROJECT_BINARY_DIR}/nvcc_tmp")
+                    LIST(APPEND HIP_HIPCC_FLAGS "--keep" "--keep-dir" "${PROJECT_BINARY_DIR}/nvcc_tmp")
+                ENDIF()
+
+                OPTION(ALPAKA_HIP_SHOW_CODELINES "Show kernel lines in cuda-gdb and cuda-memcheck" OFF)
+                IF(ALPAKA_HIP_SHOW_CODELINES)
+                    LIST(APPEND HIP_HIPCC_FLAGS "--source-in-ptx" "-lineinfo")
+                    IF(NOT MSVC)
+                        LIST(APPEND HIP_HIPCC_FLAGS "-Xcompiler" "-rdynamic")
+                    ENDIF()
+                    SET(ALPAKA_HIP_KEEP_FILES ON CACHE BOOL "activate keep files" FORCE)
+                ENDIF()
+                LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "general;${CUDA_CUDART_LIBRARY}")
+                LIST(APPEND _ALPAKA_INCLUDE_DIRECTORIES_PUBLIC ${HIP_INCLUDE_DIRS})
+                LIST(APPEND HIP_HIPCC_FLAGS
+                    -I${ALPAKA_ROOT}/include/
+                    -DALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLED
+                    -DALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLED
+                    -DALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
+                    -DALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLED
+                    -DALPAKA_ACC_GPU_HIP_ENABLED
+                    -DALPAKA_DEBUG=0
+                    "-Xcompiler -g"
+                    "-Xcompiler -fopenmp")
+            ENDIF()
+        ENDIF()
+    ENDIF() # HIP
+
+#-------------------------------------------------------------------------------
+# Check options (just avoids CUDA+HIP conflict for now).
+#-------------------------------------------------------------------------------
+IF(ALPAKA_ACC_GPU_HIP_ENABLE AND ALPAKA_ACC_GPU_CUDA_ENABLE)
+    message(FATAL_ERROR "CUDA and HIP cannot be enabled both at the same time.")
+ENDIF()
+
+#-------------------------------------------------------------------------------
 # Compiler settings.
 IF(MSVC)
     # Empty append to define it if it does not already exist.
@@ -609,6 +758,12 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
     MESSAGE(STATUS ALPAKA_ACC_GPU_CUDA_ENABLED)
 ENDIF()
 
+#------HIP enabled------
+IF(ALPAKA_ACC_GPU_HIP_ENABLE)
+    LIST(APPEND _ALPAKA_COMPILE_DEFINITIONS_PUBLIC "ALPAKA_ACC_GPU_HIP_ENABLED")
+    MESSAGE(STATUS ALPAKA_ACC_GPU_HIP_ENABLED)
+ENDIF()
+#-----------------------
 LIST(APPEND _ALPAKA_COMPILE_DEFINITIONS_PUBLIC "ALPAKA_DEBUG=${ALPAKA_DEBUG}")
 
 IF(ALPAKA_CI)

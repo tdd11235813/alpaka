@@ -56,6 +56,19 @@
     #endif
 #endif
 
+//---------------------------------------HIP------------------------------------------------
+//-----------------------------------------------------------------------------
+#if ALPAKA_ACC_GPU_HIP_ENABLED
+    #include <hip/hip_runtime.h>
+    #ifdef __HIP_DEVICE_COMPILE__
+        //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
+        #undef abort
+    #endif
+    #define BOOST_LANG_HIP 1	// cheap hack
+#else
+    #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_NOT_AVAILABLE
+#endif
+
 //-----------------------------------------------------------------------------
 // CUDA device architecture detection
 #if !defined(BOOST_ARCH_PTX)
@@ -64,6 +77,15 @@
     #else
         #define BOOST_ARCH_PTX BOOST_VERSION_NUMBER_NOT_AVAILABLE
     #endif
+#endif
+
+//-----------------------------------------------------------------------------
+// HIP device architecture detection
+//-----------------------------------------------------------------------------
+#if defined(__HIP_DEVICE_COMPILE__)						       // cheap hack strikes again
+    #define BOOST_ARCH_HIP_DEVICE 1
+#else
+    #define BOOST_ARCH_HIP_DEVICE BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #endif
 
 //-----------------------------------------------------------------------------
@@ -117,6 +139,11 @@
 //! -> std::int32_t;
 #if BOOST_LANG_CUDA
     #define ALPAKA_FN_ACC_CUDA_ONLY __device__
+#endif
+#if BOOST_LANG_HIP
+    #define ALPAKA_FN_ACC_HIP_ONLY __device__
+#endif
+#if BOOST_LANG_CUDA || BOOST_LANG_HIP
     #define ALPAKA_FN_ACC_NO_CUDA __host__
     #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE)
         #define ALPAKA_FN_ACC __device__
@@ -127,6 +154,7 @@
     #define ALPAKA_FN_HOST __host__
 #else
     // NOTE: ALPAKA_FN_ACC_CUDA_ONLY should not be defined to cause build failures when CUDA only functions are used and CUDA is disabled.
+    // NOTE: ALPAKA_FN_ACC_CUDA_ONLY and ALPAKA_FN_ACC_HIP_ONLY should not be defined to cause build failures when CUDA only functions are used and CUDA is disabled.
     // However, this also destroys syntax highlighting.
     #define ALPAKA_FN_ACC_CUDA_ONLY
     #define ALPAKA_FN_ACC_NO_CUDA
@@ -159,7 +187,7 @@
 
 //-----------------------------------------------------------------------------
 //! Macro defining the inline function attribute.
-#if BOOST_LANG_CUDA
+#if BOOST_LANG_CUDA || BOOST_LANG_HIP
     #define ALPAKA_FN_INLINE __forceinline__
 #else
     #define ALPAKA_FN_INLINE inline
@@ -181,7 +209,7 @@
 //! In contrast to ordinary variables, you can not define such variables
 //! as static compilation unit local variables with internal linkage
 //! because this is forbidden by CUDA.
-#if BOOST_LANG_CUDA && BOOST_ARCH_PTX
+#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && __HIP_DEVICE_COMPILE__)
     #define ALPAKA_STATIC_DEV_MEM_GLOBAL __device__
 #else
     #define ALPAKA_STATIC_DEV_MEM_GLOBAL
@@ -203,7 +231,7 @@
 //! In contrast to ordinary variables, you can not define such variables
 //! as static compilation unit local variables with internal linkage
 //! because this is forbidden by CUDA.
-#if BOOST_LANG_CUDA && BOOST_ARCH_PTX
+#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && __HIP_DEVICE_COMPILE__)
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT __constant__
 #else
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT
