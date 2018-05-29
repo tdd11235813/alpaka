@@ -23,20 +23,26 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>               // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/queue/QueueHipRtSync.hpp>   // queue::QueueHipRtSync (as of now, only a renamed copy of it's HIP counterpart)
-#include <alpaka/queue/QueueHipRtAsync.hpp>  // queue::QueueHipRtAsync (as of now, only a renamed copy of it's HIP counterpart)
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <alpaka/dev/DevCpu.hpp>                // dev::DevCpu
-#include <alpaka/dev/DevHipRt.hpp>             // dev::DevHipRt (as of now, the HIP version itself is used)
-#include <alpaka/dim/DimIntegralConst.hpp>      // dim::DimInt<N>
-#include <alpaka/extent/Traits.hpp>             // mem::view::getXXX
-#include <alpaka/mem/view/Traits.hpp>           // mem::view::Copy
+#include <alpaka/queue/QueueHipRtSync.hpp>
+#include <alpaka/queue/QueueHipRtAsync.hpp>
 
-#include <alpaka/core/Hip.hpp>		    // hipMalloc,...  		as of now, just a renamed copy of it's HIP coutnerpart
+#include <alpaka/dev/DevCpu.hpp>
+#include <alpaka/dev/DevHipRt.hpp>
+#include <alpaka/dim/DimIntegralConst.hpp>
+#include <alpaka/extent/Traits.hpp>
+#include <alpaka/mem/view/Traits.hpp>
+#include <alpaka/queue/QueueHipRtAsync.hpp>
+#include <alpaka/queue/QueueHipRtSync.hpp>
 
-#include <cassert>                              // assert
+#include <alpaka/core/Hip.hpp>
+
+#include <cassert>
 
 namespace alpaka
 {
@@ -56,7 +62,7 @@ namespace alpaka
                         typename TViewDst,
                         typename TViewSrc,
                         typename TExtent>
-                    struct TaskCopy;
+                    struct TaskCopyHip;
 
                     //#############################################################################
                     //! The 1D HIP memory copy trait.
@@ -65,7 +71,7 @@ namespace alpaka
                         typename TViewDst,
                         typename TViewSrc,
                         typename TExtent>
-                    struct TaskCopy<
+                    struct TaskCopyHip<
                         dim::DimInt<1>,
                         TViewDst,
                         TViewSrc,
@@ -87,7 +93,7 @@ namespace alpaka
                         //-----------------------------------------------------------------------------
                         //!
                         //-----------------------------------------------------------------------------
-                        ALPAKA_FN_HOST TaskCopy(
+                        ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
                             TViewSrc const & viewSrc,
                             TExtent const & extent,
@@ -150,7 +156,7 @@ namespace alpaka
                         typename TViewDst,
                         typename TViewSrc,
                         typename TExtent>
-                    struct TaskCopy<
+                    struct TaskCopyHip<
                         dim::DimInt<2>,
                         TViewDst,
                         TViewSrc,
@@ -172,7 +178,7 @@ namespace alpaka
                         //-----------------------------------------------------------------------------
                         //!
                         //-----------------------------------------------------------------------------
-                        ALPAKA_FN_HOST TaskCopy(
+                        ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
                             TViewSrc const & viewSrc,
                             TExtent const & extent,
@@ -266,7 +272,7 @@ namespace alpaka
                         typename TViewDst,
                         typename TViewSrc,
                         typename TExtent>
-                    struct TaskCopy<
+                    struct TaskCopyHip<
                         dim::DimInt<3>,
                         TViewDst,
                         TViewSrc,
@@ -288,7 +294,7 @@ namespace alpaka
                         //-----------------------------------------------------------------------------
                         //!
                         //-----------------------------------------------------------------------------
-                        ALPAKA_FN_HOST TaskCopy(
+                        ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
                             TViewSrc const & viewSrc,
                             TExtent const & extent,
@@ -393,7 +399,7 @@ namespace alpaka
             }
 
             //-----------------------------------------------------------------------------
-            // Trait specializations for TaskCopy.
+            // Trait specializations for CreateTaskCopy.
             //-----------------------------------------------------------------------------
             namespace traits
             {
@@ -402,7 +408,7 @@ namespace alpaka
                 //#############################################################################
                 template<
                     typename TDim>
-                struct TaskCopy<
+                struct CreateTaskCopy<
                     TDim,
                     dev::DevCpu,
                     dev::DevHipRt>
@@ -414,11 +420,11 @@ namespace alpaka
                         typename TExtent,
                         typename TViewSrc,
                         typename TViewDst>
-                    ALPAKA_FN_HOST static auto taskCopy(
+                    ALPAKA_FN_HOST static auto createTaskCopy(
                         TViewDst & viewDst,
                         TViewSrc const & viewSrc,
                         TExtent const & extent)
-                    -> mem::view::hip::detail::TaskCopy<
+                    -> mem::view::hip::detail::TaskCopyHip<
                         TDim,
                         TViewDst,
                         TViewSrc,
@@ -430,7 +436,7 @@ namespace alpaka
                             dev::getDev(viewSrc).m_iDevice);
 
                         return
-                            mem::view::hip::detail::TaskCopy<
+                            mem::view::hip::detail::TaskCopyHip<
                                 TDim,
                                 TViewDst,
                                 TViewSrc,
@@ -448,7 +454,7 @@ namespace alpaka
                 //#############################################################################
                 template<
                     typename TDim>
-                struct TaskCopy<
+                struct CreateTaskCopy<
                     TDim,
                     dev::DevHipRt,
                     dev::DevCpu>
@@ -460,11 +466,11 @@ namespace alpaka
                         typename TExtent,
                         typename TViewSrc,
                         typename TViewDst>
-                    ALPAKA_FN_HOST static auto taskCopy(
+                    ALPAKA_FN_HOST static auto createTaskCopy(
                         TViewDst & viewDst,
                         TViewSrc const & viewSrc,
                         TExtent const & extent)
-                    -> mem::view::hip::detail::TaskCopy<
+                    -> mem::view::hip::detail::TaskCopyHip<
                         TDim,
                         TViewDst,
                         TViewSrc,
@@ -476,7 +482,7 @@ namespace alpaka
                             dev::getDev(viewDst).m_iDevice);
 
                         return
-                            mem::view::hip::detail::TaskCopy<
+                            mem::view::hip::detail::TaskCopyHip<
                                 TDim,
                                 TViewDst,
                                 TViewSrc,
@@ -494,7 +500,7 @@ namespace alpaka
                 //#############################################################################
                 template<
                     typename TDim>
-                struct TaskCopy<
+                struct CreateTaskCopy<
                     TDim,
                     dev::DevHipRt,
                     dev::DevHipRt>
@@ -506,11 +512,11 @@ namespace alpaka
                         typename TExtent,
                         typename TViewSrc,
                         typename TViewDst>
-                    ALPAKA_FN_HOST static auto taskCopy(
+                    ALPAKA_FN_HOST static auto createTaskCopy(
                         TViewDst & viewDst,
                         TViewSrc const & viewSrc,
                         TExtent const & extent)
-                    -> mem::view::hip::detail::TaskCopy<
+                    -> mem::view::hip::detail::TaskCopyHip<
                         TDim,
                         TViewDst,
                         TViewSrc,
@@ -519,7 +525,7 @@ namespace alpaka
                         ALPAKA_DEBUG_FULL_LOG_SCOPE;
 
                         return
-                            mem::view::hip::detail::TaskCopy<
+                            mem::view::hip::detail::TaskCopyHip<
                                 TDim,
                                 TViewDst,
                                 TViewSrc,
@@ -739,14 +745,14 @@ namespace alpaka
                 typename TViewDst>
             struct Enqueue<
                 queue::QueueHipRtAsync,
-                mem::view::hip::detail::TaskCopy<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
-                    mem::view::hip::detail::TaskCopy<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent> const & task)
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_FULL_LOG_SCOPE;
@@ -802,14 +808,14 @@ namespace alpaka
                 typename TViewDst>
             struct Enqueue<
                 queue::QueueHipRtSync,
-                mem::view::hip::detail::TaskCopy<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtSync &,
-                    mem::view::hip::detail::TaskCopy<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent> const & task)
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_FULL_LOG_SCOPE;
@@ -863,14 +869,14 @@ namespace alpaka
                 typename TViewDst>
             struct Enqueue<
                 queue::QueueHipRtAsync,
-                mem::view::hip::detail::TaskCopy<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
-                    mem::view::hip::detail::TaskCopy<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent> const & task)
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_FULL_LOG_SCOPE;
@@ -934,14 +940,14 @@ namespace alpaka
                 typename TViewDst>
             struct Enqueue<
                 queue::QueueHipRtSync,
-                mem::view::hip::detail::TaskCopy<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtSync &,
-                    mem::view::hip::detail::TaskCopy<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent> const & task)
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_FULL_LOG_SCOPE;
@@ -1003,14 +1009,14 @@ namespace alpaka
                 //~ typename TViewDst>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
+                //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
@@ -1060,14 +1066,14 @@ namespace alpaka
                 //~ typename TViewDst>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
+                //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;

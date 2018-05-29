@@ -23,20 +23,24 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>               // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/queue/QueueHipRtSync.hpp>   // queue::QueueHipRtSync (as of now, only a renamed copy of it's HIP counterpart)
-#include <alpaka/queue/QueueHipRtAsync.hpp>  // queue::QueueHipRtAsync (as of now, only a renamed copy of it's HIP counterpart)
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <alpaka/dev/Traits.hpp>                // dev::getDev
-#include <alpaka/dim/DimIntegralConst.hpp>      // dim::DimInt<N>
-#include <alpaka/extent/Traits.hpp>             // mem::view::getXXX
-#include <alpaka/mem/view/Traits.hpp>           // mem::view::Set
-#include <alpaka/queue/Traits.hpp>             // queue::Enqueue
+#include <alpaka/queue/QueueHipRtSync.hpp>
+#include <alpaka/queue/QueueHipRtAsync.hpp>
 
-#include <alpaka/core/Hip.hpp>		    // hipMalloc,...  		as of now, just a renamed copy of it's HIP coutnerpart
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/dim/DimIntegralConst.hpp>
+#include <alpaka/extent/Traits.hpp>
+#include <alpaka/mem/view/Traits.hpp>
+#include <alpaka/queue/Traits.hpp>
 
-#include <cassert>                              // assert
+#include <alpaka/core/Hip.hpp>
+
+#include <cassert>
 
 namespace alpaka
 {
@@ -66,12 +70,12 @@ namespace alpaka
                         typename TDim,
                         typename TView,
                         typename TExtent>
-                    struct TaskSet
+                    struct TaskSetHip
                     {
                         //-----------------------------------------------------------------------------
                         //!
                         //-----------------------------------------------------------------------------
-                        TaskSet(
+                        TaskSetHip(
                             TView & buf,
                             std::uint8_t const & byte,
                             TExtent const & extent) :
@@ -99,7 +103,7 @@ namespace alpaka
                 //#############################################################################
                 template<
                     typename TDim>
-                struct TaskSet<
+                struct CreateTaskSet<
                     TDim,
                     dev::DevHipRt>
                 {
@@ -109,17 +113,17 @@ namespace alpaka
                     template<
                         typename TExtent,
                         typename TView>
-                    ALPAKA_FN_HOST static auto taskSet(
+                    ALPAKA_FN_HOST static auto createTaskSet(
                         TView & buf,
                         std::uint8_t const & byte,
                         TExtent const & extent)
-                    -> mem::view::hip::detail::TaskSet<
+                    -> mem::view::hip::detail::TaskSetHip<
                         TDim,
                         TView,
                         TExtent>
                     {
                         return
-                            mem::view::hip::detail::TaskSet<
+                            mem::view::hip::detail::TaskSetHip<
                                 TDim,
                                 TView,
                                 TExtent>(
@@ -143,14 +147,14 @@ namespace alpaka
                 typename TExtent>
             struct Enqueue<
                 queue::QueueHipRtAsync,
-                mem::view::hip::detail::TaskSet<dim::DimInt<1u>, TView, TExtent>>
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<1u>, TView, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
-                    mem::view::hip::detail::TaskSet<dim::DimInt<1u>, TView, TExtent> const & task)
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<1u>, TView, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
@@ -198,14 +202,14 @@ namespace alpaka
                 typename TExtent>
             struct Enqueue<
                 queue::QueueHipRtSync,
-                mem::view::hip::detail::TaskSet<dim::DimInt<1u>, TView, TExtent>>
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<1u>, TView, TExtent>>
             {
                 //-----------------------------------------------------------------------------
                 //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtSync &,
-                    mem::view::hip::detail::TaskSet<dim::DimInt<1u>, TView, TExtent> const & task)
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<1u>, TView, TExtent> const & task)
                 -> void
                 {
                     ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
@@ -252,14 +256,14 @@ namespace alpaka
                 //~ typename TExtent>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskSet<dim::DimInt<2u>, TView, TExtent>>
+                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskSet<dim::DimInt<2u>, TView, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
@@ -313,14 +317,14 @@ namespace alpaka
                 //~ typename TExtent>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskSet<dim::DimInt<2u>, TView, TExtent>>
+                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskSet<dim::DimInt<2u>, TView, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
@@ -373,14 +377,14 @@ namespace alpaka
                 //~ typename TExtent>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskSet<dim::DimInt<3u>, TView, TExtent>>
+                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskSet<dim::DimInt<3u>, TView, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
@@ -450,14 +454,14 @@ namespace alpaka
                 //~ typename TExtent>
             //~ struct Enqueue<
                 //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskSet<dim::DimInt<3u>, TView, TExtent>>
+                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
             //~ {
                 //~ //-----------------------------------------------------------------------------
                 //~ //
                 //~ //-----------------------------------------------------------------------------
                 //~ ALPAKA_FN_HOST static auto enqueue(
                     //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskSet<dim::DimInt<3u>, TView, TExtent> const & task)
+                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
                 //~ -> void
                 //~ {
                     //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;

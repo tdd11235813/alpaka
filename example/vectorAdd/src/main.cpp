@@ -24,7 +24,6 @@
 #include <random>
 #include <iostream>
 #include <typeinfo>
-#include <random>
 
 //#############################################################################
 //! A vector addition kernel.
@@ -87,9 +86,10 @@ auto main()
     using Dim = alpaka::dim::DimInt<1u>;
     using Idx = std::size_t;
 
+    // Define the accelerator
 #ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
     using Acc = alpaka::acc::AccGpuCudaRt<Dim, Idx>;
-    using QueueAcc = alpaka::stream::StreamCudaRtSync;
+    using QueueAcc = alpaka::queue::QueueCudaRtSync;
 #elif ALPAKA_ACC_GPU_HIP_ENABLED
     using Acc = alpaka::acc::AccGpuHipRt<Dim, Idx>;
     using QueueAcc = alpaka::queue::QueueHipRtSync;
@@ -99,7 +99,6 @@ auto main()
 #endif
     using DevAcc = alpaka::dev::Dev<Acc>;
     using PltfAcc = alpaka::pltf::Pltf<DevAcc>;
-    using PltfHost = alpaka::pltf::PltfCpu;
 
     // Select a device
     DevAcc const devAcc(alpaka::pltf::getDevByIdx<PltfAcc>(0u));
