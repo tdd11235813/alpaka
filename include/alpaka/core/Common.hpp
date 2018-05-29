@@ -52,9 +52,9 @@
     #define BOOST_LANG_CUDA BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #endif
 
-//---------------------------------------HIP------------------------------------------------
-//-----------------------------------------------------------------------------
-#if ALPAKA_ACC_GPU_HIP_ENABLED
+//---------------------------------------HIP-----------------------------------
+// source: https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md#identifying-current-compilation-pass-host-or-device
+#if defined(ALPAKA_ACC_GPU_HIP_ENABLED)
     #include <hip/hip_runtime.h>
     #ifdef __HIP_DEVICE_COMPILE__
         //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
