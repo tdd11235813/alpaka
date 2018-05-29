@@ -25,10 +25,6 @@
 
 #include <alpaka/core/Common.hpp>
 
-#if !BOOST_LANG_HIP
-    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
-#endif
-
 #include <alpaka/queue/QueueHipRtSync.hpp>
 #include <alpaka/queue/QueueHipRtAsync.hpp>
 
