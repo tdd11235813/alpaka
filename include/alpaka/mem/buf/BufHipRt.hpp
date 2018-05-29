@@ -23,21 +23,24 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>           // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>         
 
-#include <alpaka/dev/DevHipRt.hpp>	    // dev::DevHipRt (as of now, the hip version itself is used)
-#include <alpaka/vec/Vec.hpp>               // Vec
-#include <alpaka/core/Hip.hpp>		    // hipMalloc,...  		as of now, just a renamed copy of it's HIP coutnerpart
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <alpaka/dev/Traits.hpp>            // dev::traits::DevType
-#include <alpaka/dim/DimIntegralConst.hpp>  // dim::DimInt<N>
-#include <alpaka/mem/buf/Traits.hpp>        // mem::view::Copy, ...
+#include <alpaka/dev/DevHipRt.hpp>
+#include <alpaka/vec/Vec.hpp>
+#include <alpaka/core/Hip.hpp>
 
-#include <cassert>                          // assert
-#include <memory>                           // std::shared_ptr
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/dim/DimIntegralConst.hpp>
+#include <alpaka/mem/buf/Traits.hpp>
 
-#include <hip/hip_runtime.h>		    // temporary fix
+#include <cassert>
+#include <memory>
 
+#include <hip/hip_runtime.h> // temporary fix
 
 
 namespace alpaka
@@ -725,7 +728,7 @@ namespace alpaka
                             ALPAKA_HIP_RT_CHECK(
                                 hipHostRegister(
                                     const_cast<void *>(reinterpret_cast<void const *>(mem::view::getPtrNative(buf))),
-                                    extent::getProductOfExtent(buf) * sizeof(elem::Elem<BufCpu<TElem, TDim, TIdx>>),
+                                    extent::getExtentProduct(buf) * sizeof(elem::Elem<BufCpu<TElem, TDim, TIdx>>),
                                     hipHostRegisterMapped));
                         }
                         // If it is already the same device, nothing has to be mapped.
