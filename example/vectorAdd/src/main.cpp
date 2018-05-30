@@ -135,6 +135,7 @@ auto main()
     Data * const pBufHostA(alpaka::mem::view::getPtrNative(bufHostA));
     Data * const pBufHostB(alpaka::mem::view::getPtrNative(bufHostB));
     Data * const pBufHostC(alpaka::mem::view::getPtrNative(bufHostC));
+
     for (Idx i(0); i < numElements; ++i)
     {
       pBufHostA[i] = static_cast<Data>(std::rand());

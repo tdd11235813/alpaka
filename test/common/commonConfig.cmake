@@ -79,6 +79,10 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
     LIST(APPEND _COMMON_COMPILE_DEFINITIONS_PUBLIC "CUDA_API_PER_THREAD_DEFAULT_STREAM")
 ENDIF()
 
+IF(ALPAKA_ACC_GPU_HIP_ENABLE)
+    message("commonConfig.cmake: HIP ToDo point.")
+ENDIF()
+
 #-------------------------------------------------------------------------------
 # Add library.
 

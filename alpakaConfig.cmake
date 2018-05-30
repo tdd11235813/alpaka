@@ -84,6 +84,7 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${_ALPAKA_ROOT_DIR}/cmake/modules/")
 #-------------------------------------------------------------------------------
 # Options.
 OPTION(ALPAKA_ACC_GPU_CUDA_ONLY_MODE "Only back-ends using CUDA can be enabled in this mode (This allows to mix alpaka code with native CUDA code)." OFF)
+OPTION(ALPAKA_ACC_GPU_HIP_ONLY_MODE "Only back-ends using HIP can be enabled in this mode (This allows to mix alpaka code with native HIP code)." OFF)
 
 OPTION(ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE "Enable the serial CPU back-end" ON)
 OPTION(ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE "Enable the threads CPU block thread back-end" ON)
@@ -106,6 +107,16 @@ IF(ALPAKA_ACC_GPU_CUDA_ONLY_MODE AND
     ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR
     ALPAKA_ACC_CPU_BT_OMP4_ENABLE))
     MESSAGE(WARNING "If ALPAKA_ACC_GPU_CUDA_ONLY_MODE is enabled, only back-ends using CUDA can be enabled! This allows to mix alpaka code with native CUDA code. However, this prevents any non-CUDA back-ends from being enabled.")
+ENDIF()
+IF(ALPAKA_ACC_GPU_HIP_ONLY_MODE AND
+    (ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE OR
+    ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE OR
+    ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE OR
+    ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE OR
+    ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR
+    ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR
+    ALPAKA_ACC_CPU_BT_OMP4_ENABLE))
+    MESSAGE(WARNING "If ALPAKA_ACC_GPU_HIP_ONLY_MODE is enabled, only back-ends using HIP can be enabled! This allows to mix alpaka code with native HIP code. However, this prevents any non-HIP back-ends from being enabled.")
 ENDIF()
 
 # Drop-down combo box in cmake-gui.
@@ -282,18 +293,18 @@ IF(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR A
 
     ELSE()
         IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE) # hip/hcc does not like fopenmp as it forwards it to nvcc
-            LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
-            IF(NOT MSVC)
-                LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
-            ENDIF()
+        LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
+        IF(NOT MSVC AND NOT ALPAKA_ACC_GPU_HIP_ENABLE)
+            LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
+        ENDIF()
 
-            # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
-            IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
-                    LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
-                    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
-                ENDIF()
+        # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
+        IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
+                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
+                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
             ENDIF()
+        ENDIF()
         ENDIF()
         # CUDA requires some special handling
         IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
@@ -562,8 +573,8 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
                 ENDIF()
 
                 IF(ALPAKA_HIP_KEEP_FILES)
-                    MAKE_DIRECTORY("${PROJECT_BINARY_DIR}/nvcc_tmp")
-                    LIST(APPEND HIP_HIPCC_FLAGS "--keep" "--keep-dir" "${PROJECT_BINARY_DIR}/nvcc_tmp")
+                    MAKE_DIRECTORY("${PROJECT_BINARY_DIR}/hcc_tmp")
+                    LIST(APPEND HIP_HIPCC_FLAGS "--keep" "--keep-dir" "${PROJECT_BINARY_DIR}/hcc_tmp")
                 ENDIF()
 
                 OPTION(ALPAKA_HIP_SHOW_CODELINES "Show kernel lines in cuda-gdb and cuda-memcheck" OFF)
@@ -576,16 +587,12 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
                 ENDIF()
                 LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "general;${CUDA_CUDART_LIBRARY}")
                 LIST(APPEND _ALPAKA_INCLUDE_DIRECTORIES_PUBLIC ${HIP_INCLUDE_DIRS})
+
                 LIST(APPEND HIP_HIPCC_FLAGS
-                    -I${ALPAKA_ROOT}/include/
-                    -DALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLED
-                    -DALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLED
-                    -DALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLED
-                    -DALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLED
-                    -DALPAKA_ACC_GPU_HIP_ENABLED
-                    -DALPAKA_DEBUG=0
-                    "-Xcompiler -g"
-                    "-Xcompiler -fopenmp")
+                    -I${_ALPAKA_ROOT_DIR}/include/
+                    -I${_ALPAKA_ROOT_DIR}/test/common/include/
+                    #        "-Xcompiler -fopenmp"
+                    )
             ENDIF()
         ENDIF()
     ENDIF() # HIP
@@ -612,12 +619,14 @@ ELSE()
     # librt: undefined reference to `clock_gettime'
     LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "general;rt")
 
+    if(NOT ALPAKA_ACC_GPU_HIP_ENABLE)
     # GNU
     IF(CMAKE_COMPILER_IS_GNUCXX)
         LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth-512")
     # Clang or AppleClang
     ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth=512")
+    ENDIF()
     ENDIF()
 ENDIF()
 
@@ -626,6 +635,10 @@ ENDIF()
 IF(ALPAKA_ACC_GPU_CUDA_ONLY_MODE)
     LIST(APPEND _ALPAKA_COMPILE_DEFINITIONS_PUBLIC "ALPAKA_ACC_GPU_CUDA_ONLY_MODE")
     MESSAGE(STATUS ALPAKA_ACC_GPU_CUDA_ONLY_MODE)
+ENDIF()
+IF(ALPAKA_ACC_GPU_HIP_ONLY_MODE)
+    LIST(APPEND _ALPAKA_COMPILE_DEFINITIONS_PUBLIC "ALPAKA_ACC_GPU_HIP_ONLY_MODE")
+    MESSAGE(STATUS ALPAKA_ACC_GPU_HIP_ONLY_MODE)
 ENDIF()
 
 IF(ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE)
@@ -673,11 +686,23 @@ IF(ALPAKA_CI)
     LIST(APPEND _ALPAKA_COMPILE_DEFINITIONS_PUBLIC "ALPAKA_CI")
 ENDIF()
 
+#-----------------------
+# workaround to get the flags correctly to the hip compiler
+IF(ALPAKA_ACC_GPU_HIP_ENABLE)
+    SET(hip_defs ${_ALPAKA_COMPILE_DEFINITIONS_PUBLIC})
+    list_add_prefix("-D" hip_defs)
+    LIST(APPEND HIP_HIPCC_FLAGS
+        ${hip_defs}
+    )
+ENDIF()
+
 SET(_ALPAKA_INCLUDE_DIRECTORY "${_ALPAKA_ROOT_DIR}/include")
 SET(_ALPAKA_SUFFIXED_INCLUDE_DIR "${_ALPAKA_INCLUDE_DIRECTORY}/alpaka")
 
 SET(_ALPAKA_LINK_LIBRARY)
 LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "${_ALPAKA_LINK_LIBRARY}")
+
+#-------------------------------------------------------------------------------
 
 # Add all the source and include files in all recursive subdirectories and group them accordingly.
 append_recursive_files_add_to_src_group("${_ALPAKA_SUFFIXED_INCLUDE_DIR}" "${_ALPAKA_SUFFIXED_INCLUDE_DIR}" "hpp" _ALPAKA_FILES_HEADER)

@@ -137,7 +137,7 @@
 #endif
 #if BOOST_LANG_CUDA || BOOST_LANG_HIP
     #define ALPAKA_FN_ACC_NO_CUDA __host__
-    #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE)
+    #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE) || defined(ALPAKA_ACC_GPU_HIP_ONLY_MODE)
         #define ALPAKA_FN_ACC __device__
     #else
         #define ALPAKA_FN_ACC __device__ __host__

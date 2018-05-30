@@ -136,6 +136,17 @@ namespace alpaka
                     typename TIdx>
                 using AccGpuCudaRtIfAvailableElseInt = int;
 #endif
+#if defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
+                template<
+                    typename TDim,
+                    typename TIdx>
+                using AccGpuHipRtIfAvailableElseInt = alpaka::acc::AccGpuHipRt<TDim, TIdx>;
+#else
+                template<
+                    typename TDim,
+                    typename TIdx>
+                using AccGpuHipRtIfAvailableElseInt = int;
+#endif
                 //#############################################################################
                 //! A vector containing all available accelerators and void's.
                 template<
@@ -150,7 +161,8 @@ namespace alpaka
                         AccCpuOmp2BlocksIfAvailableElseInt<TDim, TIdx>,
                         AccCpuOmp2ThreadsIfAvailableElseInt<TDim, TIdx>,
                         AccCpuOmp4IfAvailableElseInt<TDim, TIdx>,
-                        AccGpuCudaRtIfAvailableElseInt<TDim, TIdx>
+                        AccGpuCudaRtIfAvailableElseInt<TDim, TIdx>,
+                        AccGpuHipRtIfAvailableElseInt<TDim, TIdx>
                     >;
             }
 
@@ -240,9 +252,11 @@ namespace alpaka
                     alpaka::dim::DimInt<1u>,
                     alpaka::dim::DimInt<2u>,
                     alpaka::dim::DimInt<3u>
-            // The CUDA acceleator does not currently support 4D buffers and 4D acceleration.
+            // The CUDA & HIP accelerators do not currently support 4D buffers and 4D acceleration.
 #if !(defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA)
+  #if !(defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP)
                     ,alpaka::dim::DimInt<4u>
+  #endif
 #endif
                 >;
 
