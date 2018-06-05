@@ -130,7 +130,6 @@ FUNCTION(ALPAKA_ADD_LIBRARY libraryName)
                 ${optionArguments}
             )
         ENDIF()
-#-----Call HIP_ADD_LIBRARY-----------
     ELSEIF( ALPAKA_ACC_GPU_HIP_ENABLE )
             FOREACH( _file ${ARGN} )
                 IF( ( ${_file} MATCHES "\\.cpp$" ) OR
@@ -148,7 +147,6 @@ FUNCTION(ALPAKA_ADD_LIBRARY libraryName)
                 ${optionArguments}
             )
         
-#------------------------------------
     ELSE()
         #message( "add_library( ${libraryName} ${libraryType} ${excludeFromAll} ${sourceFileNames} )" )
         ADD_LIBRARY(

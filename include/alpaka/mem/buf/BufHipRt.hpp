@@ -119,7 +119,8 @@ namespace alpaka
                         hipSetDevice(
                             dev.m_iDevice));
                     // Free the buffer.
-                    hipFree(reinterpret_cast<void *>(memPtr));
+                    ALPAKA_HIP_RT_CHECK(
+                        hipFree(reinterpret_cast<void *>(memPtr)));
                 }
 
             public:

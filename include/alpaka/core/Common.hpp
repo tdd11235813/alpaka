@@ -57,14 +57,12 @@
 #endif
 
 //---------------------------------------HIP-----------------------------------
-// source: https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md#identifying-current-compilation-pass-host-or-device
-#if defined(ALPAKA_ACC_GPU_HIP_ENABLED)
+// __HIPCC__ is defined when either __HCC__ or __CUDACC__ is defined
+#if defined(__HIPCC__)
     #include <hip/hip_runtime.h>
-    #ifdef __HIP_DEVICE_COMPILE__
-        //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
-        #undef abort
-    #endif
-    #define BOOST_LANG_HIP 1	// cheap hack
+    //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
+    #undef abort
+    #define BOOST_LANG_HIP 1 // there is no HIP_VERSION macro
 #else
     #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #endif
@@ -157,6 +155,7 @@
     // NOTE: ALPAKA_FN_ACC_CUDA_ONLY and ALPAKA_FN_ACC_HIP_ONLY should not be defined to cause build failures when CUDA only functions are used and CUDA is disabled.
     // However, this also destroys syntax highlighting.
     #define ALPAKA_FN_ACC_CUDA_ONLY
+    #define ALPAKA_FN_ACC_HIP_ONLY
     #define ALPAKA_FN_ACC_NO_CUDA
     #define ALPAKA_FN_ACC
     #define ALPAKA_FN_HOST_ACC
@@ -231,7 +230,7 @@
 //! In contrast to ordinary variables, you can not define such variables
 //! as static compilation unit local variables with internal linkage
 //! because this is forbidden by CUDA.
-#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && __HIP_DEVICE_COMPILE__)
+#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && BOOST_ARCH_HIP_DEVICE)
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT __constant__
 #else
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT
