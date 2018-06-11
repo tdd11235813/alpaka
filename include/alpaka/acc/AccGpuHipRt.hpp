@@ -31,10 +31,10 @@
 
 // Base classes.
 #include <alpaka/workdiv/WorkDivHipBuiltIn.hpp>
-#include <alpaka/idx/gb/IdxGbHipBuiltIn.hpp>       // IdxGbHipBuiltIn
-#include <alpaka/idx/bt/IdxBtHipBuiltIn.hpp>	   // IdxBtHipBuiltIn
+#include <alpaka/idx/gb/IdxGbHipBuiltIn.hpp>
+#include <alpaka/idx/bt/IdxBtHipBuiltIn.hpp>
 #include <alpaka/atomic/AtomicHipBuiltIn.hpp>
-#include <alpaka/atomic/AtomicHierarchy.hpp>    // AtomicHierarchy
+#include <alpaka/atomic/AtomicHierarchy.hpp>
 #include <alpaka/math/MathHipBuiltIn.hpp>
 #include <alpaka/block/shared/dyn/BlockSharedMemDynHipBuiltIn.hpp>
 #include <alpaka/block/shared/st/BlockSharedMemStHipBuiltIn.hpp>
@@ -43,19 +43,19 @@
 #include <alpaka/time/TimeHipBuiltIn.hpp>
 
 // Specialized traits.
-#include <alpaka/acc/Traits.hpp>                    // acc::traits::AccType
-#include <alpaka/dev/Traits.hpp>                    // dev::traits::DevType
-#include <alpaka/exec/Traits.hpp>                   // exec::traits::ExecType
-#include <alpaka/pltf/Traits.hpp>                   // pltf::traits::PltfType
+#include <alpaka/acc/Traits.hpp>
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/kernel/Traits.hpp>
+#include <alpaka/pltf/Traits.hpp>
 #include <alpaka/idx/Traits.hpp>
 
 // Implementation details.
-#include <alpaka/dev/DevHipRt.hpp>	// DevHipRt
+#include <alpaka/dev/DevHipRt.hpp>
 #include <alpaka/core/Hip.hpp>
 
-#include <boost/predef.h>                           // workarounds
+#include <boost/predef.h>
 
-#include <typeinfo>                                 // typeid
+#include <typeinfo>
 
 namespace alpaka
 {
@@ -74,7 +74,6 @@ namespace alpaka
         //! The GPU HIP accelerator.
         //!
         //! This accelerator allows parallel kernel execution on devices supporting HIP or HCC
-        //#############################################################################
         template<
             typename TDim,
             typename TIdx>
@@ -96,8 +95,6 @@ namespace alpaka
         {
         public:
             //-----------------------------------------------------------------------------
-            //! Constructor.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(
                 vec::Vec<TDim, TIdx> const & threadElemExtent) :
                     workdiv::WorkDivHipBuiltIn<TDim, TIdx>(threadElemExtent),
@@ -118,25 +115,15 @@ namespace alpaka
 
         public:
             //-----------------------------------------------------------------------------
-            //! Copy constructor.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(AccGpuHipRt const &) = delete;
-            //-----------------------------------------------------------------------------
-            //! Move constructor.
             //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(AccGpuHipRt &&) = delete;
             //-----------------------------------------------------------------------------
-            //! Copy assignment operator.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccGpuHipRt const &) -> AccGpuHipRt & = delete;
-            //-----------------------------------------------------------------------------
-            //! Move assignment operator.
             //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccGpuHipRt &&) -> AccGpuHipRt & = delete;
             //-----------------------------------------------------------------------------
-            //! Destructor.
-            //-----------------------------------------------------------------------------
-            /*virtual*/ ~AccGpuHipRt() = default;
+            ~AccGpuHipRt() = default;
         };
     }
 
@@ -146,7 +133,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The GPU HIP accelerator accelerator type trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -157,15 +143,12 @@ namespace alpaka
             };
             //#############################################################################
             //! The GPU HIP accelerator device properties get trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
             struct GetAccDevProps<
                 acc::AccGpuHipRt<TDim, TIdx>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getAccDevProps(
                     dev::DevHipRt const & dev)
@@ -203,15 +186,12 @@ namespace alpaka
             };
             //#############################################################################
             //! The GPU Hip accelerator name trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
             struct GetAccName<
                 acc::AccGpuHipRt<TDim, TIdx>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getAccName()
                 -> std::string
@@ -227,7 +207,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The GPU HIP accelerator device type trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -244,7 +223,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The GPU HIP accelerator dimension getter trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -255,24 +233,47 @@ namespace alpaka
             };
         }
     }
-    namespace exec
+    namespace kernel
     {
         namespace traits
         {
             //#############################################################################
             //! The GPU HIP accelerator executor type trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx,
+                typename TWorkDiv,
                 typename TKernelFnObj,
                 typename... TArgs>
-            struct ExecType<
+            struct CreateTaskExec<
                 acc::AccGpuHipRt<TDim, TIdx>,
+                TWorkDiv,
                 TKernelFnObj,
                 TArgs...>
             {
-                using type = exec::ExecGpuHipRt<TDim, TIdx, TKernelFnObj, TArgs...>;
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto createTaskExec(
+                    TWorkDiv const & workDiv,
+                    TKernelFnObj const & kernelFnObj,
+                    TArgs const & ... args)
+#ifdef BOOST_NO_CXX14_RETURN_TYPE_DEDUCTION
+                -> exec::ExecGpuHipRt<
+                    TDim,
+                    TIdx,
+                    TKernelFnObj,
+                    TArgs...>
+#endif
+                {
+                    return
+                        exec::ExecGpuHipRt<
+                            TDim,
+                            TIdx,
+                            TKernelFnObj,
+                            TArgs...>(
+                                workDiv,
+                                kernelFnObj,
+                                args...);
+                }
             };
         }
     }
@@ -282,7 +283,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The CPU HIP executor platform type trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -299,7 +299,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The GPU HIP accelerator idx type trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>

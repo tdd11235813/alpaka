@@ -23,32 +23,35 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>               // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 // Specialized traits.
-#include <alpaka/acc/Traits.hpp>                // acc::traits::AccType
-#include <alpaka/dev/Traits.hpp>                // dev::traits::DevType
-#include <alpaka/dim/Traits.hpp>                // dim::traits::DimType
-#include <alpaka/exec/Traits.hpp>               // exec::traits::ExecType
-#include <alpaka/pltf/Traits.hpp>               // pltf::traits::PltfType
-#include <alpaka/idx/Traits.hpp>               // idx::traits::IdxType
-#include <alpaka/queue/Traits.hpp>             // queue::traits::Enqueue
+#include <alpaka/acc/Traits.hpp>
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/dim/Traits.hpp>
+
+#include <alpaka/pltf/Traits.hpp>
+#include <alpaka/idx/Traits.hpp>
+#include <alpaka/queue/Traits.hpp>
 
 // Implementation details.
 #include <alpaka/acc/AccGpuHipRt.hpp>
+#include <alpaka/dev/DevHipRt.hpp>
 
-#include <alpaka/dev/DevHipRt.hpp>	// DevHipRt
-#include <alpaka/kernel/Traits.hpp>             // kernel::getBlockSharedMemDynSizeBytes
+#include <alpaka/kernel/Traits.hpp>
+#include <alpaka/queue/QueueHipRtSync.hpp>
+#include <alpaka/queue/QueueHipRtAsync.hpp>
 
-#include <alpaka/queue/QueueHipRtSync.hpp>   // queue::QueueHipRtSync (as of now, only a renamed copy of it's HIP counterpart)
-#include <alpaka/queue/QueueHipRtAsync.hpp>  // queue::QueueHipRtAsync (as of now, only a renamed copy of it's HIP counterpart)
-
-#include <alpaka/workdiv/WorkDivMembers.hpp>    // workdiv::WorkDivMembers
+#include <alpaka/workdiv/WorkDivMembers.hpp>
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_MINIMAL
-    #include <alpaka/acc/Traits.hpp>            // acc::getAccName
-    #include <alpaka/dev/Traits.hpp>            // dev::getDev
-    #include <alpaka/workdiv/WorkDivHelpers.hpp>// workdiv::isValidWorkDiv
+    #include <alpaka/acc/Traits.hpp>
+    #include <alpaka/dev/Traits.hpp>
+    #include <alpaka/workdiv/WorkDivHelpers.hpp>
 #endif
 
 #include <alpaka/core/Hip.hpp>
@@ -220,27 +223,6 @@ namespace alpaka
                 exec::ExecGpuHipRt<TDim, TIdx, TKernelFnObj, TArgs...>>
             {
                 using type = TDim;
-            };
-        }
-    }
-    namespace exec
-    {
-        namespace traits
-        {
-            //#############################################################################
-            //! The GPU HIP executor executor type trait specialization.
-            //#############################################################################
-            template<
-                typename TDim,
-                typename TIdx,
-                typename TKernelFnObj,
-                typename... TArgs>
-            struct ExecType<
-                exec::ExecGpuHipRt<TDim, TIdx, TKernelFnObj, TArgs...>,
-                TKernelFnObj,
-                TArgs...>
-            {
-                using type = exec::ExecGpuHipRt<TDim, TIdx, TKernelFnObj, TArgs...>;
             };
         }
     }

@@ -347,7 +347,7 @@ IF(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR A
         SET(ALPAKA_ACC_CPU_BT_OMP4_ENABLE OFF CACHE BOOL "Enable the OpenMP 4.0 CPU block and thread back-end" FORCE)
 
     ELSE()
-        IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE) # hip/hcc does not like fopenmp as it forwards it to nvcc
+#        IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE) # hip/hcc does not like fopenmp as it forwards it to nvcc
             LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
             IF(NOT MSVC AND NOT ALPAKA_ACC_GPU_HIP_ENABLE)
                 LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
@@ -360,9 +360,12 @@ IF(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR A
                     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
                 ENDIF()
             ENDIF()
-        ENDIF()
+#        ENDIF()
         # CUDA requires some special handling
         IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
+            SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        ENDIF()
+        IF(ALPAKA_ACC_GPU_HIP_ENABLE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
         ENDIF()
     ENDIF()
@@ -651,7 +654,9 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
                 ENDFOREACH()
                 # for CUDA cmake adds automatically compiler flags as nvcc does not do this,
                 # but for HIP we have to do this here
-                LIST(APPEND HIP_NVCC_FLAGS "-D__CUDACC__ -Xcompiler ,\"-g\"")
+                LIST(APPEND HIP_NVCC_FLAGS "-D__CUDACC__")
+                LIST(APPEND HIP_NVCC_FLAGS "-Xcompiler" "-g")
+                LIST(APPEND HIP_NVCC_FLAGS "-Xcompiler" "${CMAKE_CXX_FLAGS}")
             ENDIF()
 
             SET(HIP_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
