@@ -36,6 +36,9 @@
 // - BOOST_ARCH_PTX
 // - BOOST_COMP_NVCC
 // - BOOST_COMP_CLANG_CUDA
+// - BOOST_LANG_HIP
+// - BOOST_COMP_HCC
+// - BOOST_ARCH_HSA_DEVICE
 
 //-----------------------------------------------------------------------------
 // BOOST_PREDEF_MAKE_10_VVRRP(V)
@@ -43,12 +46,24 @@
     #define BOOST_PREDEF_MAKE_10_VVRRP(V) BOOST_VERSION_NUMBER(((V)/1000)%100,((V)/10)%100,(V)%10)
 #endif
 
+//---------------------------------------HIP-----------------------------------
+// __HIPCC__ is defined by hipcc (if either __HCC__ or __CUDACC__ is defined)
+#if defined(__HIPCC__)
+    #include <hip/hip_runtime.h>
+    //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
+    #undef abort
+    // there is no HIP_VERSION macro
+    #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_AVAILABLE
+#else
+    #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_NOT_AVAILABLE
+#endif
+
 //-----------------------------------------------------------------------------
 // CUDA language detection
 // - clang defines __CUDA__ and __CUDACC__ when compiling CUDA code ('-x cuda')
 // - nvcc defines __CUDACC__ when compiling CUDA code
 #if !defined(BOOST_LANG_CUDA)
-    #if defined(__CUDA__) || defined(__CUDACC__)
+    #if !BOOST_LANG_HIP && (defined(__CUDA__) || defined(__CUDACC__))
         #include <cuda.h>
         #define BOOST_LANG_CUDA BOOST_PREDEF_MAKE_10_VVRRP(CUDA_VERSION)
     #else
@@ -56,15 +71,15 @@
     #endif
 #endif
 
-//---------------------------------------HIP-----------------------------------
-// __HIPCC__ is defined when either __HCC__ or __CUDACC__ is defined
-#if defined(__HIPCC__)
-    #include <hip/hip_runtime.h>
-    //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
-    #undef abort
-    #define BOOST_LANG_HIP 1 // there is no HIP_VERSION macro
+//-----------------------------------------------------------------------------
+// HSA device architecture detection (via HIP or HCC)
+#if defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__==1 && defined(__HCC__) \
+    || (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__!=0)
+    // HIP_DEVICE_COMPILE does not represent feature capability of target device as CUDA_ARCH
+    // for feature detection there are special macros, see ROCm's HIP porting guide
+    #define BOOST_ARCH_HSA_DEVICE BOOST_VERSION_NUMBER_AVAILABLE
 #else
-    #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_NOT_AVAILABLE
+    #define BOOST_ARCH_HSA_DEVICE BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #endif
 
 //-----------------------------------------------------------------------------
@@ -78,12 +93,11 @@
 #endif
 
 //-----------------------------------------------------------------------------
-// HIP device architecture detection
-//-----------------------------------------------------------------------------
-#if defined(__HIP_DEVICE_COMPILE__)						       // cheap hack strikes again
-    #define BOOST_ARCH_HIP_DEVICE 1
+// hcc HSA compiler detection
+#if defined(__HCC__)
+    #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_AVAILABLE
 #else
-    #define BOOST_ARCH_HIP_DEVICE BOOST_VERSION_NUMBER_NOT_AVAILABLE
+    #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_NOT_AVAILABLE
 #endif
 
 //-----------------------------------------------------------------------------
@@ -101,6 +115,7 @@
         #define BOOST_COMP_NVCC BOOST_VERSION_NUMBER_NOT_AVAILABLE
     #endif
 #endif
+
 
 //-----------------------------------------------------------------------------
 // clang CUDA compiler detection
@@ -141,8 +156,10 @@
 #if BOOST_LANG_HIP
     #define ALPAKA_FN_ACC_HIP_ONLY __device__
 #endif
+
 #if BOOST_LANG_CUDA || BOOST_LANG_HIP
     #define ALPAKA_FN_ACC_NO_CUDA __host__
+    #define ALPAKA_FN_ACC_NO_HIP __host__
     #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE) || defined(ALPAKA_ACC_GPU_HIP_ONLY_MODE)
         #define ALPAKA_FN_ACC __device__
     #else
@@ -157,6 +174,7 @@
     #define ALPAKA_FN_ACC_CUDA_ONLY
     #define ALPAKA_FN_ACC_HIP_ONLY
     #define ALPAKA_FN_ACC_NO_CUDA
+    #define ALPAKA_FN_ACC_NO_HIP
     #define ALPAKA_FN_ACC
     #define ALPAKA_FN_HOST_ACC
     #define ALPAKA_FN_HOST
@@ -208,7 +226,7 @@
 //! In contrast to ordinary variables, you can not define such variables
 //! as static compilation unit local variables with internal linkage
 //! because this is forbidden by CUDA.
-#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && __HIP_DEVICE_COMPILE__)
+#if (BOOST_LANG_CUDA || BOOST_LANG_HIP) && BOOST_ARCH_PTX
     #define ALPAKA_STATIC_DEV_MEM_GLOBAL __device__
 #else
     #define ALPAKA_STATIC_DEV_MEM_GLOBAL
@@ -230,7 +248,7 @@
 //! In contrast to ordinary variables, you can not define such variables
 //! as static compilation unit local variables with internal linkage
 //! because this is forbidden by CUDA.
-#if (BOOST_LANG_CUDA && BOOST_ARCH_PTX) || (BOOST_LANG_HIP && BOOST_ARCH_HIP_DEVICE)
+#if (BOOST_LANG_CUDA || BOOST_LANG_HIP) && BOOST_ARCH_PTX
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT __constant__
 #else
     #define ALPAKA_STATIC_DEV_MEM_CONSTANT
