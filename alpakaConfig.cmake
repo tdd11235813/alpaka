@@ -347,20 +347,18 @@ IF(ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE OR ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE OR A
         SET(ALPAKA_ACC_CPU_BT_OMP4_ENABLE OFF CACHE BOOL "Enable the OpenMP 4.0 CPU block and thread back-end" FORCE)
 
     ELSE()
-#        IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE) # hip/hcc does not like fopenmp as it forwards it to nvcc
-            LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
-            IF(NOT MSVC AND NOT ALPAKA_ACC_GPU_HIP_ENABLE)
-                LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
-            ENDIF()
+        LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC ${OpenMP_CXX_FLAGS})
+        IF(NOT MSVC AND NOT ALPAKA_ACC_GPU_HIP_ENABLE)
+            LIST(APPEND _ALPAKA_LINK_FLAGS_PUBLIC ${OpenMP_CXX_FLAGS})
+        ENDIF()
 
-            # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
-            IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-                IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
-                    LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
-                    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
-                ENDIF()
+        # clang versions beginning with 3.9 support OpenMP 4.0 but only when given the corresponding flag
+        IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            IF(ALPAKA_ACC_CPU_BT_OMP4_ENABLE)
+                LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-fopenmp-version=40")
+                SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp-version=40")
             ENDIF()
-#        ENDIF()
+        ENDIF()
         # CUDA requires some special handling
         IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
             SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
@@ -592,10 +590,6 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
     IF(ALPAKA_HIP_VERSION VERSION_LESS 1.2.0)
         MESSAGE(WARNING "HIP < 1.2.0 is not supported!")
         SET(_ALPAKA_FOUND FALSE)
-    # cannot check cuda version here
-    # ELSEIF(HIP_PLATFORM MATCHES "nvcc" AND CUDA_VERSION VERSION_LESS 8.0)
-    #     MESSAGE(WARNING "CUDA Toolkit < 8.0 is not supported!")
-    #     SET(_ALPAKA_FOUND FALSE)
 
     ELSE()
         #check if find package requires version for HIP
@@ -638,7 +632,12 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
                     LIST(APPEND HIP_HIPCC_FLAGS "-Wno-deprecated-gpu-targets")
                 ENDIF()
 
-#                SET(CUDA_PROPAGATE_HOST_FLAGS ON)
+                IF(CUDA_VERSION VERSION_LESS 8.0)
+                    MESSAGE(WARNING "CUDA Toolkit < 8.0 is not supported!")
+                    SET(_ALPAKA_FOUND FALSE)
+                ENDIF()
+
+                SET(CUDA_PROPAGATE_HOST_FLAGS ON)
                 IF(${ALPAKA_DEBUG} GREATER 1)
                     SET(CUDA_VERBOSE_BUILD ON)
                 ENDIF()
@@ -658,6 +657,12 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
                 LIST(APPEND HIP_NVCC_FLAGS "-Xcompiler" "-g")
                 LIST(APPEND HIP_NVCC_FLAGS "-Xcompiler" "${CMAKE_CXX_FLAGS}")
             ENDIF()
+
+            IF(HIP_PLATFORM MATCHES "hcc")
+                MESSAGE(WARNING "HIP(hcc) is not yet supported.")
+                SET(_ALPAKA_FOUND FALSE)
+            ENDIF()
+
 
             SET(HIP_HOST_COMPILER "${CMAKE_CXX_COMPILER}")
             LIST(APPEND HIP_HIPCC_FLAGS "-D__HIPCC__")
@@ -694,11 +699,6 @@ IF(ALPAKA_ACC_GPU_HIP_ENABLE)
             ENDIF()
             LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "general;${_ALPAKA_HIP_LIBRARIES}")
             LIST(APPEND _ALPAKA_INCLUDE_DIRECTORIES_PUBLIC ${HIP_INCLUDE_DIRS})
-
-            # LIST(APPEND HIP_HIPCC_FLAGS
-            #     -I${_ALPAKA_ROOT_DIR}/include/
-            #     -I${_ALPAKA_ROOT_DIR}/test/common/include/
-            #     )
         ENDIF()
     ENDIF()
 ENDIF() # HIP
@@ -719,15 +719,13 @@ ELSE()
     # librt: undefined reference to `clock_gettime'
     LIST(APPEND _ALPAKA_LINK_LIBRARIES_PUBLIC "general;rt")
 
-#    IF(NOT ALPAKA_ACC_GPU_HIP_ENABLE)
-        # GNU
-        IF(CMAKE_COMPILER_IS_GNUCXX)
-            LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth-512")
+    # GNU
+    IF(CMAKE_COMPILER_IS_GNUCXX)
+        LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth-512")
         # Clang or AppleClang
-        ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth=512")
-        ENDIF()
-#    ENDIF()
+    ELSEIF(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-ftemplate-depth=512")
+    ENDIF()
 ENDIF()
 
 #-------------------------------------------------------------------------------
