@@ -214,7 +214,7 @@ namespace alpaka
                 os << std::endl;
             }
 
-#if defined(ALPAKA_CUDA_CI)
+#if defined(ALPAKA_CUDA_CI) || defined(ALPAKA_HIP_CUDA_CI)
             //#############################################################################
             //! A std::tuple holding dimensions.
             using TestDims =
@@ -222,9 +222,11 @@ namespace alpaka
                     alpaka::dim::DimInt<1u>,
                     //alpaka::dim::DimInt<2u>,
                     alpaka::dim::DimInt<3u>
-            // The CUDA acceleator does not currently support 4D buffers and 4D acceleration.
+            // The CUDA accelerator does not currently support 4D buffers and 4D acceleration.
 #if !(defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA)
+  #if !(defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP)
                     /*,alpaka::dim::DimInt<4u>*/
+  #endif
 #endif
                 >;
 

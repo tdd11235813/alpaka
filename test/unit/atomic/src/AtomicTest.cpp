@@ -288,7 +288,8 @@ struct TestAtomicOperations
     }
 };
 
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA
+#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA \
+  || defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
 //#############################################################################
 // NOTE: std::uint32_t is the only type supported by all atomic CUDA operations.
 template<

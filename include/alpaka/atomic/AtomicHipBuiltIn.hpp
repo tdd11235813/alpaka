@@ -23,10 +23,14 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>   // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/atomic/Op.hpp>     // Add, Sub, ...
-#include <alpaka/atomic/Traits.hpp> // AtomicOp
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
+
+#include <alpaka/atomic/Op.hpp>
+#include <alpaka/atomic/Traits.hpp>
 
 namespace alpaka
 {
@@ -37,33 +41,20 @@ namespace alpaka
         //
         //  Atomics can used in the hierarchy level grids, blocks and threads.
         //  Atomics are not guaranteed to be save between devices
-        //#############################################################################
         class AtomicHipBuiltIn
         {
         public:
 
             //-----------------------------------------------------------------------------
-            //! Default constructor.
-            //-----------------------------------------------------------------------------
             AtomicHipBuiltIn() = default;
-            //-----------------------------------------------------------------------------
-            //! Copy constructor.
             //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY AtomicHipBuiltIn(AtomicHipBuiltIn const &) = delete;
             //-----------------------------------------------------------------------------
-            //! Move constructor.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY AtomicHipBuiltIn(AtomicHipBuiltIn &&) = delete;
-            //-----------------------------------------------------------------------------
-            //! Copy assignment operator.
             //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY auto operator=(AtomicHipBuiltIn const &) -> AtomicHipBuiltIn & = delete;
             //-----------------------------------------------------------------------------
-            //! Move assignment operator.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY auto operator=(AtomicHipBuiltIn &&) -> AtomicHipBuiltIn & = delete;
-            //-----------------------------------------------------------------------------
-            //! Destructor.
             //-----------------------------------------------------------------------------
             /*virtual*/ ~AtomicHipBuiltIn() = default;
         };
@@ -72,14 +63,10 @@ namespace alpaka
         {
             //#############################################################################
             //! The specializations to execute the requested atomic ops of the HIP accelerator.
-            // See: http://docs.nvidia.com/hip/hip-c-programming-guide/#atomic-functions how to implement everything with CAS
-            //#############################################################################
             //-----------------------------------------------------------------------------
             // Add.
             //-----------------------------------------------------------------------------
-            //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -88,8 +75,6 @@ namespace alpaka
                 int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -102,7 +87,6 @@ namespace alpaka
             };
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -111,8 +95,6 @@ namespace alpaka
                 unsigned int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -125,7 +107,6 @@ namespace alpaka
             };
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -134,8 +115,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -148,7 +127,6 @@ namespace alpaka
             };
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -157,8 +135,6 @@ namespace alpaka
                 float,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -171,7 +147,6 @@ namespace alpaka
             };
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -181,42 +156,19 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     double * const addr,
                     double const & value)
                 -> double
                 {
-//#if BOOST_ARCH_HIP_DEVICE >= BOOST_VERSION_NUMBER(6, 0, 0)
                     return atomicAdd(addr, value);
-/*#else
-                    // Code from: http://docs.nvidia.com/hip/hip-c-programming-guide/#atomic-functions
-
-                    unsigned long long int * address_as_ull(reinterpret_cast<unsigned long long int *>(addr));
-                    unsigned long long int old(*address_as_ull);
-                    unsigned long long int assumed;
-                    do
-                    {
-                        assumed = old;
-                        old = atomicCAS(
-                            address_as_ull,
-                            assumed,
-                            static_cast<unsigned long long>(__double_as_longlong(value + __longlong_as_double(static_cast<long long>(assumed)))));
-                        // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
-                    }
-                    while(assumed != old);
-                    return __longlong_as_double(static_cast<long long>(old));
-#endif */
                 }
             };
             //-----------------------------------------------------------------------------
             // Sub.
             //-----------------------------------------------------------------------------
-            //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
-            //-----------------------------------------------------------------------------
             template<
                 typename THierarchy>
             struct AtomicOp<
@@ -248,8 +200,6 @@ namespace alpaka
                 unsigned int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -275,8 +225,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -320,8 +268,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -347,8 +293,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -389,8 +333,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -416,8 +358,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -438,8 +378,6 @@ namespace alpaka
                 unsigned int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -462,8 +400,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned long long int * const addr,
@@ -484,8 +420,6 @@ namespace alpaka
                 float,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -511,8 +445,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned int * const addr,
@@ -536,8 +468,6 @@ namespace alpaka
                 unsigned int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -563,8 +493,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -586,8 +514,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned int * const addr,
@@ -608,8 +534,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -635,8 +559,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -680,8 +602,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -707,8 +627,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -730,8 +648,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned int * const addr,
@@ -752,8 +668,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
@@ -779,8 +693,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     int * const addr,
@@ -803,8 +715,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-                //
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned int * const addr,
@@ -826,8 +736,6 @@ namespace alpaka
                 unsigned long long int,
                 THierarchy>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_ACC_HIP_ONLY static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
