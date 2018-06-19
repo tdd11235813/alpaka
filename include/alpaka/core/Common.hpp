@@ -72,14 +72,16 @@
 #endif
 
 //-----------------------------------------------------------------------------
-// HSA device architecture detection (via HIP or HCC)
-#if defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__==1 && defined(__HCC__) \
-    || (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__!=0)
-    // HIP_DEVICE_COMPILE does not represent feature capability of target device as CUDA_ARCH
-    // for feature detection there are special macros, see ROCm's HIP porting guide
-    #define BOOST_ARCH_HSA_DEVICE BOOST_VERSION_NUMBER_AVAILABLE
-#else
-    #define BOOST_ARCH_HSA_DEVICE BOOST_VERSION_NUMBER_NOT_AVAILABLE
+// HSA device architecture detection (HSA generated via HIP(HCC) or HCC directly)
+#if !defined(BOOST_ARCH_HSA)
+    #if defined(__HIP_DEVICE_COMPILE__) && __HIP_DEVICE_COMPILE__==1 && defined(__HCC__) \
+        || (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__!=0)
+        // __HIP_DEVICE_COMPILE__ does not represent feature capability of target device like CUDA_ARCH.
+        // For feature detection there are special macros, see ROCm's HIP porting guide.
+        #define BOOST_ARCH_HSA BOOST_VERSION_NUMBER_AVAILABLE
+    #else
+        #define BOOST_ARCH_HSA BOOST_VERSION_NUMBER_NOT_AVAILABLE
+    #endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -94,10 +96,12 @@
 
 //-----------------------------------------------------------------------------
 // hcc HSA compiler detection
-#if defined(__HCC__)
-    #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_AVAILABLE
-#else
-    #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_NOT_AVAILABLE
+#if !defined(BOOST_COMP_HCC)
+    #if defined(__HCC__)
+        #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_AVAILABLE
+    #else
+        #define BOOST_COMP_HCC BOOST_VERSION_NUMBER_NOT_AVAILABLE
+    #endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -120,10 +124,12 @@
 //-----------------------------------------------------------------------------
 // clang CUDA compiler detection
 // Currently __CUDA__ is only defined by clang when compiling CUDA code.
-#if defined(__clang__) && defined(__CUDA__)
-    #define BOOST_COMP_CLANG_CUDA BOOST_COMP_CLANG
-#else
-    #define BOOST_COMP_CLANG_CUDA BOOST_VERSION_NUMBER_NOT_AVAILABLE
+#if !defined(BOOST_COMP_CLANG_CUDA)
+    #if defined(__clang__) && defined(__CUDA__)
+        #define BOOST_COMP_CLANG_CUDA BOOST_COMP_CLANG
+    #else
+        #define BOOST_COMP_CLANG_CUDA BOOST_VERSION_NUMBER_NOT_AVAILABLE
+    #endif
 #endif
 
 //-----------------------------------------------------------------------------
