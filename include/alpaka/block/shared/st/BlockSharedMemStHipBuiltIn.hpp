@@ -21,7 +21,7 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>           // ALPAKA_FN_*, __HIPCC__
 

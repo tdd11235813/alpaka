@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/dev/DevHipRt.hpp>	// DevHipRt
 
@@ -34,9 +38,11 @@
 
 #include <alpaka/core/Hip.hpp>
 
-#include <stdexcept>                    // std::runtime_error
-#include <memory>                       // std::shared_ptr
-#include <functional>                   // std::bind
+#include <stdexcept>
+#include <memory>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
 
 namespace alpaka
 {
@@ -61,9 +67,7 @@ namespace alpaka
                 {
                 public:
                     //-----------------------------------------------------------------------------
-                    //! Constructor.
-                    //-----------------------------------------------------------------------------
-                    QueueHipRtSyncImpl(
+                    ALPAKA_FN_HOST QueueHipRtSyncImpl(
                         dev::DevHipRt const & dev) :
                             m_dev(dev),
                             m_HipQueue()
@@ -88,11 +92,11 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     //! Copy constructor.
                     //-----------------------------------------------------------------------------
-                    ALPAKA_FN_HOST QueueHipRtSyncImpl(QueueHipRtSyncImpl const &) = delete;
+                    QueueHipRtSyncImpl(QueueHipRtSyncImpl const &) = delete;
                     //-----------------------------------------------------------------------------
                     //! Move constructor.
                     //-----------------------------------------------------------------------------
-                    ALPAKA_FN_HOST QueueHipRtSyncImpl(QueueHipRtSyncImpl &&) = default;
+                    QueueHipRtSyncImpl(QueueHipRtSyncImpl &&) = default;
                     //-----------------------------------------------------------------------------
                     //! Copy assignment operator.
                     //-----------------------------------------------------------------------------
@@ -134,48 +138,32 @@ namespace alpaka
         {
         public:
             //-----------------------------------------------------------------------------
-            //! Constructor.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST QueueHipRtSync(
                 dev::DevHipRt const & dev) :
                 m_spQueueImpl(std::make_shared<hip::detail::QueueHipRtSyncImpl>(dev))
             {}
             //-----------------------------------------------------------------------------
-            //! Copy constructor.
+            QueueHipRtSync(QueueHipRtSync const &) = default;
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST QueueHipRtSync(QueueHipRtSync const &) = default;
-            //-----------------------------------------------------------------------------
-            //! Move constructor.
-            //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST QueueHipRtSync(QueueHipRtSync &&) = default;
-            //-----------------------------------------------------------------------------
-            //! Copy assignment operator.
+            QueueHipRtSync(QueueHipRtSync &&) = default;
             //-----------------------------------------------------------------------------
             auto operator=(QueueHipRtSync const &) -> QueueHipRtSync & = default;
             //-----------------------------------------------------------------------------
-            //! Move assignment operator.
-            //-----------------------------------------------------------------------------
             auto operator=(QueueHipRtSync &&) -> QueueHipRtSync & = default;
             //-----------------------------------------------------------------------------
-            //! Equality comparison operator.
-            //-----------------------------------------------------------------------------
-            auto operator==(QueueHipRtSync const & rhs) const
+            ALPAKA_FN_HOST auto operator==(QueueHipRtSync const & rhs) const
             -> bool
             {
                 return (m_spQueueImpl->m_HipQueue == rhs.m_spQueueImpl->m_HipQueue);
             }
             //-----------------------------------------------------------------------------
-            //! Equality comparison operator.
-            //-----------------------------------------------------------------------------
-            auto operator!=(QueueHipRtSync const & rhs) const
+            ALPAKA_FN_HOST auto operator!=(QueueHipRtSync const & rhs) const
             -> bool
             {
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            //! Destructor.
-            //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST ~QueueHipRtSync() = default;
+            ~QueueHipRtSync() = default;
 
         public:
             std::shared_ptr<hip::detail::QueueHipRtSyncImpl> m_spQueueImpl;
@@ -188,7 +176,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP RT queue device type trait specialization.
-            //#############################################################################
             template<>
             struct DevType<
                 queue::QueueHipRtSync>
@@ -197,13 +184,10 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP RT queue device get trait specialization.
-            //#############################################################################
             template<>
             struct GetDev<
                 queue::QueueHipRtSync>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getDev(
                     queue::QueueHipRtSync const & queue)
@@ -233,6 +217,65 @@ namespace alpaka
     {
         namespace traits
         {
+            //#############################################################################
+            //! The HIP RT sync queue enqueue trait specialization.
+            template<
+                typename TTask>
+            struct Enqueue<
+                queue::QueueHipRtSync,
+                TTask>
+            {
+                //#############################################################################
+                struct CallbackSynchronizationData
+                {
+                    std::mutex m_mutex;
+                    std::condition_variable m_event;
+                    bool notified = false;
+                };
+
+                //-----------------------------------------------------------------------------
+                static void HIPRT_CB hipRtCallback(hipStream_t /*queue*/, hipError_t /*status*/, void *arg)
+                {
+                    auto& callbackSynchronizationData = *reinterpret_cast<CallbackSynchronizationData*>(arg);
+
+                    {
+                        std::unique_lock<std::mutex> lock(callbackSynchronizationData.m_mutex);
+                        callbackSynchronizationData.notified = true;
+                    }
+
+                    callbackSynchronizationData.m_event.notify_one();
+                }
+
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtSync & queue,
+                    TTask const & task)
+                -> void
+                {
+                    auto pCallbackSynchronizationData = std::make_shared<CallbackSynchronizationData>();
+
+                    ALPAKA_HIP_RT_CHECK(hipStreamAddCallback(
+                        queue.m_spQueueImpl->m_HipQueue,
+                        hipRtCallback,
+                        pCallbackSynchronizationData.get(),
+                        0u));
+
+                    // If the callback has not yet been called, we wait for it.
+                    std::unique_lock<std::mutex> lock(pCallbackSynchronizationData->m_mutex);
+                    if(!pCallbackSynchronizationData->notified)
+                    {
+                        pCallbackSynchronizationData->m_event.wait(
+                            lock,
+                            [pCallbackSynchronizationData](){
+                                return pCallbackSynchronizationData->notified;
+                            }
+                        );
+                    }
+
+                    task();
+                }
+            };
+
             //#############################################################################
             //! The HIP RT queue test trait specialization.
             //#############################################################################

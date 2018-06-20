@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>           // ALPAKA_FN_*, __HIPCC__
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/workdiv/Traits.hpp>        // workdiv::GetWorkDiv
 #include <alpaka/idx/Traits.hpp>           // idx::Idx
@@ -39,7 +43,6 @@ namespace alpaka
     {
         //#############################################################################
         //! The GPU HIP accelerator work division.
-        //#############################################################################
         template<
             typename TDim,
             typename TIdx>
@@ -50,7 +53,6 @@ namespace alpaka
 
             //-----------------------------------------------------------------------------
             //! Default constructor.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_ACC_HIP_ONLY WorkDivHipBuiltIn(
                 vec::Vec<TDim, TIdx> const & threadElemExtent) :
                     m_threadElemExtent(threadElemExtent)
@@ -77,8 +79,8 @@ namespace alpaka
             /*virtual*/ ~WorkDivHipBuiltIn() = default;
 
         public:
-            // \TODO: Optimize! Add WorkDivHipBuiltInNoElems that has no member m_threadElemExtent as well as AccGpuHipRtNoElems.
-            // Use it instead of AccGpuHipRt if the thread element extent is one to reduce the register usage.
+            // \TODO: Optimize! Add WorkDivHipBuiltInNoElems that has no member m_threadElemExtent as well as AccHipRtNoElems.
+            // Use it instead of AccHipRt if the thread element extent is one to reduce the register usage.
             vec::Vec<TDim, TIdx> const & m_threadElemExtent;
         };
     }
@@ -134,7 +136,7 @@ namespace alpaka
             {
                 //-----------------------------------------------------------------------------
                 //! \return The number of blocks in each dimension of the grid.
-                //-----------------------------------------------------------------------------
+                ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_ACC_HIP_ONLY static auto getWorkDiv(
                     WorkDivHipBuiltIn<TDim, TIdx> const & /*workDiv*/)
                 -> vec::Vec<TDim, TIdx>
@@ -157,7 +159,7 @@ namespace alpaka
             {
                 //-----------------------------------------------------------------------------
                 //! \return The number of threads in each dimension of a block.
-                //-----------------------------------------------------------------------------
+                ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_ACC_HIP_ONLY static auto getWorkDiv(
                     WorkDivHipBuiltIn<TDim, TIdx> const & /*workDiv*/)
                 -> vec::Vec<TDim, TIdx>
@@ -180,7 +182,7 @@ namespace alpaka
             {
                 //-----------------------------------------------------------------------------
                 //! \return The number of blocks in each dimension of the grid.
-                //-----------------------------------------------------------------------------
+                ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_ACC_HIP_ONLY static auto getWorkDiv(
                     WorkDivHipBuiltIn<TDim, TIdx> const & workDiv)
                 -> vec::Vec<TDim, TIdx>

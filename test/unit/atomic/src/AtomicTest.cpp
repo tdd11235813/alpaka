@@ -288,8 +288,7 @@ struct TestAtomicOperations
     }
 };
 
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA \
-  || defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
+#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA
 //#############################################################################
 // NOTE: std::uint32_t is the only type supported by all atomic CUDA operations.
 template<
@@ -298,6 +297,27 @@ template<
     typename T>
 struct TestAtomicOperations<
     alpaka::acc::AccGpuCudaRt<TDim, TIdx>,
+    T,
+    typename std::enable_if<!std::is_same<std::uint32_t, T>::value>::type>
+{
+    //-----------------------------------------------------------------------------
+    static auto testAtomicOperations()
+    -> void
+    {
+        // All other types are not supported by all CUDA atomic operations.
+    }
+};
+#endif
+
+#if defined(ALPAKA_ACC_HIP_ENABLED) && BOOST_LANG_HIP
+//#############################################################################
+// NOTE: std::uint32_t is the only type supported by all atomic CUDA operations.
+template<
+    typename TDim,
+    typename TIdx,
+    typename T>
+struct TestAtomicOperations<
+    alpaka::acc::AccHipRt<TDim, TIdx>,
     T,
     typename std::enable_if<!std::is_same<std::uint32_t, T>::value>::type>
 {

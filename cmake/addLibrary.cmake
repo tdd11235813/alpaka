@@ -130,7 +130,7 @@ FUNCTION(ALPAKA_ADD_LIBRARY libraryName)
                 ${optionArguments}
             )
         ENDIF()
-    ELSEIF( ALPAKA_ACC_GPU_HIP_ENABLE )
+    ELSEIF( ALPAKA_ACC_HIP_ENABLE )
             FOREACH( _file ${ARGN} )
                 IF( ( ${_file} MATCHES "\\.cpp$" ) OR
                     ( ${_file} MATCHES "\\.cxx$" )

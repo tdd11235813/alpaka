@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>         
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/dev/DevHipRt.hpp>
 #include <alpaka/vec/Vec.hpp>
@@ -62,13 +66,18 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP memory buffer.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
                 typename TIdx>
             class BufHipRt
             {
+                static_assert(
+                    !std::is_const<TElem>::value,
+                    "The elem type of the buffer can not be const because the C++ Standard forbids containers of const elements!");
+                static_assert(
+                    !std::is_const<TIdx>::value,
+                    "The idx type of the buffer can not be const!");
             private:
                 using Elem = TElem;
                 using Dim = TDim;
@@ -76,7 +85,6 @@ namespace alpaka
             public:
                 //-----------------------------------------------------------------------------
                 //! Constructor
-                //-----------------------------------------------------------------------------
                 template<
                     typename TExtent>
                 ALPAKA_FN_HOST BufHipRt(
@@ -106,7 +114,6 @@ namespace alpaka
             private:
                 //-----------------------------------------------------------------------------
                 //! Frees the shared buffer.
-                //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto freeBuffer(
                     TElem * memPtr,
                     dev::DevHipRt const & dev)
@@ -132,16 +139,12 @@ namespace alpaka
         }
     }
 
-    //-----------------------------------------------------------------------------
-    // Trait specializations for BufHipRt.
-    //-----------------------------------------------------------------------------
     namespace dev
     {
         namespace traits
         {
             //#############################################################################
             //! The BufHipRt device type trait specialization.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
@@ -153,7 +156,6 @@ namespace alpaka
             };
             //#############################################################################
             //! The BufHipRt device get trait specialization.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
@@ -176,7 +178,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The BufHipRt dimension getter trait specialization.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
@@ -194,7 +195,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The BufHipRt memory element type get trait specialization.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
@@ -212,7 +212,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The BufHipRt extent get trait specialization.
-            //#############################################################################
             template<
                 typename TIdxIntegralConst,
                 typename TElem,
@@ -241,7 +240,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The BufHipRt native pointer get trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -250,16 +248,12 @@ namespace alpaka
                     mem::buf::BufHipRt<TElem, TDim, TIdx>>
                 {
                     //-----------------------------------------------------------------------------
-                    //!
-                    //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrNative(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const & buf)
                     -> TElem const *
                     {
                         return buf.m_spMem.get();
                     }
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrNative(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> & buf)
@@ -270,7 +264,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt pointer on device get trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -279,8 +272,6 @@ namespace alpaka
                     mem::buf::BufHipRt<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrDev(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const & buf,
@@ -296,8 +287,6 @@ namespace alpaka
                             throw std::runtime_error("The buffer is not accessible from the given device!");
                         }
                     }
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrDev(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> & buf,
@@ -316,7 +305,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt pitch get trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -325,8 +313,6 @@ namespace alpaka
                     dim::DimInt<TDim::value - 1u>,
                     mem::buf::BufHipRt<TElem, TDim, TIdx>>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPitchBytes(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const & buf)
@@ -456,66 +442,63 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The HIP 3D memory allocation trait specialization.
-                //#############################################################################
-                //~ template<
-                    //~ typename T,
-                    //~ typename TIdx>
-                //~ struct Alloc<
-                    //~ T,
-                    //~ dim::DimInt<3u>,
-                    //~ TIdx,
-                    //~ dev::DevHipRt>
-                //~ {
-                    //~ //-----------------------------------------------------------------------------
-                    //~ //!
-                    //~ //-----------------------------------------------------------------------------
-                    //~ template<
-                        //~ typename TExtent>
-                    //~ ALPAKA_FN_HOST static auto alloc(
-                        //~ dev::DevHipRt const & dev,
-                        //~ TExtent const & extent)
-                    //~ -> mem::buf::BufHipRt<T, dim::DimInt<3u>, TIdx>
-                    //~ {
-                        //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+                template<
+                    typename TElem,
+                    typename TIdx>
+                struct Alloc<
+                    TElem,
+                    dim::DimInt<3u>,
+                    TIdx,
+                    dev::DevHipRt>
+                {
+                    //-----------------------------------------------------------------------------
+                    template<
+                        typename TExtent>
+                    ALPAKA_FN_HOST static auto alloc(
+                        dev::DevHipRt const & dev,
+                        TExtent const & extent)
+                    -> mem::buf::BufHipRt<TElem, dim::DimInt<3u>, TIdx>
+                    {
+                        ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                         //~ hipExtent const hipExtentVal(
-                             //~ make_hipExtent(
-                                //~ static_cast<std::size_t>(extent::getWidth(extent) * static_cast<TIdx>(sizeof(T))),
-                                //~ static_cast<std::size_t>(extent::getHeight(extent)),
-                                //~ static_cast<std::size_t>(extent::getDepth(extent))));
+                        hipExtent const hipExtentVal(
+                            make_hipExtent(
+                                static_cast<std::size_t>(extent::getWidth(extent) * static_cast<TIdx>(sizeof(TElem))),
+                                static_cast<std::size_t>(extent::getHeight(extent)),
+                                static_cast<std::size_t>(extent::getDepth(extent))));
 
-                        //~ // Set the current device.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipSetDevice(
-                                //~ dev.m_iDevice));
-                        //~ // Allocate the buffer on this device.
-                        //~ hipPitchedPtr hipPitchedPtrVal;
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMalloc3D(
-                                //~ &hipPitchedPtrVal,
-                                //~ hipExtentVal));
+                        // Set the current device.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipSetDevice(
+                                dev.m_iDevice));
+                        // Allocate the buffer on this device.
+                        hipPitchedPtr hipPitchedPtrVal;
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMalloc3D(
+                                &hipPitchedPtrVal,
+                                hipExtentVal));
 
 
-//~ #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
-                        //~ std::cout << BOOST_CURRENT_FUNCTION
-                            //~ << " ew: " << extent::getWidth(extent)
-                            //~ << " eh: " << hipExtentVal.height
-                            //~ << " ed: " << hipExtentVal.depth
-                            //~ << " ewb: " << hipExtentVal.width
-                            //~ << " ptr: " << hipPitchedPtrVal.ptr
-                            //~ << " pitch: " << hipPitchedPtrVal.pitch
-                            //~ << " wb: " << hipPitchedPtrVal.xsize
-                            //~ << " h: " << hipPitchedPtrVal.ysize
-                            //~ << std::endl;
-//~ #endif
-                        //~ return
-                            //~ mem::buf::BufHipRt<T, dim::DimInt<3u>, TIdx>(
-                                //~ dev,
-                                //~ reinterpret_cast<T *>(hipPitchedPtrVal.ptr),
-                                //~ static_cast<TIdx>(hipPitchedPtrVal.pitch),
-                                //~ extent);
-                    //~ }
-                //~ };
+#if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
+                        std::cout << BOOST_CURRENT_FUNCTION
+                            << " ew: " << extent::getWidth(extent)
+                            << " eh: " << hipExtentVal.height
+                            << " ed: " << hipExtentVal.depth
+                            << " ewb: " << hipExtentVal.width
+                            << " ptr: " << hipPitchedPtrVal.ptr
+                            << " pitch: " << hipPitchedPtrVal.pitch
+                            << " wb: " << hipPitchedPtrVal.xsize
+                            << " h: " << hipPitchedPtrVal.ysize
+                            << std::endl;
+#endif
+                        return
+                            mem::buf::BufHipRt<TElem, dim::DimInt<3u>, TIdx>(
+                                dev,
+                                reinterpret_cast<TElem *>(hipPitchedPtrVal.ptr),
+                                static_cast<TIdx>(hipPitchedPtrVal.pitch),
+                                extent);
+                    }
+                };
                 //#############################################################################
                 //! The BufHipRt HIP device memory mapping trait specialization.
                 //#############################################################################

@@ -38,7 +38,7 @@
 #include <alpaka/acc/AccCpuOmp2Threads.hpp>
 #include <alpaka/acc/AccCpuOmp4.hpp>
 #include <alpaka/acc/AccGpuCudaRt.hpp>
-#include <alpaka/acc/AccGpuHipRt.hpp>
+#include <alpaka/acc/AccHipRt.hpp>
 #include <alpaka/acc/AccDevProps.hpp>
 #include <alpaka/acc/Traits.hpp>
 //-----------------------------------------------------------------------------
@@ -119,7 +119,7 @@
 #include <alpaka/exec/ExecCpuOmp2Threads.hpp>
 #include <alpaka/exec/ExecCpuOmp4.hpp>
 #include <alpaka/exec/ExecGpuCudaRt.hpp>
-#include <alpaka/exec/ExecGpuHipRt.hpp>
+#include <alpaka/exec/ExecHipRt.hpp>
 //-----------------------------------------------------------------------------
 // extent
 #include <alpaka/extent/Traits.hpp>

@@ -21,13 +21,19 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/idx/Traits.hpp>            // idx::getIdx
-#include <alpaka/vec/Vec.hpp>               // Vec, offset::getOffsetVecEnd
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
+
+#include <alpaka/idx/Traits.hpp>
+
+#include <alpaka/vec/Vec.hpp>
 #include <alpaka/core/Hip.hpp>
+#include <alpaka/core/Positioning.hpp>
 
 //#include <boost/core/ignore_unused.hpp>   // boost::ignore_unused
 
@@ -39,7 +45,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP accelerator ND index provider.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -49,27 +54,15 @@ namespace alpaka
                 using IdxGbBase = IdxGbHipBuiltIn;
 
                 //-----------------------------------------------------------------------------
-                //! Default constructor.
-                //-----------------------------------------------------------------------------
                 IdxGbHipBuiltIn() = default;
-                //-----------------------------------------------------------------------------
-                //! Copy constructor.
                 //-----------------------------------------------------------------------------
                 IdxGbHipBuiltIn(IdxGbHipBuiltIn const &) = delete;
                 //-----------------------------------------------------------------------------
-                //! Move constructor.
-                //-----------------------------------------------------------------------------
                 IdxGbHipBuiltIn(IdxGbHipBuiltIn &&) = delete;
-                //-----------------------------------------------------------------------------
-                //! Copy assignment operator.
                 //-----------------------------------------------------------------------------
                 auto operator=(IdxGbHipBuiltIn const & ) -> IdxGbHipBuiltIn & = delete;
                 //-----------------------------------------------------------------------------
-                //! Move assignment operator.
-                //-----------------------------------------------------------------------------
                 auto operator=(IdxGbHipBuiltIn &&) -> IdxGbHipBuiltIn & = delete;
-                //-----------------------------------------------------------------------------
-                //! Destructor.
                 //-----------------------------------------------------------------------------
                 /*virtual*/ ~IdxGbHipBuiltIn() = default;
             };

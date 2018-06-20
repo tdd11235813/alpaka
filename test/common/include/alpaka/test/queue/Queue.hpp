@@ -74,10 +74,10 @@ namespace alpaka
                 };
 #endif
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #if !BOOST_LANG_HIP
-    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
                 //#############################################################################
                 //! The default queue type trait specialization for the HIP device.
@@ -151,10 +151,10 @@ namespace alpaka
                 };
 #endif
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #if !BOOST_LANG_HIP
-    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
                 //#############################################################################
                 //! The sync queue trait specialization for a sync HIP RT queue.
@@ -192,7 +192,7 @@ namespace alpaka
                     std::tuple<alpaka::dev::DevCudaRt, alpaka::queue::QueueCudaRtSync>,
                     std::tuple<alpaka::dev::DevCudaRt, alpaka::queue::QueueCudaRtAsync>
 #endif
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
                     ,
                     std::tuple<alpaka::dev::DevHipRt, alpaka::queue::QueueHipRtSync>,
                     std::tuple<alpaka::dev::DevHipRt, alpaka::queue::QueueHipRtAsync>

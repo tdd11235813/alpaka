@@ -90,8 +90,8 @@ auto main()
 #ifdef ALPAKA_ACC_GPU_CUDA_ENABLED
     using Acc = alpaka::acc::AccGpuCudaRt<Dim, Idx>;
     using QueueAcc = alpaka::queue::QueueCudaRtSync;
-#elif defined(ALPAKA_ACC_GPU_HIP_ENABLED)
-    using Acc = alpaka::acc::AccGpuHipRt<Dim, Idx>;
+#elif defined(ALPAKA_ACC_HIP_ENABLED)
+    using Acc = alpaka::acc::AccHipRt<Dim, Idx>;
     using QueueAcc = alpaka::queue::QueueHipRtSync;
 #else
     using Acc = alpaka::acc::AccCpuSerial<Dim, Idx>;

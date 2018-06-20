@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/queue/QueueHipRtSync.hpp>
 #include <alpaka/queue/QueueHipRtAsync.hpp>
@@ -61,15 +65,12 @@ namespace alpaka
                 {
                     //#############################################################################
                     //! The HIP memory set trait.
-                    //#############################################################################
                     template<
                         typename TDim,
                         typename TView,
                         typename TExtent>
                     struct TaskSetHip
                     {
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         TaskSetHip(
                             TView & buf,
@@ -96,7 +97,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The HIP device memory set trait specialization.
-                //#############################################################################
                 template<
                     typename TDim>
                 struct CreateTaskSet<
@@ -137,7 +137,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP async device queue 1D set enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TView,
                 typename TExtent>
@@ -145,8 +144,6 @@ namespace alpaka
                 queue::QueueHipRtAsync,
                 mem::view::hip::detail::TaskSetHip<dim::DimInt<1u>, TView, TExtent>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
@@ -192,7 +189,6 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP sync device queue 1D set enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TView,
                 typename TExtent>
@@ -246,278 +242,267 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP async device queue 2D set enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TView,
-                //~ typename TExtent>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+            template<
+                typename TView,
+                typename TExtent>
+            struct Enqueue<
+                queue::QueueHipRtAsync,
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtAsync & queue,
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == 2u,
-                        //~ "The destination buffer is required to be 2-dimensional for this specialization!");
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == dim::Dim<TExtent>::value,
-                        //~ "The destination buffer and the extent are required to have the same dimensionality!");
+                    static_assert(
+                        dim::Dim<TView>::value == 2u,
+                        "The destination buffer is required to be 2-dimensional for this specialization!");
+                    static_assert(
+                        dim::Dim<TView>::value == dim::Dim<TExtent>::value,
+                        "The destination buffer and the extent are required to have the same dimensionality!");
 
-                    //~ using Idx = size::Idx<TExtent>;
+                    using Idx = idx::Idx<TExtent>;
 
-                    //~ auto & buf(task.m_buf);
-                    //~ auto const & byte(task.m_byte);
-                    //~ auto const & extent(task.m_extent);
-                    //~ auto const & iDevice(task.m_iDevice);
+                    auto & buf(task.m_buf);
+                    auto const & byte(task.m_byte);
+                    auto const & extent(task.m_extent);
+                    auto const & iDevice(task.m_iDevice);
 
-                    //~ auto const extentWidth(extent::getWidth(extent));
-                    //~ auto const extentWidthBytes(extentWidth * static_cast<Idx>(sizeof(elem::Elem<TView>)));
-                    //~ auto const extentHeight(extent::getHeight(extent));
-//~ #if !defined(NDEBUG)
-                    //~ auto const dstWidth(extent::getWidth(buf));
-                    //~ auto const dstHeight(extent::getHeight(buf));
-//~ #endif
-                    //~ auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
-                    //~ auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
-                    //~ assert(extentWidth <= dstWidth);
-                    //~ assert(extentHeight <= dstHeight);
+                    auto const extentWidth(extent::getWidth(extent));
+                    auto const extentWidthBytes(extentWidth * static_cast<Idx>(sizeof(elem::Elem<TView>)));
+                    auto const extentHeight(extent::getHeight(extent));
+#if !defined(NDEBUG)
+                    auto const dstWidth(extent::getWidth(buf));
+                    auto const dstHeight(extent::getHeight(buf));
+#endif
+                    auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
+                    auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
+                    assert(extentWidth <= dstWidth);
+                    assert(extentHeight <= dstHeight);
 
-                    //~ // Set the current device.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipSetDevice(
-                            //~ iDevice));
-                    //~ // Initiate the memory set.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipMemset2DAsync(
-                            //~ dstNativePtr,
-                            //~ static_cast<size_t>(dstPitchBytesX),
-                            //~ static_cast<int>(byte),
-                            //~ static_cast<size_t>(extentWidthBytes),
-                            //~ static_cast<size_t>(extentHeight),
-                            //~ queue.m_spQueueHipRtAsyncImpl->m_HipQueue));
-                //~ }
-            //~ };
+                    // Set the current device.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipSetDevice(
+                            iDevice));
+                    // Initiate the memory set.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipMemset2DAsync(
+                            dstNativePtr,
+                            static_cast<size_t>(dstPitchBytesX),
+                            static_cast<int>(byte),
+                            static_cast<size_t>(extentWidthBytes),
+                            static_cast<size_t>(extentHeight),
+                            queue.m_spQueueImpl->m_HipQueue));
+                }
+            };
             //#############################################################################
             //! The HIP sync device queue 2D set enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TView,
-                //~ typename TExtent>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+            template<
+                typename TView,
+                typename TExtent>
+            struct Enqueue<
+                queue::QueueHipRtSync,
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtSync &,
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<2u>, TView, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == 2u,
-                        //~ "The destination buffer is required to be 2-dimensional for this specialization!");
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == dim::Dim<TExtent>::value,
-                        //~ "The destination buffer and the extent are required to have the same dimensionality!");
+                    static_assert(
+                        dim::Dim<TView>::value == 2u,
+                        "The destination buffer is required to be 2-dimensional for this specialization!");
+                    static_assert(
+                        dim::Dim<TView>::value == dim::Dim<TExtent>::value,
+                        "The destination buffer and the extent are required to have the same dimensionality!");
 
-                    //~ using Idx = size::Idx<TExtent>;
+                    using Idx = idx::Idx<TExtent>;
 
-                    //~ auto & buf(task.m_buf);
-                    //~ auto const & byte(task.m_byte);
-                    //~ auto const & extent(task.m_extent);
-                    //~ auto const & iDevice(task.m_iDevice);
+                    auto & buf(task.m_buf);
+                    auto const & byte(task.m_byte);
+                    auto const & extent(task.m_extent);
+                    auto const & iDevice(task.m_iDevice);
 
-                    //~ auto const extentWidth(extent::getWidth(extent));
-                    //~ auto const extentWidthBytes(extentWidth * static_cast<Idx>(sizeof(elem::Elem<TView>)));
-                    //~ auto const extentHeight(extent::getHeight(extent));
-//~ #if !defined(NDEBUG)
-                    //~ auto const dstWidth(extent::getWidth(buf));
-                    //~ auto const dstHeight(extent::getHeight(buf));
-//~ #endif
-                    //~ auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
-                    //~ auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
-                    //~ assert(extentWidth <= dstWidth);
-                    //~ assert(extentHeight <= dstHeight);
+                    auto const extentWidth(extent::getWidth(extent));
+                    auto const extentWidthBytes(extentWidth * static_cast<Idx>(sizeof(elem::Elem<TView>)));
+                    auto const extentHeight(extent::getHeight(extent));
+#if !defined(NDEBUG)
+                    auto const dstWidth(extent::getWidth(buf));
+                    auto const dstHeight(extent::getHeight(buf));
+#endif
+                    auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
+                    auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
+                    assert(extentWidth <= dstWidth);
+                    assert(extentHeight <= dstHeight);
 
-                    //~ // Set the current device.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipSetDevice(
-                            //~ iDevice));
-                    //~ // Initiate the memory set.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipMemset2D(
-                            //~ dstNativePtr,
-                            //~ static_cast<size_t>(dstPitchBytesX),
-                            //~ static_cast<int>(byte),
-                            //~ static_cast<size_t>(extentWidthBytes),
-                            //~ static_cast<size_t>(extentHeight)));
-                //~ }
-            //~ };
+                    // Set the current device.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipSetDevice(
+                            iDevice));
+                    // Initiate the memory set.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipMemset2D(
+                            dstNativePtr,
+                            static_cast<size_t>(dstPitchBytesX),
+                            static_cast<int>(byte),
+                            static_cast<size_t>(extentWidthBytes),
+                            static_cast<size_t>(extentHeight)));
+                }
+            };
             //#############################################################################
             //! The HIP async device queue 3D set enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TView,
-                //~ typename TExtent>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+            template<
+                typename TView,
+                typename TExtent>
+            struct Enqueue<
+                queue::QueueHipRtAsync,
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtAsync & queue,
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == 3u,
-                        //~ "The destination buffer is required to be 3-dimensional for this specialization!");
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == dim::Dim<TExtent>::value,
-                        //~ "The destination buffer and the extent are required to have the same dimensionality!");
+                    static_assert(
+                        dim::Dim<TView>::value == 3u,
+                        "The destination buffer is required to be 3-dimensional for this specialization!");
+                    static_assert(
+                        dim::Dim<TView>::value == dim::Dim<TExtent>::value,
+                        "The destination buffer and the extent are required to have the same dimensionality!");
 
-                    //~ using Elem = alpaka::elem::Elem<TView>;
-                    //~ using Idx = size::Idx<TExtent>;
+                    using Elem = alpaka::elem::Elem<TView>;
+                    using Idx = idx::Idx<TExtent>;
 
-                    //~ auto & buf(task.m_buf);
-                    //~ auto const & byte(task.m_byte);
-                    //~ auto const & extent(task.m_extent);
-                    //~ auto const & iDevice(task.m_iDevice);
+                    auto & buf(task.m_buf);
+                    auto const & byte(task.m_byte);
+                    auto const & extent(task.m_extent);
+                    auto const & iDevice(task.m_iDevice);
 
-                    //~ auto const extentWidth(extent::getWidth(extent));
-                    //~ auto const extentHeight(extent::getHeight(extent));
-                    //~ auto const extentDepth(extent::getDepth(extent));
-                    //~ auto const dstWidth(extent::getWidth(buf));
-//~ #if !defined(NDEBUG)
-                    //~ auto const dstHeight(extent::getHeight(buf));
-                    //~ auto const dstDepth(extent::getDepth(buf));
-//~ #endif
-                    //~ auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
-                    //~ auto const dstPitchBytesY(mem::view::getPitchBytes<dim::Dim<TView>::value - (2u % dim::Dim<TView>::value)>(buf));
-                    //~ auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
-                    //~ assert(extentWidth <= dstWidth);
-                    //~ assert(extentHeight <= dstHeight);
-                    //~ assert(extentDepth <= dstDepth);
+                    auto const extentWidth(extent::getWidth(extent));
+                    auto const extentHeight(extent::getHeight(extent));
+                    auto const extentDepth(extent::getDepth(extent));
+                    auto const dstWidth(extent::getWidth(buf));
+#if !defined(NDEBUG)
+                    auto const dstHeight(extent::getHeight(buf));
+                    auto const dstDepth(extent::getDepth(buf));
+#endif
+                    auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
+                    auto const dstPitchBytesY(mem::view::getPitchBytes<dim::Dim<TView>::value - (2u % dim::Dim<TView>::value)>(buf));
+                    auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
+                    assert(extentWidth <= dstWidth);
+                    assert(extentHeight <= dstHeight);
+                    assert(extentDepth <= dstDepth);
 
-                    //~ // Fill HIP parameter structures.
-                    //~ hipPitchedPtr const hipPitchedPtrVal(
-                        //~ make_hipPitchedPtr(
-                            //~ dstNativePtr,
-                            //~ static_cast<size_t>(dstPitchBytesX),
-                            //~ static_cast<size_t>(dstWidth * static_cast<Idx>(sizeof(Elem))),
-                            //~ static_cast<size_t>(dstPitchBytesY/dstPitchBytesX)));
+                    // Fill HIP parameter structures.
+                    hipPitchedPtr const hipPitchedPtrVal(
+                        make_hipPitchedPtr(
+                            dstNativePtr,
+                            static_cast<size_t>(dstPitchBytesX),
+                            static_cast<size_t>(dstWidth * static_cast<Idx>(sizeof(Elem))),
+                            static_cast<size_t>(dstPitchBytesY/dstPitchBytesX)));
 
-                    //~ hipExtent const hipExtentVal(
-                        //~ make_hipExtent(
-                            //~ static_cast<size_t>(extentWidth * static_cast<Idx>(sizeof(Elem))),
-                            //~ static_cast<size_t>(extentHeight),
-                            //~ static_cast<size_t>(extentDepth)));
+                    hipExtent const hipExtentVal(
+                        make_hipExtent(
+                            static_cast<size_t>(extentWidth * static_cast<Idx>(sizeof(Elem))),
+                            static_cast<size_t>(extentHeight),
+                            static_cast<size_t>(extentDepth)));
 
-                    //~ // Set the current device.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipSetDevice(
-                            //~ iDevice));
-                    //~ // Initiate the memory set.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipMemset3DAsync(
-                            //~ hipPitchedPtrVal,
-                            //~ static_cast<int>(byte),
-                            //~ hipExtentVal,
-                            //~ queue.m_spQueueHipRtAsyncImpl->m_HipQueue));
-                //~ }
-            //~ };
+                    // Set the current device.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipSetDevice(
+                            iDevice));
+                    // Initiate the memory set.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipMemset3DAsync(
+                            hipPitchedPtrVal,
+                            static_cast<int>(byte),
+                            hipExtentVal,
+                            queue.m_spQueueImpl->m_HipQueue));
+                }
+            };
             //#############################################################################
             //! The HIP sync device queue 3D set enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TView,
-                //~ typename TExtent>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+            template<
+                typename TView,
+                typename TExtent>
+            struct Enqueue<
+                queue::QueueHipRtSync,
+                mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtSync &,
+                    mem::view::hip::detail::TaskSetHip<dim::DimInt<3u>, TView, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == 3u,
-                        //~ "The destination buffer is required to be 3-dimensional for this specialization!");
-                    //~ static_assert(
-                        //~ dim::Dim<TView>::value == dim::Dim<TExtent>::value,
-                        //~ "The destination buffer and the extent are required to have the same dimensionality!");
+                    static_assert(
+                        dim::Dim<TView>::value == 3u,
+                        "The destination buffer is required to be 3-dimensional for this specialization!");
+                    static_assert(
+                        dim::Dim<TView>::value == dim::Dim<TExtent>::value,
+                        "The destination buffer and the extent are required to have the same dimensionality!");
 
-                    //~ using Elem = alpaka::elem::Elem<TView>;
-                    //~ using Idx = size::Idx<TExtent>;
+                    using Elem = alpaka::elem::Elem<TView>;
+                    using Idx = idx::Idx<TExtent>;
 
-                    //~ auto & buf(task.m_buf);
-                    //~ auto const & byte(task.m_byte);
-                    //~ auto const & extent(task.m_extent);
-                    //~ auto const & iDevice(task.m_iDevice);
+                    auto & buf(task.m_buf);
+                    auto const & byte(task.m_byte);
+                    auto const & extent(task.m_extent);
+                    auto const & iDevice(task.m_iDevice);
 
-                    //~ auto const extentWidth(extent::getWidth(extent));
-                    //~ auto const extentHeight(extent::getHeight(extent));
-                    //~ auto const extentDepth(extent::getDepth(extent));
-                    //~ auto const dstWidth(extent::getWidth(buf));
-//~ #if !defined(NDEBUG)
-                    //~ auto const dstHeight(extent::getHeight(buf));
-                    //~ auto const dstDepth(extent::getDepth(buf));
-//~ #endif
-                    //~ auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
-                    //~ auto const dstPitchBytesY(mem::view::getPitchBytes<dim::Dim<TView>::value - (2u % dim::Dim<TView>::value)>(buf));
-                    //~ auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
-                    //~ assert(extentWidth <= dstWidth);
-                    //~ assert(extentHeight <= dstHeight);
-                    //~ assert(extentDepth <= dstDepth);
+                    auto const extentWidth(extent::getWidth(extent));
+                    auto const extentHeight(extent::getHeight(extent));
+                    auto const extentDepth(extent::getDepth(extent));
+                    auto const dstWidth(extent::getWidth(buf));
+#if !defined(NDEBUG)
+                    auto const dstHeight(extent::getHeight(buf));
+                    auto const dstDepth(extent::getDepth(buf));
+#endif
+                    auto const dstPitchBytesX(mem::view::getPitchBytes<dim::Dim<TView>::value - 1u>(buf));
+                    auto const dstPitchBytesY(mem::view::getPitchBytes<dim::Dim<TView>::value - (2u % dim::Dim<TView>::value)>(buf));
+                    auto const dstNativePtr(reinterpret_cast<void *>(mem::view::getPtrNative(buf)));
+                    assert(extentWidth <= dstWidth);
+                    assert(extentHeight <= dstHeight);
+                    assert(extentDepth <= dstDepth);
 
-                    //~ // Fill HIP parameter structures.
-                    //~ hipPitchedPtr const hipPitchedPtrVal(
-                        //~ make_hipPitchedPtr(
-                            //~ dstNativePtr,
-                            //~ static_cast<size_t>(dstPitchBytesX),
-                            //~ static_cast<size_t>(dstWidth * static_cast<Idx>(sizeof(Elem))),
-                            //~ static_cast<size_t>(dstPitchBytesY/dstPitchBytesX)));
+                    // Fill HIP parameter structures.
+                    hipPitchedPtr const hipPitchedPtrVal(
+                        make_hipPitchedPtr(
+                            dstNativePtr,
+                            static_cast<size_t>(dstPitchBytesX),
+                            static_cast<size_t>(dstWidth * static_cast<Idx>(sizeof(Elem))),
+                            static_cast<size_t>(dstPitchBytesY/dstPitchBytesX)));
 
-                    //~ hipExtent const hipExtentVal(
-                        //~ make_hipExtent(
-                            //~ static_cast<size_t>(extentWidth * static_cast<Idx>(sizeof(Elem))),
-                            //~ static_cast<size_t>(extentHeight),
-                            //~ static_cast<size_t>(extentDepth)));
+                    hipExtent const hipExtentVal(
+                        make_hipExtent(
+                            static_cast<size_t>(extentWidth * static_cast<Idx>(sizeof(Elem))),
+                            static_cast<size_t>(extentHeight),
+                            static_cast<size_t>(extentDepth)));
 
-                    //~ // Set the current device.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipSetDevice(
-                            //~ iDevice));
-                    //~ // Initiate the memory set.
-                    //~ ALPAKA_HIP_RT_CHECK(
-                        //~ hipMemset3D(
-                            //~ hipPitchedPtrVal,
-                            //~ static_cast<int>(byte),
-                            //~ hipExtentVal));
-                //~ }
-            //~ };
+                    // Set the current device.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipSetDevice(
+                            iDevice));
+                    // Initiate the memory set.
+                    ALPAKA_HIP_RT_CHECK(
+                        hipMemset3D(
+                            hipPitchedPtrVal,
+                            static_cast<int>(byte),
+                            hipExtentVal));
+                }
+            };
+
         }
     }
 }

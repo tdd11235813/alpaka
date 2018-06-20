@@ -23,7 +23,7 @@
 
 #include <alpaka/core/Common.hpp>
 
-#if !BOOST_ARCH_PTX && !BOOST_ARCH_HIP_DEVICE
+#if !BOOST_ARCH_PTX && !BOOST_ARCH_HSA
     #include <boost/core/ignore_unused.hpp>
 #endif
 
@@ -53,7 +53,7 @@ namespace alpaka
                 ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_HOST_ACC static auto assertValueUnsigned(
 #ifdef NDEBUG
-#if !BOOST_ARCH_PTX && !BOOST_ARCH_HIP_DEVICE
+#if !BOOST_ARCH_PTX && !BOOST_ARCH_HSA
                     TArg const & arg)
 #else
                     TArg const &)
@@ -64,7 +64,7 @@ namespace alpaka
                 -> void
                 {
 #ifdef NDEBUG
-#if !BOOST_ARCH_PTX && !BOOST_ARCH_HIP_DEVICE
+#if !BOOST_ARCH_PTX && !BOOST_ARCH_HSA
                     boost::ignore_unused(arg);
 #endif
 #else
@@ -81,14 +81,14 @@ namespace alpaka
             {
                 ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_HOST_ACC static auto assertValueUnsigned(
-#if !BOOST_ARCH_PTX && !BOOST_ARCH_HIP_DEVICE
+#if !BOOST_ARCH_PTX && !BOOST_ARCH_HSA
                     TArg const & arg)
 #else
                     TArg const &)
 #endif
                 -> void
                 {
-#if !BOOST_ARCH_PTX && !BOOST_ARCH_HIP_DEVICE
+#if !BOOST_ARCH_PTX && !BOOST_ARCH_HSA
                     boost::ignore_unused(arg);
 #endif
                     // Nothing to do for unsigned types.

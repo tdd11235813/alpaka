@@ -30,8 +30,11 @@
 // When compiling the tests with CUDA enabled (nvcc or native clang) on the CI infrastructure
 // we have to dramatically reduce the number of tested combinations.
 // Else the log length would be exceeded.
-#if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA && defined(ALPAKA_CI)
+#if defined(ALPAKA_CI)
+  #if defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA \
+   || defined(ALPAKA_ACC_HIP_ENABLED) && BOOST_LANG_HIP && !BOOST_COMP_HCC
     #define ALPAKA_CUDA_CI
+  #endif
 #endif
 
 namespace alpaka
@@ -136,16 +139,16 @@ namespace alpaka
                     typename TIdx>
                 using AccGpuCudaRtIfAvailableElseInt = int;
 #endif
-#if defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
+#if defined(ALPAKA_ACC_HIP_ENABLED) && BOOST_LANG_HIP
                 template<
                     typename TDim,
                     typename TIdx>
-                using AccGpuHipRtIfAvailableElseInt = alpaka::acc::AccGpuHipRt<TDim, TIdx>;
+                using AccHipRtIfAvailableElseInt = alpaka::acc::AccHipRt<TDim, TIdx>;
 #else
                 template<
                     typename TDim,
                     typename TIdx>
-                using AccGpuHipRtIfAvailableElseInt = int;
+                using AccHipRtIfAvailableElseInt = int;
 #endif
                 //#############################################################################
                 //! A vector containing all available accelerators and void's.
@@ -162,7 +165,7 @@ namespace alpaka
                         AccCpuOmp2ThreadsIfAvailableElseInt<TDim, TIdx>,
                         AccCpuOmp4IfAvailableElseInt<TDim, TIdx>,
                         AccGpuCudaRtIfAvailableElseInt<TDim, TIdx>,
-                        AccGpuHipRtIfAvailableElseInt<TDim, TIdx>
+                        AccHipRtIfAvailableElseInt<TDim, TIdx>
                     >;
             }
 
@@ -214,7 +217,7 @@ namespace alpaka
                 os << std::endl;
             }
 
-#if defined(ALPAKA_CUDA_CI) || defined(ALPAKA_HIP_CUDA_CI)
+#if defined(ALPAKA_CUDA_CI)
             //#############################################################################
             //! A std::tuple holding dimensions.
             using TestDims =
@@ -224,7 +227,7 @@ namespace alpaka
                     alpaka::dim::DimInt<3u>
             // The CUDA accelerator does not currently support 4D buffers and 4D acceleration.
 #if !(defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA)
-  #if !(defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP)
+  #if !(defined(ALPAKA_ACC_HIP_ENABLED) && BOOST_LANG_HIP)
                     /*,alpaka::dim::DimInt<4u>*/
   #endif
 #endif
@@ -256,7 +259,7 @@ namespace alpaka
                     alpaka::dim::DimInt<3u>
             // The CUDA & HIP accelerators do not currently support 4D buffers and 4D acceleration.
 #if !(defined(ALPAKA_ACC_GPU_CUDA_ENABLED) && BOOST_LANG_CUDA)
-  #if !(defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP)
+  #if !(defined(ALPAKA_ACC_HIP_ENABLED) && BOOST_LANG_HIP)
                     ,alpaka::dim::DimInt<4u>
   #endif
 #endif

@@ -21,18 +21,19 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
 
-//#if !defined(__HIPCC__)
-//    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
-//#endif
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <alpaka/idx/Traits.hpp>            // idx::getIdx
+#include <alpaka/idx/Traits.hpp>
 
-#include <alpaka/vec/Vec.hpp>               // Vec, offset::getOffsetVecEnd
+#include <alpaka/vec/Vec.hpp>
 #include <alpaka/core/Hip.hpp>
+#include <alpaka/core/Positioning.hpp>
 
 //#include <boost/core/ignore_unused.hpp>   // boost::ignore_unused
 
@@ -54,27 +55,15 @@ namespace alpaka
                 using IdxBtBase = IdxBtHipBuiltIn;
 
                 //-----------------------------------------------------------------------------
-                //! Default constructor.
-                //-----------------------------------------------------------------------------
                 IdxBtHipBuiltIn() = default;
-                //-----------------------------------------------------------------------------
-                //! Copy constructor.
                 //-----------------------------------------------------------------------------
                 IdxBtHipBuiltIn(IdxBtHipBuiltIn const &) = delete;
                 //-----------------------------------------------------------------------------
-                //! Move constructor.
-                //-----------------------------------------------------------------------------
                 IdxBtHipBuiltIn(IdxBtHipBuiltIn &&) = delete;
-                //-----------------------------------------------------------------------------
-                //! Copy assignment operator.
                 //-----------------------------------------------------------------------------
                 auto operator=(IdxBtHipBuiltIn const & ) -> IdxBtHipBuiltIn & = delete;
                 //-----------------------------------------------------------------------------
-                //! Move assignment operator.
-                //-----------------------------------------------------------------------------
                 auto operator=(IdxBtHipBuiltIn &&) -> IdxBtHipBuiltIn & = delete;
-                //-----------------------------------------------------------------------------
-                //! Destructor.
                 //-----------------------------------------------------------------------------
                 /*virtual*/ ~IdxBtHipBuiltIn() = default;
             };
@@ -104,7 +93,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The GPU HIP accelerator block thread index get trait specialization.
-            //#############################################################################
             template<
                 typename TDim,
                 typename TIdx>
@@ -115,7 +103,6 @@ namespace alpaka
             {
                 //-----------------------------------------------------------------------------
                 //! \return The index of the current thread in the block.
-                //-----------------------------------------------------------------------------
                 template<
                     typename TWorkDiv>
                 ALPAKA_FN_ACC_HIP_ONLY static auto getIdx(

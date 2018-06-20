@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 // This is not currently supported by HIP
 #if !BOOST_COMP_HIPCC
@@ -68,7 +72,7 @@ namespace alpaka
                     // After calling this constructor the instance is not valid initialized and
                     // need to be overwritten with a valid object
                     //-----------------------------------------------------------------------------
-                    ALPAKA_FN_ACC_HIP_ONLY Xor() = default;
+                    Xor() = default;
 
                     //-----------------------------------------------------------------------------
                     //! Constructor.
@@ -170,7 +174,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     //! Constructor.
                     //-----------------------------------------------------------------------------
-                    ALPAKA_FN_ACC_HIP_ONLY UniformReal() = default;
+                    UniformReal() = default;
 
                     //-----------------------------------------------------------------------------
                     //! Call operator.

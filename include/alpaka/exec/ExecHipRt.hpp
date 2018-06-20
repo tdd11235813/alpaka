@@ -21,12 +21,12 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>
 
 #if !BOOST_LANG_HIP
-    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
 
 // Specialized traits.
@@ -39,7 +39,7 @@
 #include <alpaka/queue/Traits.hpp>
 
 // Implementation details.
-#include <alpaka/acc/AccGpuHipRt.hpp>
+#include <alpaka/acc/AccHipRt.hpp>
 #include <alpaka/dev/DevHipRt.hpp>
 
 #include <alpaka/kernel/Traits.hpp>
@@ -91,13 +91,13 @@ namespace alpaka
                     TKernelFnObj const kernelFnObj,
                     TArgs ... args)
                 {
-//#if BOOST_ARCH_HIP_DEVICE && (BOOST_ARCH_HIP_DEVICE < BOOST_VERSION_NUMBER(2, 0, 0))
+//#if BOOST_ARCH_HSA_DEVICE && (BOOST_ARCH_HSA_DEVICE < BOOST_VERSION_NUMBER(2, 0, 0))
 //    #error "Hip device capability >= 2.0 is required!"
 //#endif
-                    acc::AccGpuHipRt<TDim, TIdx> acc(threadElemExtent);
+                    acc::AccHipRt<TDim, TIdx> acc(threadElemExtent);
 
                     kernelFnObj(
-                        const_cast<acc::AccGpuHipRt<TDim, TIdx> const &>(acc),
+                        const_cast<acc::AccHipRt<TDim, TIdx> const &>(acc),
                         args...);
                 }
             }
@@ -146,23 +146,23 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             //! Copy constructor.
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST ExecGpuHipRt(ExecGpuHipRt const &) = default;
+            ExecGpuHipRt(ExecGpuHipRt const &) = default;
             //-----------------------------------------------------------------------------
             //! Move constructor.
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST ExecGpuHipRt(ExecGpuHipRt &&) = default;
+            ExecGpuHipRt(ExecGpuHipRt &&) = default;
             //-----------------------------------------------------------------------------
             //! Copy assignment operator.
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST auto operator=(ExecGpuHipRt const &) -> ExecGpuHipRt & = default;
+            auto operator=(ExecGpuHipRt const &) -> ExecGpuHipRt & = default;
             //-----------------------------------------------------------------------------
             //! Move assignment operator.
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST auto operator=(ExecGpuHipRt &&) -> ExecGpuHipRt & = default;
+            auto operator=(ExecGpuHipRt &&) -> ExecGpuHipRt & = default;
             //-----------------------------------------------------------------------------
             //! Destructor.
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_HOST ~ExecGpuHipRt() = default;
+            ~ExecGpuHipRt() = default;
 
             TKernelFnObj m_kernelFnObj;
             std::tuple<TArgs...> m_args;
@@ -184,7 +184,7 @@ namespace alpaka
             struct AccType<
                 exec::ExecGpuHipRt<TDim, TIdx, TKernelFnObj, TArgs...>>
             {
-                using type = acc::AccGpuHipRt<TDim, TIdx>;
+                using type = acc::AccHipRt<TDim, TIdx>;
             };
         }
     }
@@ -332,9 +332,9 @@ namespace alpaka
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_MINIMAL
                     // This checks for a valid work division that is also compliant with the maxima of the accelerator.
-                    if(!workdiv::isValidWorkDiv<acc::AccGpuHipRt<TDim, TIdx>>(dev::getDev(queue), task))
+                    if(!workdiv::isValidWorkDiv<acc::AccHipRt<TDim, TIdx>>(dev::getDev(queue), task))
                     {
-                        throw std::runtime_error("The given work division is not valid or not supported by the device of type " + acc::getAccName<acc::AccGpuHipRt<TDim, TIdx>>() + "!");
+                        throw std::runtime_error("The given work division is not valid or not supported by the device of type " + acc::getAccName<acc::AccHipRt<TDim, TIdx>>() + "!");
                     }
 #endif
 
@@ -345,7 +345,7 @@ namespace alpaka
                             {
                                 return
                                     kernel::getBlockSharedMemDynSizeBytes<
-                                        acc::AccGpuHipRt<TDim, TIdx>>(
+                                        acc::AccHipRt<TDim, TIdx>>(
                                             task.m_kernelFnObj,
                                             blockThreadExtent,
                                             threadElemExtent,
@@ -470,9 +470,9 @@ namespace alpaka
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_MINIMAL
                     // This checks for a valid work division that is also compliant with the maxima of the accelerator.
-                    if(!workdiv::isValidWorkDiv<acc::AccGpuHipRt<TDim, TIdx>>(dev::getDev(queue), task))
+                    if(!workdiv::isValidWorkDiv<acc::AccHipRt<TDim, TIdx>>(dev::getDev(queue), task))
                     {
-                        throw std::runtime_error("The given work division is not valid or not supported by the device of type " + acc::getAccName<acc::AccGpuHipRt<TDim, TIdx>>() + "!");
+                        throw std::runtime_error("The given work division is not valid or not supported by the device of type " + acc::getAccName<acc::AccHipRt<TDim, TIdx>>() + "!");
                     }
 #endif
 
@@ -483,7 +483,7 @@ namespace alpaka
                             {
                                 return
                                     kernel::getBlockSharedMemDynSizeBytes<
-                                        acc::AccGpuHipRt<TDim, TIdx>>(
+                                        acc::AccHipRt<TDim, TIdx>>(
                                             task.m_kernelFnObj,
                                             blockThreadExtent,
                                             threadElemExtent,

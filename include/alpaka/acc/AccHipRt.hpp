@@ -21,12 +21,12 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>
 
 #if !BOOST_LANG_HIP
-    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
 
 // Base classes.
@@ -77,7 +77,7 @@ namespace alpaka
         template<
             typename TDim,
             typename TIdx>
-        class AccGpuHipRt final :
+        class AccHipRt final :
             public workdiv::WorkDivHipBuiltIn<TDim, TIdx>,
             public idx::gb::IdxGbHipBuiltIn<TDim, TIdx>,
             public idx::bt::IdxBtHipBuiltIn<TDim, TIdx>,
@@ -95,7 +95,7 @@ namespace alpaka
         {
         public:
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(
+            ALPAKA_FN_ACC_HIP_ONLY AccHipRt(
                 vec::Vec<TDim, TIdx> const & threadElemExtent) :
                     workdiv::WorkDivHipBuiltIn<TDim, TIdx>(threadElemExtent),
                     idx::gb::IdxGbHipBuiltIn<TDim, TIdx>(),
@@ -115,15 +115,15 @@ namespace alpaka
 
         public:
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(AccGpuHipRt const &) = delete;
+            ALPAKA_FN_ACC_HIP_ONLY AccHipRt(AccHipRt const &) = delete;
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_ACC_HIP_ONLY AccGpuHipRt(AccGpuHipRt &&) = delete;
+            ALPAKA_FN_ACC_HIP_ONLY AccHipRt(AccHipRt &&) = delete;
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccGpuHipRt const &) -> AccGpuHipRt & = delete;
+            ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccHipRt const &) -> AccHipRt & = delete;
             //-----------------------------------------------------------------------------
-            ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccGpuHipRt &&) -> AccGpuHipRt & = delete;
+            ALPAKA_FN_ACC_HIP_ONLY auto operator=(AccHipRt &&) -> AccHipRt & = delete;
             //-----------------------------------------------------------------------------
-            ~AccGpuHipRt() = default;
+            ~AccHipRt() = default;
         };
     }
 
@@ -137,9 +137,9 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct AccType<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
-                using type = acc::AccGpuHipRt<TDim, TIdx>;
+                using type = acc::AccHipRt<TDim, TIdx>;
             };
             //#############################################################################
             //! The GPU HIP accelerator device properties get trait specialization.
@@ -147,7 +147,7 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct GetAccDevProps<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getAccDevProps(
@@ -190,13 +190,13 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct GetAccName<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getAccName()
                 -> std::string
                 {
-                    return "AccGpuHipRt<" + std::to_string(TDim::value) + "," + typeid(TIdx).name() + ">";
+                    return "AccHipRt<" + std::to_string(TDim::value) + "," + typeid(TIdx).name() + ">";
                 }
             };
         }
@@ -211,7 +211,7 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct DevType<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 using type = dev::DevHipRt;
             };
@@ -227,7 +227,7 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct DimType<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 using type = TDim;
             };
@@ -246,7 +246,7 @@ namespace alpaka
                 typename TKernelFnObj,
                 typename... TArgs>
             struct CreateTaskExec<
-                acc::AccGpuHipRt<TDim, TIdx>,
+                acc::AccHipRt<TDim, TIdx>,
                 TWorkDiv,
                 TKernelFnObj,
                 TArgs...>
@@ -287,7 +287,7 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct PltfType<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 using type = pltf::PltfHipRt;
             };
@@ -303,7 +303,7 @@ namespace alpaka
                 typename TDim,
                 typename TIdx>
             struct IdxType<
-                acc::AccGpuHipRt<TDim, TIdx>>
+                acc::AccHipRt<TDim, TIdx>>
             {
                 using type = TIdx;
             };

@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/dev/DevHipRt.hpp>
 
@@ -37,6 +41,9 @@
 #include <stdexcept>
 #include <memory>
 #include <functional>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 
 namespace alpaka
 {
@@ -108,7 +115,7 @@ namespace alpaka
                     {
                         ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                        // Set the current device. \TODO: Is setting the current device before hipQueueDestroy required?
+                        // Set the current device.
                         ALPAKA_HIP_RT_CHECK(
                             hipSetDevice(
                                 m_dev.m_iDevice));

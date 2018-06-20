@@ -21,18 +21,22 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/dev/Traits.hpp>        // dev::traits::DevType
-#include <alpaka/dev/DevHipRt.hpp>	// DevHipRt
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
+
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/dev/DevHipRt.hpp>
 
 #include <alpaka/core/Hip.hpp>
 
-#include <iostream>                     // std::cout
-#include <sstream>                      // std::stringstream
-#include <stdexcept>                    // std::runtime_error
+#include <iostream>
+#include <sstream>
+#include <stdexcept>
 
 namespace alpaka
 {

@@ -38,7 +38,7 @@
 // - BOOST_COMP_CLANG_CUDA
 // - BOOST_LANG_HIP
 // - BOOST_COMP_HCC
-// - BOOST_ARCH_HSA_DEVICE
+// - BOOST_ARCH_HSA
 
 //-----------------------------------------------------------------------------
 // BOOST_PREDEF_MAKE_10_VVRRP(V)
@@ -48,14 +48,16 @@
 
 //---------------------------------------HIP-----------------------------------
 // __HIPCC__ is defined by hipcc (if either __HCC__ or __CUDACC__ is defined)
-#if defined(__HIPCC__)
+#if !defined(BOOST_LANG_HIP)
+  #if defined(__HIPCC__) && ( defined(__CUDACC__) || defined(__HCC__) )
     #include <hip/hip_runtime.h>
     //HIP defines "abort()" as "{asm("trap;");}", which breaks some kernels
     #undef abort
     // there is no HIP_VERSION macro
     #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_AVAILABLE
-#else
+  #else
     #define BOOST_LANG_HIP BOOST_VERSION_NUMBER_NOT_AVAILABLE
+  #endif
 #endif
 
 //-----------------------------------------------------------------------------
@@ -166,7 +168,7 @@
 #if BOOST_LANG_CUDA || BOOST_LANG_HIP
     #define ALPAKA_FN_ACC_NO_CUDA __host__
     #define ALPAKA_FN_ACC_NO_HIP __host__
-    #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE) || defined(ALPAKA_ACC_GPU_HIP_ONLY_MODE)
+    #if defined(ALPAKA_ACC_GPU_CUDA_ONLY_MODE)
         #define ALPAKA_FN_ACC __device__
     #else
         #define ALPAKA_FN_ACC __device__ __host__
@@ -196,7 +198,8 @@
 //!
 //! WARNING: Only use this method if there is no other way.
 //! Most cases can be solved by #if BOOST_ARCH_PTX or #if BOOST_LANG_CUDA.
-#if BOOST_LANG_CUDA && !BOOST_COMP_CLANG_CUDA
+#if (BOOST_LANG_CUDA && !BOOST_COMP_CLANG_CUDA) \
+  || BOOST_LANG_HIP
     #if BOOST_COMP_MSVC
         #define ALPAKA_NO_HOST_ACC_WARNING\
             __pragma(hd_warning_disable)

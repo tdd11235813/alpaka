@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/queue/QueueHipRtSync.hpp>
 #include <alpaka/queue/QueueHipRtAsync.hpp>
@@ -52,7 +56,6 @@ namespace alpaka
                 {
                     //#############################################################################
                     //! The HIP memory copy trait.
-                    //#############################################################################
                     template<
                         typename TDim,
                         typename TViewDst,
@@ -62,7 +65,6 @@ namespace alpaka
 
                     //#############################################################################
                     //! The 1D HIP memory copy trait.
-                    //#############################################################################
                     template<
                         typename TViewDst,
                         typename TViewSrc,
@@ -86,8 +88,6 @@ namespace alpaka
 
                         using Idx = idx::Idx<TExtent>;
 
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
@@ -115,8 +115,6 @@ namespace alpaka
                         }
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         ALPAKA_FN_HOST auto printDebug() const
                         -> void
@@ -540,189 +538,62 @@ namespace alpaka
                 namespace detail
                 {
                     //-----------------------------------------------------------------------------
-                    //!
-                    //-----------------------------------------------------------------------------
-                    //~ template<
-                        //~ typename TExtent,
-                        //~ typename TViewSrc,
-                        //~ typename TViewDst>
-                    //~ ALPAKA_FN_HOST static auto buildHipMemcpy3DParms(
-                        //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3>, TViewDst, TViewSrc, TExtent> const & task)
-                    //~ -> hipMemcpy3DParms
-                    //~ {
-                        //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
+                    template<
+                        typename TExtent,
+                        typename TViewSrc,
+                        typename TViewDst>
+                    ALPAKA_FN_HOST auto buildHipMemcpy3DParms(
+                        mem::view::hip::detail::TaskCopyHip<dim::DimInt<3>, TViewDst, TViewSrc, TExtent> const & task)
+                    -> hipMemcpy3DParms
+                    {
+                        ALPAKA_DEBUG_FULL_LOG_SCOPE;
 
-                        //~ auto const & extentWidthBytes(task.m_extentWidthBytes);
-                        //~ auto const & dstWidth(task.m_dstWidth);
-                        //~ auto const & srcWidth(task.m_srcWidth);
+                        auto const & extentWidthBytes(task.m_extentWidthBytes);
+                        auto const & dstWidth(task.m_dstWidth);
+                        auto const & srcWidth(task.m_srcWidth);
 
-                        //~ auto const & extentHeight(task.m_extentHeight);
-                        //~ //auto const & dstHeight(task.m_dstHeight);
-                        //~ //auto const & srcHeight(task.m_srcHeight);
+                        auto const & extentHeight(task.m_extentHeight);
+                        //auto const & dstHeight(task.m_dstHeight);
+                        //auto const & srcHeight(task.m_srcHeight);
 
-                        //~ auto const & extentDepth(task.m_extentDepth);
+                        auto const & extentDepth(task.m_extentDepth);
 
-                        //~ auto const & dstPitchBytesX(task.m_dstpitchBytesX);
-                        //~ auto const & srcPitchBytesX(task.m_srcpitchBytesX);
-                        //~ auto const & dstPitchBytesY(task.m_dstPitchBytesY);
-                        //~ auto const & srcPitchBytesY(task.m_srcPitchBytesY);
+                        auto const & dstPitchBytesX(task.m_dstpitchBytesX);
+                        auto const & srcPitchBytesX(task.m_srcpitchBytesX);
+                        auto const & dstPitchBytesY(task.m_dstPitchBytesY);
+                        auto const & srcPitchBytesY(task.m_srcPitchBytesY);
 
-                        //~ auto const & dstNativePtr(task.m_dstMemNative);
-                        //~ auto const & srcNativePtr(task.m_srcMemNative);
+                        auto const & dstNativePtr(task.m_dstMemNative);
+                        auto const & srcNativePtr(task.m_srcMemNative);
 
-                        //~ // Fill HIP parameter structure.
-                        //~ hipMemcpy3DParms hipMemCpy3DParms = {};
-                        //~ //hipMemCpy3DParms.srcArray;     // Either srcArray or srcPtr.
-                        //~ //hipMemCpy3DParms.srcPos;       // Optional. Offset in bytes.
+                        // Fill HIP parameter structure.
+                        hipMemcpy3DParms hipMemCpy3DParms;
+                        hipMemCpy3DParms.srcArray = nullptr;  // Either srcArray or srcPtr.
+                        hipMemCpy3DParms.srcPos = make_hipPos(0, 0, 0);  // Optional. Offset in bytes.
+                        hipMemCpy3DParms.srcPtr =
+                            make_hipPitchedPtr(
+                                const_cast<void *>(srcNativePtr),
+                                static_cast<std::size_t>(srcPitchBytesX),
+                                static_cast<std::size_t>(srcWidth),
+                                static_cast<std::size_t>(srcPitchBytesY/srcPitchBytesX));
+                        hipMemCpy3DParms.dstArray = nullptr;  // Either dstArray or dstPtr.
+                        hipMemCpy3DParms.dstPos = make_hipPos(0, 0, 0);  // Optional. Offset in bytes.
+                        hipMemCpy3DParms.dstPtr =
+                            make_hipPitchedPtr(
+                                dstNativePtr,
+                                static_cast<std::size_t>(dstPitchBytesX),
+                                static_cast<std::size_t>(dstWidth),
+                                static_cast<std::size_t>(dstPitchBytesY/dstPitchBytesX));
+                        hipMemCpy3DParms.extent =
+                            make_hipExtent(
+                                static_cast<std::size_t>(extentWidthBytes),
+                                static_cast<std::size_t>(extentHeight),
+                                static_cast<std::size_t>(extentDepth));
+                        // TODO: deal with HCC as well
+                        hipMemCpy3DParms.kind = hipMemcpyKindToCudaMemcpyKind(task.m_hipMemCpyKind);
 
-                        //~ hipMemCpy3DParms.srcPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ const_cast<void *>(srcNativePtr),
-                                //~ static_cast<std::size_t>(srcPitchBytesX),
-                                //~ static_cast<std::size_t>(srcWidth),
-                                //~ static_cast<std::size_t>(srcPitchBytesY/srcPitchBytesX));
-                        //~ //hipMemCpy3DParms.dstArray;     // Either dstArray or dstPtr.
-                        //~ //hipMemCpy3DParms.dstPos;       // Optional. Offset in bytes.
-                        //~ hipMemCpy3DParms.dstPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ dstNativePtr,
-                                //~ static_cast<std::size_t>(dstPitchBytesX),
-                                //~ static_cast<std::size_t>(dstWidth),
-                                //~ static_cast<std::size_t>(dstPitchBytesY/dstPitchBytesX));
-                        //~ hipMemCpy3DParms.extent =
-                            //~ make_hipExtent(
-                                //~ static_cast<std::size_t>(extentWidthBytes),
-                                //~ static_cast<std::size_t>(extentHeight),
-                                //~ static_cast<std::size_t>(extentDepth));
-                        //~ hipMemCpy3DParms.kind = task.m_hipMemCpyKind;
-
-                        //~ return hipMemCpy3DParms;
-                    //~ }
-                    //-----------------------------------------------------------------------------
-                    //!
-                    //-----------------------------------------------------------------------------
-
-                    //~ template<
-                        //~ typename TViewDst,
-                        //~ typename TViewSrc,
-                        //~ typename TExtent>
-                    //~ ALPAKA_FN_HOST static auto buildHipMemcpy3DPeerParms(
-                        //~ mem::view::hip::detail::TaskCopy<dim::DimInt<2>, TViewDst, TViewSrc, TExtent> const & task)
-                    //~ -> hipMemcpy3DPeerParms
-                    //~ {
-                        //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
-
-                        //~ auto const & iDstDev(task.m_iDstDevice);
-                        //~ auto const & iSrcDev(task.m_iSrcDevice);
-
-                        //~ auto const & extentWidthBytes(task.m_extentWidthBytes);
-                        //~ auto const & dstWidth(task.m_dstWidth);
-                        //~ auto const & srcWidth(task.m_srcWidth);
-
-                        //~ auto const & extentHeight(task.m_extentHeight);
-                        //~ //auto const & dstHeight(task.m_dstHeight);
-                        //~ //auto const & srcHeight(task.m_srcHeight);
-
-                        //~ auto const extentDepth(1u);
-
-                        //~ auto const & dstPitchBytesX(task.m_dstpitchBytesX);
-                        //~ auto const & srcPitchBytesX(task.m_srcpitchBytesX);
-                        //~ auto const & dstPitchBytesY(task.m_dstPitchBytesY);
-                        //~ auto const & srcPitchBytesY(task.m_srcPitchBytesY);
-
-                        //~ auto const & dstNativePtr(task.m_dstMemNative);
-                        //~ auto const & srcNativePtr(task.m_srcMemNative);
-
-                        //~ // Fill HIP parameter structure.
-                        //~ hipMemcpy3DPeerParms hipMemCpy3DPeerParms = {};
-                        //~ //hipMemCpy3DPeerParms.dstArray;     // Either dstArray or dstPtr.
-                        //~ hipMemCpy3DPeerParms.dstDevice = iDstDev;
-                        //~ //hipMemCpy3DPeerParms.dstPos;       // Optional. Offset in bytes.
-                        //~ hipMemCpy3DPeerParms.dstPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ dstNativePtr,
-                                //~ static_cast<std::size_t>(dstPitchBytesX),
-                                //~ static_cast<std::size_t>(dstWidth),
-                                //~ static_cast<std::size_t>(dstPitchBytesY/dstPitchBytesX));
-                        //~ hipMemCpy3DPeerParms.extent =
-                            //~ make_hipExtent(
-                                //~ static_cast<std::size_t>(extentWidthBytes),
-                                //~ static_cast<std::size_t>(extentHeight),
-                                //~ static_cast<std::size_t>(extentDepth));
-                        //~ //hipMemCpy3DPeerParms.srcArray;     // Either srcArray or srcPtr.
-                        //~ hipMemCpy3DPeerParms.srcDevice = iSrcDev;
-                        //~ //hipMemCpy3DPeerParms.srcPos;       // Optional. Offset in bytes.
-                        //~ hipMemCpy3DPeerParms.srcPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ const_cast<void *>(srcNativePtr),
-                                //~ static_cast<std::size_t>(srcPitchBytesX),
-                                //~ static_cast<std::size_t>(srcWidth),
-                                //~ static_cast<std::size_t>(srcPitchBytesY/srcPitchBytesX));
-
-                        //~ return hipMemCpy3DPeerParms;
-                    //~ }
-                    //-----------------------------------------------------------------------------
-                    //!
-                    //-----------------------------------------------------------------------------
-                    //~ template<
-                        //~ typename TViewDst,
-                        //~ typename TViewSrc,
-                        //~ typename TExtent>
-                    //~ ALPAKA_FN_HOST static auto buildHipMemcpy3DPeerParms(
-                        //~ mem::view::hip::detail::TaskCopy<dim::DimInt<3>, TViewDst, TViewSrc, TExtent> const & task)
-                    //~ -> hipMemcpy3DPeerParms
-                    //~ {
-                        //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
-
-                        //~ auto const & iDstDev(task.m_iDstDevice);
-                        //~ auto const & iSrcDev(task.m_iSrcDevice);
-
-                        //~ auto const & extentWidthBytes(task.m_extentWidthBytes);
-                        //~ auto const & dstWidth(task.m_dstWidth);
-                        //~ auto const & srcWidth(task.m_srcWidth);
-
-                        //~ auto const & extentHeight(task.m_extentHeight);
-                        //~ //auto const & dstHeight(task.m_dstHeight);
-                        //~ //auto const & srcHeight(task.m_srcHeight);
-
-                        //~ auto const & extentDepth(task.m_extentDepth);
-
-                        //~ auto const & dstPitchBytesX(task.m_dstpitchBytesX);
-                        //~ auto const & srcPitchBytesX(task.m_srcpitchBytesX);
-                        //~ auto const & dstPitchBytesY(task.m_dstPitchBytesY);
-                        //~ auto const & srcPitchBytesY(task.m_srcPitchBytesY);
-
-                        //~ auto const & dstNativePtr(task.m_dstMemNative);
-                        //~ auto const & srcNativePtr(task.m_srcMemNative);
-
-                        //~ // Fill HIP parameter structure.
-                        //~ hipMemcpy3DPeerParms hipMemCpy3DPeerParms = {};
-                        //~ //hipMemCpy3DPeerParms.dstArray;     // Either dstArray or dstPtr.
-                        //~ hipMemCpy3DPeerParms.dstDevice = iDstDev;
-                        //~ //hipMemCpy3DPeerParms.dstPos;       // Optional. Offset in bytes.
-                        //~ hipMemCpy3DPeerParms.dstPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ dstNativePtr,
-                                //~ static_cast<std::size_t>(dstPitchBytesX),
-                                //~ static_cast<std::size_t>(dstWidth),
-                                //~ static_cast<std::size_t>(dstPitchBytesY/dstPitchBytesX));
-                        //~ hipMemCpy3DPeerParms.extent =
-                            //~ make_hipExtent(
-                                //~ static_cast<std::size_t>(extentWidthBytes),
-                                //~ static_cast<std::size_t>(extentHeight),
-                                //~ static_cast<std::size_t>(extentDepth));
-                        //~ //hipMemCpy3DPeerParms.srcArray;     // Either srcArray or srcPtr.
-                        //~ hipMemCpy3DPeerParms.srcDevice = iSrcDev;
-                        //~ //hipMemCpy3DPeerParms.srcPos;       // Optional. Offset in bytes.
-                        //~ hipMemCpy3DPeerParms.srcPtr =
-                            //~ make_hipPitchedPtr(
-                                //~ const_cast<void *>(srcNativePtr),
-                                //~ static_cast<std::size_t>(srcPitchBytesX),
-                                //~ static_cast<std::size_t>(srcWidth),
-                                //~ static_cast<std::size_t>(srcPitchBytesY/srcPitchBytesX));
-
-                        //~ return hipMemCpy3DPeerParms;
-                    //~ }
+                        return hipMemCpy3DParms;
+                    }
                 }
             }
         }
@@ -914,16 +785,30 @@ namespace alpaka
                     }
                     else
                     {
-                        // There is no hipMemcpy2DPeerAsync, therefore we use hipMemcpy3DPeerAsync.
+                        auto const & extentWidthBytes(task.m_extentWidthBytes);
+                        auto const & extentHeight(task.m_extentHeight);
+
+                        auto const & dstPitchBytesX(task.m_dstpitchBytesX);
+                        auto const & srcPitchBytesX(task.m_srcpitchBytesX);
+
+                        auto const & dstNativePtr(task.m_dstMemNative);
+                        auto const & srcNativePtr(task.m_srcMemNative);
+
+                        auto const & hipMemCpyKind(task.m_hipMemCpyKind);
+
+                        // TODO: hipMemcpy2DPeer not implemented yet by HIP. Use 2D copy over host RAM.
                         // Create the struct describing the copy.
-                        //~ hipMemcpy3DPeerParms const hipMemCpy3DPeerParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DPeerParms(
-                                //~ task));
-                        // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3DPeerAsync(
-                                //~ &hipMemCpy3DPeerParms,
-                                //~ queue.m_spQueueImpl->m_HipQueue));
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy2DAsync(
+                                dstNativePtr,
+                                static_cast<std::size_t>(dstPitchBytesX),
+                                srcNativePtr,
+                                static_cast<std::size_t>(srcPitchBytesX),
+                                static_cast<std::size_t>(extentWidthBytes),
+                                static_cast<std::size_t>(extentHeight),
+                                hipMemCpyKind,
+                                queue.m_spQueueImpl->m_HipQueue));
+
                     }
                 }
             };
@@ -984,130 +869,143 @@ namespace alpaka
                     }
                     else
                     {
-                        //~ // There is no hipMemcpy2DPeerAsync, therefore we use hipMemcpy3DPeerAsync.
-                        //~ // Create the struct describing the copy.
-                        //~ hipMemcpy3DPeerParms const hipMemCpy3DPeerParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DPeerParms(
-                                //~ task));
-                        //~ // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3DPeer(
-                                //~ &hipMemCpy3DPeerParms));
+                        auto const & extentWidthBytes(task.m_extentWidthBytes);
+                        auto const & extentHeight(task.m_extentHeight);
+
+                        auto const & dstPitchBytesX(task.m_dstpitchBytesX);
+                        auto const & srcPitchBytesX(task.m_srcpitchBytesX);
+
+                        auto const & dstNativePtr(task.m_dstMemNative);
+                        auto const & srcNativePtr(task.m_srcMemNative);
+
+                        auto const & hipMemCpyKind(task.m_hipMemCpyKind);
+
+                        // TODO: hipMemcpy2DPeer not implemented yet by HIP. Use 2D copy over host RAM.
+                        // Create the struct describing the copy.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy2D(
+                                dstNativePtr,
+                                static_cast<std::size_t>(dstPitchBytesX),
+                                srcNativePtr,
+                                static_cast<std::size_t>(srcPitchBytesX),
+                                static_cast<std::size_t>(extentWidthBytes),
+                                static_cast<std::size_t>(extentHeight),
+                                hipMemCpyKind));
+
                     }
                 }
             };
             //#############################################################################
             //! The HIP async device queue 3D copy enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TExtent,
-                //~ typename TViewSrc,
-                //~ typename TViewDst>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtAsync,
-                //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtAsync & queue,
-                    //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
+            template<
+                typename TExtent,
+                typename TViewSrc,
+                typename TViewDst>
+            struct Enqueue<
+                queue::QueueHipRtAsync,
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtAsync & queue,
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_FULL_LOG_SCOPE;
 
-//~ #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
-                    //~ task.printDebug();
-//~ #endif
-                    //~ auto const & iDstDev(task.m_iDstDevice);
-                    //~ auto const & iSrcDev(task.m_iSrcDevice);
+#if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
+                    task.printDebug();
+#endif
+                    auto const & iDstDev(task.m_iDstDevice);
+                    auto const & iSrcDev(task.m_iSrcDevice);
 
-                    //~ if(iDstDev == iSrcDev)
-                    //~ {
-                        //~ // Create the struct describing the copy.
-                        //~ hipMemcpy3DParms const hipMemCpy3DParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DParms(
-                                //~ task));
-                        //~ // Set the current device.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipSetDevice(
-                                //~ iDstDev));
-                        //~ // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3DAsync(
-                                //~ &hipMemCpy3DParms,
-                                //~ queue.m_spQueueImpl->m_HipQueue));
-                    //~ }
-                    //~ else
-                    //~ {
-                        //~ // Create the struct describing the copy.
-                        //~ hipMemcpy3DPeerParms const hipMemCpy3DPeerParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DPeerParms(
-                                //~ task));
-                        //~ // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3DPeerAsync(
-                                //~ &hipMemCpy3DPeerParms,
-                                //~ queue.m_spQueueImpl->m_HipQueue));
-                    //~ }
-                //~ }
-            //~ };
+                    if(iDstDev == iSrcDev)
+                    {
+                        // Create the struct describing the copy.
+                        hipMemcpy3DParms const hipMemCpy3DParms(
+                            mem::view::hip::detail::buildHipMemcpy3DParms(
+                                task));
+                        // Set the current device.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipSetDevice(
+                                iDstDev));
+                        // Initiate the memory copy.
+                        // TODO: hipMemcpy3DAsync not implemented yet by HIP. Use hipMemcpy3D instead.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy3D(
+                                &hipMemCpy3DParms));
+                    }
+                    else
+                    {
+                        // TODO: hipMemcpy3DPeerParms not implemented yet by HIP. Use hipMemcpy3DParms instead.
+                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead. Use 3D copy over host RAM.
+                        //
+                        // Create the struct describing the copy.
+                        hipMemcpy3DParms const hipMemCpy3DParms(
+                            mem::view::hip::detail::buildHipMemcpy3DParms(
+                                task));
+                        // Initiate the memory copy.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy3D(
+                                &hipMemCpy3DParms));
+                    }
+                }
+            };
             //#############################################################################
             //! The HIP sync device queue 3D copy enqueue trait specialization.
-            //#############################################################################
-            //~ template<
-                //~ typename TExtent,
-                //~ typename TViewSrc,
-                //~ typename TViewDst>
-            //~ struct Enqueue<
-                //~ queue::QueueHipRtSync,
-                //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
-            //~ {
-                //~ //-----------------------------------------------------------------------------
-                //~ //
-                //~ //-----------------------------------------------------------------------------
-                //~ ALPAKA_FN_HOST static auto enqueue(
-                    //~ queue::QueueHipRtSync &,
-                    //~ mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
-                //~ -> void
-                //~ {
-                    //~ ALPAKA_DEBUG_FULL_LOG_SCOPE;
+            template<
+                typename TExtent,
+                typename TViewSrc,
+                typename TViewDst>
+            struct Enqueue<
+                queue::QueueHipRtSync,
+                mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent>>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtSync &,
+                    mem::view::hip::detail::TaskCopyHip<dim::DimInt<3u>, TViewDst, TViewSrc, TExtent> const & task)
+                -> void
+                {
+                    ALPAKA_DEBUG_FULL_LOG_SCOPE;
 
-//~ #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
-                    //~ task.printDebug();
-//~ #endif
-                    //~ auto const & iDstDev(task.m_iDstDevice);
-                    //~ auto const & iSrcDev(task.m_iSrcDevice);
+#if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
+                    task.printDebug();
+#endif
+                    auto const & iDstDev(task.m_iDstDevice);
+                    auto const & iSrcDev(task.m_iSrcDevice);
 
-                    //~ if(iDstDev == iSrcDev)
-                    //~ {
-                        //~ // Create the struct describing the copy.
-                        //~ hipMemcpy3DParms const hipMemCpy3DParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DParms(
-                                //~ task));
-                        //~ // Set the current device.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipSetDevice(
-                                //~ iDstDev));
-                        //~ // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3D(
-                                //~ &hipMemCpy3DParms));
-                    //~ }
-                    //~ else
-                    //~ {
-                        //~ // Create the struct describing the copy.
-                        //~ hipMemcpy3DPeerParms const hipMemCpy3DPeerParms(
-                            //~ mem::view::hip::detail::buildHipMemcpy3DPeerParms(
-                                //~ task));
-                        //~ // Initiate the memory copy.
-                        //~ ALPAKA_HIP_RT_CHECK(
-                            //~ hipMemcpy3DPeer(
-                                //~ &hipMemCpy3DPeerParms));
-                    //~ }
-                //~ }
-            //~ };
+                    if(iDstDev == iSrcDev)
+                    {
+                        // Create the struct describing the copy.
+                        hipMemcpy3DParms const hipMemCpy3DParms(
+                            mem::view::hip::detail::buildHipMemcpy3DParms(
+                                task));
+                        // Set the current device.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipSetDevice(
+                                iDstDev));
+                        // Initiate the memory copy.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy3D(
+                                &hipMemCpy3DParms));
+                    }
+                    else
+                    {
+                        // TODO: hipMemcpy3DPeerParms not implemented yet by HIP. Use hipMemcpy3DParms instead.
+                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead. Use 3D copy over host RAM.
+                        //
+                        // Create the struct describing the copy.
+                        hipMemcpy3DParms const hipMemCpy3DParms(
+                            mem::view::hip::detail::buildHipMemcpy3DParms(
+                                task));
+                        // Initiate the memory copy.
+                        ALPAKA_HIP_RT_CHECK(
+                            hipMemcpy3D(
+                                &hipMemCpy3DParms));
+                    }
+                }
+            };
         }
     }
 }

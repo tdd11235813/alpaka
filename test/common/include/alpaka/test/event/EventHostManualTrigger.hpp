@@ -694,3 +694,299 @@ namespace alpaka
     }
 }
 #endif
+
+
+#ifdef ALPAKA_ACC_HIP_ENABLED
+
+#include <hip/hip_runtime.h>
+
+#include <alpaka/core/Common.hpp>
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
+
+#include <alpaka/core/Hip.hpp>
+
+namespace alpaka
+{
+    namespace test
+    {
+        namespace event
+        {
+            namespace hip
+            {
+                namespace detail
+                {
+                    //#############################################################################
+                    class EventHostManualTriggerHipImpl final
+                    {
+                    public:
+                        //-----------------------------------------------------------------------------
+                        ALPAKA_FN_HOST EventHostManualTriggerHipImpl(
+                            dev::DevHipRt const & dev) :
+                                m_dev(dev),
+                                m_mutex(),
+                                m_bIsReady(true)
+                        {
+                            ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+
+                            // Set the current device.
+                            ALPAKA_HIP_RT_CHECK(
+                                hipSetDevice(
+                                    m_dev.m_iDevice));
+                            // Allocate the buffer on this device.
+                            ALPAKA_HIP_RT_CHECK(
+                                hipMalloc(
+                                    &m_devMem,
+                                    static_cast<size_t>(sizeof(int32_t))));
+                            // Initiate the memory set.
+                            ALPAKA_HIP_RT_CHECK(
+                                hipMemset(
+                                    m_devMem,
+                                    static_cast<int>(0u),
+                                    static_cast<size_t>(sizeof(int32_t))));
+                        }
+                        //-----------------------------------------------------------------------------
+                        EventHostManualTriggerHipImpl(EventHostManualTriggerHipImpl const &) = delete;
+                        //-----------------------------------------------------------------------------
+                        EventHostManualTriggerHipImpl(EventHostManualTriggerHipImpl &&) = default;
+                        //-----------------------------------------------------------------------------
+                        auto operator=(EventHostManualTriggerHipImpl const &) -> EventHostManualTriggerHipImpl & = delete;
+                        //-----------------------------------------------------------------------------
+                        auto operator=(EventHostManualTriggerHipImpl &&) -> EventHostManualTriggerHipImpl & = default;
+                        //-----------------------------------------------------------------------------
+                        ALPAKA_FN_HOST ~EventHostManualTriggerHipImpl()
+                        {
+                            ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+
+                            // Set the current device. \TODO: Is setting the current device before hipFree required?
+                            ALPAKA_HIP_RT_CHECK(
+                                hipSetDevice(
+                                    m_dev.m_iDevice));
+                            // Free the buffer.
+                            ALPAKA_HIP_RT_CHECK(hipFree(m_devMem));
+                        }
+
+                        //-----------------------------------------------------------------------------
+                        void trigger()
+                        {
+                            std::unique_lock<std::mutex> lock(m_mutex);
+                            m_bIsReady = true;
+
+                            // Set the current device.
+                            ALPAKA_HIP_RT_CHECK(
+                                hipSetDevice(
+                                    m_dev.m_iDevice));
+                            // Initiate the memory set.
+                            ALPAKA_HIP_RT_CHECK(
+                                hipMemset(
+                                    m_devMem,
+                                    static_cast<int>(1u),
+                                    static_cast<size_t>(sizeof(int32_t))));
+                        }
+
+                    public:
+                        dev::DevHipRt const m_dev;     //!< The device this event is bound to.
+
+                        mutable std::mutex m_mutex;     //!< The mutex used to synchronize access to the event.
+                        void * m_devMem;
+
+                        bool m_bIsReady;                //!< If the event is not waiting within a queue (not enqueued or already completed).
+                    };
+                }
+            }
+
+            //#############################################################################
+            class EventHostManualTriggerHip final
+            {
+            public:
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST EventHostManualTriggerHip(
+                    dev::DevHipRt const & dev) :
+                        m_spEventImpl(std::make_shared<hip::detail::EventHostManualTriggerHipImpl>(dev))
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+                }
+                //-----------------------------------------------------------------------------
+                EventHostManualTriggerHip(EventHostManualTriggerHip const &) = default;
+                //-----------------------------------------------------------------------------
+                EventHostManualTriggerHip(EventHostManualTriggerHip &&) = default;
+                //-----------------------------------------------------------------------------
+                auto operator=(EventHostManualTriggerHip const &) -> EventHostManualTriggerHip & = default;
+                //-----------------------------------------------------------------------------
+                auto operator=(EventHostManualTriggerHip &&) -> EventHostManualTriggerHip & = default;
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST auto operator==(EventHostManualTriggerHip const & rhs) const
+                -> bool
+                {
+                    return (m_spEventImpl == rhs.m_spEventImpl);
+                }
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST auto operator!=(EventHostManualTriggerHip const & rhs) const
+                -> bool
+                {
+                    return !((*this) == rhs);
+                }
+                //-----------------------------------------------------------------------------
+                ~EventHostManualTriggerHip() = default;
+
+                //-----------------------------------------------------------------------------
+                void trigger()
+                {
+                    m_spEventImpl->trigger();
+                }
+
+            public:
+                std::shared_ptr<hip::detail::EventHostManualTriggerHipImpl> m_spEventImpl;
+            };
+
+            namespace traits
+            {
+                //#############################################################################
+                template<>
+                struct EventHostManualTriggerType<
+                    alpaka::dev::DevHipRt>
+                {
+                    using type = alpaka::test::event::EventHostManualTriggerHip;
+                };
+            }
+        }
+    }
+    namespace dev
+    {
+        namespace traits
+        {
+            //#############################################################################
+            //! The CPU device event device get trait specialization.
+            template<>
+            struct GetDev<
+                test::event::EventHostManualTriggerHip>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto getDev(
+                    test::event::EventHostManualTriggerHip const & event)
+                -> dev::DevHipRt
+                {
+                    return event.m_spEventImpl->m_dev;
+                }
+            };
+        }
+    }
+    namespace event
+    {
+        namespace traits
+        {
+            //#############################################################################
+            //! The CPU device event test trait specialization.
+            template<>
+            struct Test<
+                test::event::EventHostManualTriggerHip>
+            {
+                //-----------------------------------------------------------------------------
+                //! \return If the event is not waiting within a queue (not enqueued or already handled).
+                ALPAKA_FN_HOST static auto test(
+                    test::event::EventHostManualTriggerHip const & event)
+                -> bool
+                {
+                    std::lock_guard<std::mutex> lk(event.m_spEventImpl->m_mutex);
+
+                    return event.m_spEventImpl->m_bIsReady;
+                }
+            };
+        }
+    }
+    namespace queue
+    {
+        namespace traits
+        {
+            //#############################################################################
+            template<>
+            struct Enqueue<
+                queue::QueueHipRtAsync,
+                test::event::EventHostManualTriggerHip>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtAsync & queue,
+                    test::event::EventHostManualTriggerHip & event)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+
+                    // Copy the shared pointer to ensure that the event implementation is alive as long as it is enqueued.
+                    auto spEventImpl(event.m_spEventImpl);
+
+                    // Setting the event state and enqueuing it has to be atomic.
+                    std::lock_guard<std::mutex> lk(spEventImpl->m_mutex);
+
+                    // The event should not yet be enqueued.
+                    assert(spEventImpl->m_bIsReady);
+
+                    // Set its state to enqueued.
+                    spEventImpl->m_bIsReady = false;
+
+                    // PGI Profiler`s User Guide:
+                    // The following are known issues related to Events and Metrics:
+                    // * In event or metric profiling, kernel launches are blocking. Thus kernels waiting
+                    //   on host updates may hang. This includes synchronization between the host and
+                    //   the device build upon value-based HIP queue synchronization APIs such as
+                    //   cuStreamWaitValue32() and cuStreamWriteValue32().
+                    // TODO: hipStreamWaitValue32 not available. Implement HCC path.
+#ifdef BOOST_ARCH_PTX
+                    ALPAKA_HIP_RT_CHECK(hipCUResultTohipError(
+                        cuStreamWaitValue32(
+                            static_cast<CUstream>(queue.m_spQueueImpl->m_HipQueue),
+                            reinterpret_cast<CUdeviceptr>(event.m_spEventImpl->m_devMem),
+                            0x01010101u,
+                            CU_STREAM_WAIT_VALUE_GEQ)));
+#endif
+                }
+            };
+            //#############################################################################
+            template<>
+            struct Enqueue<
+                queue::QueueHipRtSync,
+                test::event::EventHostManualTriggerHip>
+            {
+                //-----------------------------------------------------------------------------
+                ALPAKA_FN_HOST static auto enqueue(
+                    queue::QueueHipRtSync & queue,
+                    test::event::EventHostManualTriggerHip & event)
+                -> void
+                {
+                    ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
+
+                    // Copy the shared pointer to ensure that the event implementation is alive as long as it is enqueued.
+                    auto spEventImpl(event.m_spEventImpl);
+
+                    // Setting the event state and enqueuing it has to be atomic.
+                    std::lock_guard<std::mutex> lk(spEventImpl->m_mutex);
+
+                    // The event should not yet be enqueued.
+                    assert(spEventImpl->m_bIsReady);
+
+                    // Set its state to enqueued.
+                    spEventImpl->m_bIsReady = false;
+
+                    // PGI Profiler`s User Guide:
+                    // The following are known issues related to Events and Metrics:
+                    // * In event or metric profiling, kernel launches are blocking. Thus kernels waiting
+                    //   on host updates may hang. This includes synchronization between the host and
+                    //   the device build upon value-based HIP queue synchronization APIs such as
+                    //   cuStreamWaitValue32() and cuStreamWriteValue32().
+                    // TODO: hipStreamWaitValue32 not available. Implement HCC path.
+#ifdef BOOST_ARCH_PTX
+                    ALPAKA_HIP_RT_CHECK(hipCUResultTohipError(
+                        cuStreamWaitValue32(
+                            static_cast<CUstream>(queue.m_spQueueImpl->m_HipQueue),
+                            reinterpret_cast<CUdeviceptr>(event.m_spEventImpl->m_devMem),
+                            0x01010101u,
+                            CU_STREAM_WAIT_VALUE_GEQ)));
+#endif
+                }
+            };
+        }
+    }
+}
+#endif

@@ -21,9 +21,13 @@
 
 #pragma once
 
-#ifdef ALPAKA_ACC_GPU_HIP_ENABLED
+#ifdef ALPAKA_ACC_HIP_ENABLED
 
 #include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
 #include <alpaka/dev/Traits.hpp>        // dev::traits::DevType
 #include <alpaka/mem/buf/Traits.hpp>    // mem::buf::traits::BufType
@@ -50,7 +54,6 @@ namespace alpaka
     {
         //#############################################################################
         //! The HIP RT device handle.
-        //#############################################################################
         class DevHipRt
         {
             friend struct pltf::traits::GetDevByIdx<pltf::PltfHipRt>;
@@ -58,28 +61,22 @@ namespace alpaka
         protected:
             //-----------------------------------------------------------------------------
             //! Constructor.
-            //-----------------------------------------------------------------------------
             DevHipRt() = default;
         public:
             //-----------------------------------------------------------------------------
             //! Copy constructor.
-            //-----------------------------------------------------------------------------
             DevHipRt(DevHipRt const &) = default;
             //-----------------------------------------------------------------------------
             //! Move constructor.
-            //-----------------------------------------------------------------------------
             DevHipRt(DevHipRt &&) = default;
             //-----------------------------------------------------------------------------
             //! Copy assignment operator.
-            //-----------------------------------------------------------------------------
             auto operator=(DevHipRt const &) -> DevHipRt & = default;
             //-----------------------------------------------------------------------------
             //! Move assignment operator.
-            //-----------------------------------------------------------------------------
             auto operator=(DevHipRt &&) -> DevHipRt & = default;
             //-----------------------------------------------------------------------------
             //! Equality comparison operator.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator==(DevHipRt const & rhs) const
             -> bool
             {
@@ -87,7 +84,6 @@ namespace alpaka
             }
             //-----------------------------------------------------------------------------
             //! Inequality comparison operator.
-            //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator!=(DevHipRt const & rhs) const
             -> bool
             {
