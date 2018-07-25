@@ -363,11 +363,16 @@ namespace alpaka
 #endif
                     {
                         TElem* pMemAcc(nullptr);
-                        // TODO: not implemented yet by HIP
-                        // ALPAKA_HIP_RT_CHECK(
-                        //     hipGetSymbolAddress(
-                        //         reinterpret_cast<void **>(&pMemAcc),
-                        //         *pMem));
+#ifdef __HIP_PLATFORM_NVCC__
+                        ALPAKA_HIP_RT_CHECK(hipCUDAErrorTohipError(
+                            cudaGetSymbolAddress(
+                                reinterpret_cast<void **>(&pMemAcc),
+                                *pMem)));
+#else
+                        // TODO: does not work for CUDA, so HCC may fail too.
+                        pMemAcc = HIP_SYMBOL(pMem);
+#endif
+
                         return
                             alpaka::mem::view::ViewPlainPtr<
                                 dev::DevHipRt,

@@ -59,7 +59,7 @@ then
     # HIP_PATH required by HIP tools
     export HIP_PATH=${ALPAKA_CI_HIP_ROOT_DIR}
     # CUDA_PATH requred by HIP tools
-    export CUDA_PATH=/usr/local/cuda-${ALPAKA_CUDA_VER}
+    export CUDA_PATH=/usr/local/cuda-${ALPAKA_CUDA_VERSION}
     export PATH=${HIP_PATH}/bin:$PATH
     export LD_LIBRARY_PATH=${HIP_PATH}/lib64:${LD_LIBRARY_PATH}
     # CMAKE_MODULE_PATH=$HOME/cuda-workspace/alpaka-hip/alpaka/cmake/modules

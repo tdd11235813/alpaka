@@ -533,7 +533,7 @@ namespace alpaka
                     using type = alpaka::test::event::EventHostManualTriggerCuda;
                 };
                 //#############################################################################
-                //! The CPU event host manual trigger support get trait specialization.
+                //! The CUDA event host manual trigger support get trait specialization.
                 template<>
                 struct IsEventHostManualTriggerSupported<
                     alpaka::dev::DevCudaRt>
@@ -850,6 +850,23 @@ namespace alpaka
                 {
                     using type = alpaka::test::event::EventHostManualTriggerHip;
                 };
+
+                //#############################################################################
+                //! The HIP event host manual trigger support get trait specialization.
+                template<>
+                struct IsEventHostManualTriggerSupported<
+                    alpaka::dev::DevHipRt>
+                {
+                    //-----------------------------------------------------------------------------
+                    // TODO: there is no CUDA_VERSION in the HIP compiler path.
+                    // TODO: there is a hipDeviceGetAttribute, but there is no pendant for CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS.
+                    ALPAKA_FN_HOST static auto isSupported(
+                        alpaka::dev::DevHipRt const &)
+                    -> bool
+                    {
+                        return false;
+                    }
+                };
             }
         }
     }
@@ -932,15 +949,18 @@ namespace alpaka
                     //   on host updates may hang. This includes synchronization between the host and
                     //   the device build upon value-based HIP queue synchronization APIs such as
                     //   cuStreamWaitValue32() and cuStreamWriteValue32().
-                    // TODO: hipStreamWaitValue32 not available. Implement HCC path.
-#ifdef BOOST_ARCH_PTX
-                    ALPAKA_HIP_RT_CHECK(hipCUResultTohipError(
-                        cuStreamWaitValue32(
-                            static_cast<CUstream>(queue.m_spQueueImpl->m_HipQueue),
-                            reinterpret_cast<CUdeviceptr>(event.m_spEventImpl->m_devMem),
-                            0x01010101u,
-                            CU_STREAM_WAIT_VALUE_GEQ)));
+                    // TODO: hipStreamWaitValue32 not available, so implement workaround for polling value.
+                    int32_t hostMem=0;
+#if ALPAKA_DEBUG >= ALPAKA_DEBUG_MINIMAL
+                    std::cerr << "[Workaround] polling of device-located value in stream, as hipStreamWaitValue32 is not available.\n";
 #endif
+                    while(hostMem<0x01010101u) {
+                      ALPAKA_HIP_RT_CHECK(hipMemcpyDtoHAsync(&hostMem,
+                                                             reinterpret_cast<hipDeviceptr_t>(event.m_spEventImpl->m_devMem),
+                                                             sizeof(int32_t),
+                                                             queue.m_spQueueImpl->m_HipQueue));
+                      ALPAKA_HIP_RT_CHECK(hipStreamSynchronize(queue.m_spQueueImpl->m_HipQueue));
+                    }
                 }
             };
             //#############################################################################

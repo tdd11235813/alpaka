@@ -23,16 +23,16 @@
 
 #ifdef ALPAKA_ACC_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>       // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
 #if !BOOST_LANG_HIP
     #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
 
-#include <alpaka/dev/Traits.hpp>        // dev::traits::DevType
-#include <alpaka/mem/buf/Traits.hpp>    // mem::buf::traits::BufType
-#include <alpaka/pltf/Traits.hpp>       // pltf::traits::PltfType
-#include <alpaka/wait/Traits.hpp>       // CurrentThreadWaitFor
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/mem/buf/Traits.hpp>
+#include <alpaka/pltf/Traits.hpp>
+#include <alpaka/wait/Traits.hpp>
 
 #include <alpaka/core/Hip.hpp>
 
@@ -60,37 +60,28 @@ namespace alpaka
 
         protected:
             //-----------------------------------------------------------------------------
-            //! Constructor.
             DevHipRt() = default;
         public:
             //-----------------------------------------------------------------------------
-            //! Copy constructor.
             DevHipRt(DevHipRt const &) = default;
             //-----------------------------------------------------------------------------
-            //! Move constructor.
             DevHipRt(DevHipRt &&) = default;
             //-----------------------------------------------------------------------------
-            //! Copy assignment operator.
             auto operator=(DevHipRt const &) -> DevHipRt & = default;
             //-----------------------------------------------------------------------------
-            //! Move assignment operator.
             auto operator=(DevHipRt &&) -> DevHipRt & = default;
             //-----------------------------------------------------------------------------
-            //! Equality comparison operator.
             ALPAKA_FN_HOST auto operator==(DevHipRt const & rhs) const
             -> bool
             {
                 return m_iDevice == rhs.m_iDevice;
             }
             //-----------------------------------------------------------------------------
-            //! Inequality comparison operator.
             ALPAKA_FN_HOST auto operator!=(DevHipRt const & rhs) const
             -> bool
             {
                 return !((*this) == rhs);
             }
-            //-----------------------------------------------------------------------------
-            //! Destructor.
             //-----------------------------------------------------------------------------
             ~DevHipRt() = default;
 
@@ -105,13 +96,10 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP RT device name get trait specialization.
-            //#############################################################################
             template<>
             struct GetName<
                 dev::DevHipRt>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getName(
                     dev::DevHipRt const & dev)
@@ -129,13 +117,10 @@ namespace alpaka
 
             //#############################################################################
             //! The HIP RT device available memory get trait specialization.
-            //#############################################################################
             template<>
             struct GetMemBytes<
                 dev::DevHipRt>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getMemBytes(
                     dev::DevHipRt const & dev)
@@ -161,13 +146,10 @@ namespace alpaka
 
             //#############################################################################
             //! The HIP RT device free memory get trait specialization.
-            //#############################################################################
             template<>
             struct GetFreeMemBytes<
                 dev::DevHipRt>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getFreeMemBytes(
                     dev::DevHipRt const & dev)
@@ -192,13 +174,10 @@ namespace alpaka
 
             //#############################################################################
             //! The HIP RT device reset trait specialization.
-            //#############################################################################
             template<>
             struct Reset<
                 dev::DevHipRt>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto reset(
                     dev::DevHipRt const & dev)
@@ -230,7 +209,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The HIP RT device memory buffer type trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -252,7 +230,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP RT device platform type trait specialization.
-            //#############################################################################
             template<>
             struct PltfType<
                 dev::DevHipRt>
@@ -270,13 +247,10 @@ namespace alpaka
             //!
             //! Blocks until the device has completed all preceding requested tasks.
             //! Tasks that are enqueued or queues that are created after this call is made are not waited for.
-            //#############################################################################
             template<>
             struct CurrentThreadWaitFor<
                 dev::DevHipRt>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto currentThreadWaitFor(
                     dev::DevHipRt const & dev)

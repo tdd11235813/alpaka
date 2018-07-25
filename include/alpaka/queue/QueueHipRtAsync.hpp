@@ -62,13 +62,10 @@ namespace alpaka
             namespace detail
             {
                 //#############################################################################
-                //! The HIP RT queue implementation.
-                //#############################################################################
+                //! The HIP RT async queue implementation.
                 class QueueHipRtAsyncImpl final
                 {
                 public:
-                    //-----------------------------------------------------------------------------
-                    //! Constructor.
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST QueueHipRtAsyncImpl(
                         dev::DevHipRt const & dev) :
@@ -81,11 +78,11 @@ namespace alpaka
                         ALPAKA_HIP_RT_CHECK(
                             hipSetDevice(
                                 m_dev.m_iDevice));
-                        // - hipQueueDefault: Default queue creation flag.
-                        // - hipQueueNonBlocking: Specifies that work running in the created queue may run concurrently with work in queue 0 (the NULL queue),
+                        // - hipStreamDefault: Default queue creation flag.
+                        // - hipStreamNonBlocking: Specifies that work running in the created queue may run concurrently with work in queue 0 (the NULL queue),
                         //   and that the created queue should perform no implicit synchronization with queue 0.
                         // Create the queue on the current device.
-                        // NOTE: hipQueueNonBlocking is required to match the semantic implemented in the alpaka CPU queue.
+                        // NOTE: hipStreamNonBlocking is required to match the semantic implemented in the alpaka CPU queue.
                         // It would be too much work to implement implicit default queue synchronization on CPU.
                         ALPAKA_HIP_RT_CHECK(
                             hipStreamCreateWithFlags(
@@ -93,33 +90,23 @@ namespace alpaka
                                 hipStreamNonBlocking));
                     }
                     //-----------------------------------------------------------------------------
-                    //! Copy constructor.
-                    //-----------------------------------------------------------------------------
                     QueueHipRtAsyncImpl(QueueHipRtAsyncImpl const &) = delete;
-                    //-----------------------------------------------------------------------------
-                    //! Move constructor.
                     //-----------------------------------------------------------------------------
                     QueueHipRtAsyncImpl(QueueHipRtAsyncImpl &&) = default;
                     //-----------------------------------------------------------------------------
-                    //! Copy assignment operator.
-                    //-----------------------------------------------------------------------------
                     auto operator=(QueueHipRtAsyncImpl const &) -> QueueHipRtAsyncImpl & = delete;
-                    //-----------------------------------------------------------------------------
-                    //! Move assignment operator.
                     //-----------------------------------------------------------------------------
                     auto operator=(QueueHipRtAsyncImpl &&) -> QueueHipRtAsyncImpl & = default;
                     //-----------------------------------------------------------------------------
-                    //! Destructor.
-                    //-----------------------------------------------------------------------------
-                    ~QueueHipRtAsyncImpl()
+                    ALPAKA_FN_HOST ~QueueHipRtAsyncImpl()
                     {
                         ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                        // Set the current device.
+                        // Set the current device. \TODO: Is setting the current device before hipStreamDestroy required?
                         ALPAKA_HIP_RT_CHECK(
                             hipSetDevice(
                                 m_dev.m_iDevice));
-                        // In case the device is still doing work in the queue when hipQueueDestroy() is called, the function will return immediately
+                        // In case the device is still doing work in the queue when hipStreamDestroy() is called, the function will return immediately
                         // and the resources associated with queue will be released automatically once the device has completed all work in queue.
                         // -> No need to synchronize here.
                         ALPAKA_HIP_RT_CHECK(
@@ -135,52 +122,35 @@ namespace alpaka
         }
 
         //#############################################################################
-        //! The HIP RT queue.
-        //#############################################################################
+        //! The HIP RT async queue.
         class QueueHipRtAsync final
         {
         public:
-            //-----------------------------------------------------------------------------
-            //! Constructor.
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST QueueHipRtAsync(
                 dev::DevHipRt const & dev) :
                 m_spQueueImpl(std::make_shared<hip::detail::QueueHipRtAsyncImpl>(dev))
             {}
             //-----------------------------------------------------------------------------
-            //! Copy constructor.
-            //-----------------------------------------------------------------------------
             QueueHipRtAsync(QueueHipRtAsync const &) = default;
-            //-----------------------------------------------------------------------------
-            //! Move constructor.
             //-----------------------------------------------------------------------------
             QueueHipRtAsync(QueueHipRtAsync &&) = default;
             //-----------------------------------------------------------------------------
-            //! Copy assignment operator.
-            //-----------------------------------------------------------------------------
             auto operator=(QueueHipRtAsync const &) -> QueueHipRtAsync & = default;
-            //-----------------------------------------------------------------------------
-            //! Move assignment operator.
             //-----------------------------------------------------------------------------
             auto operator=(QueueHipRtAsync &&) -> QueueHipRtAsync & = default;
             //-----------------------------------------------------------------------------
-            //! Equality comparison operator.
-            //-----------------------------------------------------------------------------
-            auto operator==(QueueHipRtAsync const & rhs) const
+            ALPAKA_FN_HOST auto operator==(QueueHipRtAsync const & rhs) const
             -> bool
             {
-                return (m_spQueueImpl->m_HipQueue == rhs.m_spQueueImpl->m_HipQueue);
+                return (m_spQueueImpl == rhs.m_spQueueImpl);
             }
             //-----------------------------------------------------------------------------
-            //! Equality comparison operator.
-            //-----------------------------------------------------------------------------
-            auto operator!=(QueueHipRtAsync const & rhs) const
+            ALPAKA_FN_HOST auto operator!=(QueueHipRtAsync const & rhs) const
             -> bool
             {
                 return !((*this) == rhs);
             }
-            //-----------------------------------------------------------------------------
-            //! Destructor.
             //-----------------------------------------------------------------------------
             ~QueueHipRtAsync() = default;
 
@@ -194,8 +164,7 @@ namespace alpaka
         namespace traits
         {
             //#############################################################################
-            //! The HIP RT queue device type trait specialization.
-            //#############################################################################
+            //! The HIP RT async queue device type trait specialization.
             template<>
             struct DevType<
                 queue::QueueHipRtAsync>
@@ -203,14 +172,11 @@ namespace alpaka
                 using type = dev::DevHipRt;
             };
             //#############################################################################
-            //! The HIP RT queue device get trait specialization.
-            //#############################################################################
+            //! The HIP RT async queue device get trait specialization.
             template<>
             struct GetDev<
                 queue::QueueHipRtAsync>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto getDev(
                     queue::QueueHipRtAsync const & queue)
@@ -226,8 +192,7 @@ namespace alpaka
         namespace traits
         {
             //#############################################################################
-            //! The HIP RT queue event type trait specialization.
-            //#############################################################################
+            //! The HIP RT async queue event type trait specialization.
             template<>
             struct EventType<
                 queue::QueueHipRtAsync>
@@ -249,24 +214,45 @@ namespace alpaka
                 TTask>
             {
                 //#############################################################################
-                struct CallbackSynchronizationData
+                enum class CallbackState
+                {
+                    enqueued,
+                    notified,
+                    finished,
+                };
+
+                //#############################################################################
+                struct CallbackSynchronizationData : public std::enable_shared_from_this<CallbackSynchronizationData>
                 {
                     std::mutex m_mutex;
                     std::condition_variable m_event;
-                    bool notified = false;
+                    CallbackState state = CallbackState::enqueued;
                 };
 
                 //-----------------------------------------------------------------------------
                 static void HIPRT_CB hipRtCallback(hipStream_t /*queue*/, hipError_t /*status*/, void *arg)
                 {
-                    auto& callbackSynchronizationData = *reinterpret_cast<CallbackSynchronizationData*>(arg);
+                    // explicitly copy the shared_ptr so that this method holds the state even when the executing thread has already finished.
+                    const auto pCallbackSynchronizationData = reinterpret_cast<CallbackSynchronizationData*>(arg)->shared_from_this();
 
+                    // Notify the executing thread.
                     {
-                        std::unique_lock<std::mutex> lock(callbackSynchronizationData.m_mutex);
-                        callbackSynchronizationData.notified = true;
+                        std::unique_lock<std::mutex> lock(pCallbackSynchronizationData->m_mutex);
+                        pCallbackSynchronizationData->state = CallbackState::notified;
                     }
+                    pCallbackSynchronizationData->m_event.notify_one();
 
-                    callbackSynchronizationData.m_event.notify_one();
+                    // Wait for the executing thread to finish the task if it has not already finished.
+                    std::unique_lock<std::mutex> lock(pCallbackSynchronizationData->m_mutex);
+                    if(pCallbackSynchronizationData->state != CallbackState::finished)
+                    {
+                        pCallbackSynchronizationData->m_event.wait(
+                            lock,
+                            [pCallbackSynchronizationData](){
+                                return pCallbackSynchronizationData->state == CallbackState::finished;
+                            }
+                        );
+                    }
                 }
 
                 //-----------------------------------------------------------------------------
@@ -283,22 +269,33 @@ namespace alpaka
                         pCallbackSynchronizationData.get(),
                         0u));
 
+                    // We start a new std::thread which stores the task to be executed.
+                    // This circumvents the limitation that it is not possible to call HIP methods within the HIP callback thread.
+                    // The HIP thread signals the std::thread when it is ready to execute the task.
+                    // The HIP thread is waiting for the std::thread to signal that it is finished executing the task
+                    // before it executes the next task in the queue (HIP stream).
                     std::thread t(
                         [pCallbackSynchronizationData, task](){
 
                             // If the callback has not yet been called, we wait for it.
-                            std::unique_lock<std::mutex> lock(pCallbackSynchronizationData->m_mutex);
-                            if(!pCallbackSynchronizationData->notified)
                             {
-                                pCallbackSynchronizationData->m_event.wait(
-                                    lock,
-                                    [pCallbackSynchronizationData](){
-                                        return pCallbackSynchronizationData->notified;
-                                    }
-                                );
-                            }
+                                std::unique_lock<std::mutex> lock(pCallbackSynchronizationData->m_mutex);
+                                if(pCallbackSynchronizationData->state != CallbackState::notified)
+                                {
+                                    pCallbackSynchronizationData->m_event.wait(
+                                        lock,
+                                        [pCallbackSynchronizationData](){
+                                            return pCallbackSynchronizationData->state == CallbackState::notified;
+                                        }
+                                    );
+                                }
 
-                            task();
+                                task();
+
+                                // Notify the waiting HIP thread.
+                                pCallbackSynchronizationData->state = CallbackState::finished;
+                            }
+                            pCallbackSynchronizationData->m_event.notify_one();
                         }
                     );
 
@@ -306,14 +303,11 @@ namespace alpaka
                 }
             };
             //#############################################################################
-            //! The HIP RT queue test trait specialization.
-            //#############################################################################
+            //! The HIP RT async queue test trait specialization.
             template<>
             struct Empty<
                 queue::QueueHipRtAsync>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto empty(
                     queue::QueueHipRtAsync const & queue)
@@ -337,16 +331,13 @@ namespace alpaka
         namespace traits
         {
             //#############################################################################
-            //! The HIP RT queue thread wait trait specialization.
+            //! The HIP RT async queue thread wait trait specialization.
             //!
             //! Blocks execution of the calling thread until the queue has finished processing all previously requested tasks (kernels, data copies, ...)
-            //#############################################################################
             template<>
             struct CurrentThreadWaitFor<
                 queue::QueueHipRtAsync>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto currentThreadWaitFor(
                     queue::QueueHipRtAsync const & queue)

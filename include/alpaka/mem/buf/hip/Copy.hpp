@@ -76,6 +76,9 @@ namespace alpaka
                         TExtent>
                     {
                         static_assert(
+                            !std::is_const<TViewDst>::value,
+                            "The destination view can not be const!");
+                        static_assert(
                             dim::Dim<TViewDst>::value == dim::Dim<TViewSrc>::value,
                             "The source and the destination view are required to have the same dimensionality!");
                         static_assert(
@@ -145,7 +148,6 @@ namespace alpaka
                     };
                     //#############################################################################
                     //! The 2D HIP memory copy trait.
-                    //#############################################################################
                     template<
                         typename TViewDst,
                         typename TViewSrc,
@@ -156,6 +158,9 @@ namespace alpaka
                         TViewSrc,
                         TExtent>
                     {
+                        static_assert(
+                            !std::is_const<TViewDst>::value,
+                            "The destination view can not be const!");
                         static_assert(
                             dim::Dim<TViewDst>::value == dim::Dim<TViewSrc>::value,
                             "The source and the destination view are required to have the same dimensionality!");
@@ -169,8 +174,6 @@ namespace alpaka
 
                         using Idx = idx::Idx<TExtent>;
 
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
@@ -261,7 +264,6 @@ namespace alpaka
                     };
                     //#############################################################################
                     //! The 3D HIP memory copy trait.
-                    //#############################################################################
                     template<
                         typename TViewDst,
                         typename TViewSrc,
@@ -272,6 +274,9 @@ namespace alpaka
                         TViewSrc,
                         TExtent>
                     {
+                        static_assert(
+                            !std::is_const<TViewDst>::value,
+                            "The destination view can not be const!");
                         static_assert(
                             dim::Dim<TViewDst>::value == dim::Dim<TViewSrc>::value,
                             "The source and the destination view are required to have the same dimensionality!");
@@ -285,8 +290,6 @@ namespace alpaka
 
                         using Idx = idx::Idx<TExtent>;
 
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         ALPAKA_FN_HOST TaskCopyHip(
                             TViewDst & viewDst,
@@ -336,8 +339,6 @@ namespace alpaka
                         }
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
-                        //-----------------------------------------------------------------------------
-                        //!
                         //-----------------------------------------------------------------------------
                         ALPAKA_FN_HOST auto printDebug() const
                         -> void
@@ -394,12 +395,10 @@ namespace alpaka
 
             //-----------------------------------------------------------------------------
             // Trait specializations for CreateTaskCopy.
-            //-----------------------------------------------------------------------------
             namespace traits
             {
                 //#############################################################################
                 //! The HIP to CPU memory copy trait specialization.
-                //#############################################################################
                 template<
                     typename TDim>
                 struct CreateTaskCopy<
@@ -407,8 +406,6 @@ namespace alpaka
                     dev::DevCpu,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     template<
                         typename TExtent,
@@ -454,8 +451,6 @@ namespace alpaka
                     dev::DevCpu>
                 {
                     //-----------------------------------------------------------------------------
-                    //!
-                    //-----------------------------------------------------------------------------
                     template<
                         typename TExtent,
                         typename TViewSrc,
@@ -499,8 +494,6 @@ namespace alpaka
                     dev::DevHipRt,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     template<
                         typename TExtent,
@@ -589,8 +582,11 @@ namespace alpaka
                                 static_cast<std::size_t>(extentWidthBytes),
                                 static_cast<std::size_t>(extentHeight),
                                 static_cast<std::size_t>(extentDepth));
-                        // TODO: deal with HCC as well
+#ifdef __HIP_PLATFORM_NVCC__
                         hipMemCpy3DParms.kind = hipMemcpyKindToCudaMemcpyKind(task.m_hipMemCpyKind);
+#else
+                        hipMemCpy3DParms.kind = task.m_hipMemCpyKind;
+#endif
 
                         return hipMemCpy3DParms;
                     }
@@ -605,7 +601,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The HIP async device queue 1D copy enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TExtent,
                 typename TViewSrc,
@@ -614,8 +609,6 @@ namespace alpaka
                 queue::QueueHipRtAsync,
                 mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
@@ -627,6 +620,11 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    if(task.m_extentWidthBytes == 0)
+                    {
+                        return;
+                    }
+
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -668,7 +666,6 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP sync device queue 1D copy enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TExtent,
                 typename TViewSrc,
@@ -677,8 +674,6 @@ namespace alpaka
                 queue::QueueHipRtSync,
                 mem::view::hip::detail::TaskCopyHip<dim::DimInt<1u>, TViewDst, TViewSrc, TExtent>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtSync &,
@@ -690,6 +685,10 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    if(task.m_extentWidthBytes == 0)
+                    {
+                        return;
+                    }
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -729,7 +728,6 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP async device queue 2D copy enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TExtent,
                 typename TViewSrc,
@@ -738,8 +736,6 @@ namespace alpaka
                 queue::QueueHipRtAsync,
                 mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtAsync & queue,
@@ -751,6 +747,11 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    // This is not only an optimization but also prevents a division by zero.
+                    if(task.m_extentWidthBytes == 0 || task.m_extentHeight == 0)
+                    {
+                        return;
+                    }
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -814,7 +815,6 @@ namespace alpaka
             };
             //#############################################################################
             //! The HIP sync device queue 2D copy enqueue trait specialization.
-            //#############################################################################
             template<
                 typename TExtent,
                 typename TViewSrc,
@@ -823,8 +823,6 @@ namespace alpaka
                 queue::QueueHipRtSync,
                 mem::view::hip::detail::TaskCopyHip<dim::DimInt<2u>, TViewDst, TViewSrc, TExtent>>
             {
-                //-----------------------------------------------------------------------------
-                //
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST static auto enqueue(
                     queue::QueueHipRtSync &,
@@ -836,6 +834,11 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    // This is not only an optimization but also prevents a division by zero.
+                    if(task.m_extentWidthBytes == 0 || task.m_extentHeight == 0)
+                    {
+                        return;
+                    }
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -916,6 +919,11 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    // This is not only an optimization but also prevents a division by zero.
+                    if(task.m_extentWidthBytes == 0 || task.m_extentHeight == 0 || task.m_extentDepth == 0)
+                    {
+                        return;
+                    }
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -938,13 +946,10 @@ namespace alpaka
                     else
                     {
                         // TODO: hipMemcpy3DPeerParms not implemented yet by HIP. Use hipMemcpy3DParms instead.
-                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead. Use 3D copy over host RAM.
-                        //
-                        // Create the struct describing the copy.
+                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead.
                         hipMemcpy3DParms const hipMemCpy3DParms(
                             mem::view::hip::detail::buildHipMemcpy3DParms(
                                 task));
-                        // Initiate the memory copy.
                         ALPAKA_HIP_RT_CHECK(
                             hipMemcpy3D(
                                 &hipMemCpy3DParms));
@@ -972,6 +977,11 @@ namespace alpaka
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                     task.printDebug();
 #endif
+                    // This is not only an optimization but also prevents a division by zero.
+                    if(task.m_extentWidthBytes == 0 || task.m_extentHeight == 0 || task.m_extentDepth == 0)
+                    {
+                        return;
+                    }
                     auto const & iDstDev(task.m_iDstDevice);
                     auto const & iSrcDev(task.m_iSrcDevice);
 
@@ -993,13 +1003,10 @@ namespace alpaka
                     else
                     {
                         // TODO: hipMemcpy3DPeerParms not implemented yet by HIP. Use hipMemcpy3DParms instead.
-                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead. Use 3D copy over host RAM.
-                        //
-                        // Create the struct describing the copy.
+                        // TODO: hipMemcpy3DPeerAsync not implemented yet by HIP. Use hipMemcpy3D instead.
                         hipMemcpy3DParms const hipMemCpy3DParms(
                             mem::view::hip::detail::buildHipMemcpy3DParms(
                                 task));
-                        // Initiate the memory copy.
                         ALPAKA_HIP_RT_CHECK(
                             hipMemcpy3D(
                                 &hipMemCpy3DParms));

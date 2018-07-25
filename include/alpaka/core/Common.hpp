@@ -65,7 +65,7 @@
 // - clang defines __CUDA__ and __CUDACC__ when compiling CUDA code ('-x cuda')
 // - nvcc defines __CUDACC__ when compiling CUDA code
 #if !defined(BOOST_LANG_CUDA)
-    #if !BOOST_LANG_HIP && (defined(__CUDA__) || defined(__CUDACC__))
+    #if !(BOOST_LANG_HIP && defined(__HIPCC__))
         #include <cuda.h>
         #define BOOST_LANG_CUDA BOOST_PREDEF_MAKE_10_VVRRP(CUDA_VERSION)
     #else

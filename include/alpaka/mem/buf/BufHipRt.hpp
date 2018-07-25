@@ -23,7 +23,7 @@
 
 #ifdef ALPAKA_ACC_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>         
+#include <alpaka/core/Common.hpp>
 
 #if !BOOST_LANG_HIP
     #error If ALPAKA_ACC_HIP_ENABLED is set, the compiler has to support HIP!
@@ -37,10 +37,8 @@
 #include <alpaka/dim/DimIntegralConst.hpp>
 #include <alpaka/mem/buf/Traits.hpp>
 
-#include <cassert>
 #include <memory>
-
-#include <hip/hip_runtime.h> // temporary fix
+#include <cassert>
 
 
 namespace alpaka
@@ -121,7 +119,7 @@ namespace alpaka
                 {
                     ALPAKA_DEBUG_MINIMAL_LOG_SCOPE;
 
-                    // Set the current device. \TODO: Is setting the current device before hipFree required?
+                    // Set the current device.
                     ALPAKA_HIP_RT_CHECK(
                         hipSetDevice(
                             dev.m_iDevice));
@@ -329,7 +327,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The HIP 1D memory allocation trait specialization.
-                //#############################################################################
                 template<
                     typename T,
                     typename TIdx>
@@ -339,8 +336,6 @@ namespace alpaka
                     TIdx,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     template<
                         typename TExtent>
@@ -382,7 +377,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The HIP 2D memory allocation trait specialization.
-                //#############################################################################
                 template<
                     typename T,
                     typename TIdx>
@@ -392,8 +386,6 @@ namespace alpaka
                     TIdx,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     template<
                         typename TExtent>
@@ -421,7 +413,7 @@ namespace alpaka
                                 &pitchBytes,
                                 static_cast<std::size_t>(widthBytes),
                                 static_cast<std::size_t>(height)));
-                        assert(pitchBytes>=widthBytes||(width*height)==0);
+                        assert(pitchBytes >= static_cast<std::size_t>(widthBytes) || (width * height) == 0);
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL
                         std::cout << BOOST_CURRENT_FUNCTION
@@ -501,7 +493,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt HIP device memory mapping trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -510,8 +501,6 @@ namespace alpaka
                     mem::buf::BufHipRt<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto map(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const & buf,
@@ -529,7 +518,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt HIP device memory unmapping trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -538,8 +526,6 @@ namespace alpaka
                     mem::buf::BufHipRt<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto unmap(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const & buf,
@@ -557,7 +543,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt memory pinning trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -565,8 +550,6 @@ namespace alpaka
                 struct Pin<
                     mem::buf::BufHipRt<TElem, TDim, TIdx>>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto pin(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> &)
@@ -579,7 +562,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt memory unpinning trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -587,8 +569,6 @@ namespace alpaka
                 struct Unpin<
                     mem::buf::BufHipRt<TElem, TDim, TIdx>>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto unpin(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> &)
@@ -601,7 +581,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufHipRt memory pin state trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -609,8 +588,6 @@ namespace alpaka
                 struct IsPinned<
                     mem::buf::BufHipRt<TElem, TDim, TIdx>>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto isPinned(
                         mem::buf::BufHipRt<TElem, TDim, TIdx> const &)
@@ -631,7 +608,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The BufHipRt offset get trait specialization.
-            //#############################################################################
             template<
                 typename TIdxIntegralConst,
                 typename TElem,
@@ -657,7 +633,6 @@ namespace alpaka
         {
             //#############################################################################
             //! The BufHipRt idx type trait specialization.
-            //#############################################################################
             template<
                 typename TElem,
                 typename TDim,
@@ -672,7 +647,6 @@ namespace alpaka
 
     //-----------------------------------------------------------------------------
     // Trait specializations for BufCpu.
-    //-----------------------------------------------------------------------------
     namespace mem
     {
         namespace buf
@@ -681,7 +655,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The BufCpu HIP device memory mapping trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -690,8 +663,6 @@ namespace alpaka
                     mem::buf::BufCpu<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto map(
                         mem::buf::BufCpu<TElem, TDim, TIdx> & buf,
@@ -716,7 +687,6 @@ namespace alpaka
                 };
                 //#############################################################################
                 //! The BufCpu HIP device memory unmapping trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -725,8 +695,6 @@ namespace alpaka
                     mem::buf::BufCpu<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto unmap(
                         mem::buf::BufCpu<TElem, TDim, TIdx> & buf,
@@ -754,7 +722,6 @@ namespace alpaka
             {
                 //#############################################################################
                 //! The BufCpu pointer on HIP device get trait specialization.
-                //#############################################################################
                 template<
                     typename TElem,
                     typename TDim,
@@ -763,8 +730,6 @@ namespace alpaka
                     mem::buf::BufCpu<TElem, TDim, TIdx>,
                     dev::DevHipRt>
                 {
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrDev(
                         mem::buf::BufCpu<TElem, TDim, TIdx> const & buf,
@@ -780,8 +745,6 @@ namespace alpaka
                                 0));
                         return pDev;
                     }
-                    //-----------------------------------------------------------------------------
-                    //!
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST static auto getPtrDev(
                         mem::buf::BufCpu<TElem, TDim, TIdx> & buf,
@@ -803,8 +766,7 @@ namespace alpaka
     }
 }
 
-#include <alpaka/mem/buf/hip/Copy.hpp>		//as of now, just a renamed copy of it's HIP counterpart
-
-#include <alpaka/mem/buf/hip/Set.hpp>		//as of now, just a renamed copy of it's HIP counterpart
+#include <alpaka/mem/buf/hip/Copy.hpp>
+#include <alpaka/mem/buf/hip/Set.hpp>
 
 #endif

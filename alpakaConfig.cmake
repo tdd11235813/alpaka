@@ -181,8 +181,8 @@ IF(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_
     SET(_ALPAKA_FOUND FALSE)
 ENDIF()
 
-IF(ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE AND ALPAKA_ACC_GPU_CUDA_ENABLE)
-    MESSAGE(FATAL_ERROR "Fibers and CUDA back-end can not be enabled both at the same time.")
+IF(ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE AND (ALPAKA_ACC_GPU_CUDA_ENABLE OR ALPAKA_ACC_HIP_ENABLE))
+    MESSAGE(FATAL_ERROR "Fibers and CUDA or HIP back-end can not be enabled both at the same time.")
     SET(_ALPAKA_FOUND FALSE)
 ENDIF()
 
@@ -592,8 +592,8 @@ IF(ALPAKA_ACC_HIP_ENABLE)
         ELSE()
             SET(ALPAKA_HIP_VERSION "${HIP_VERSION}")
             SET(ALPAKA_HIP_COMPILER "hipcc" CACHE STRING "HIP compiler")
-            SET_PROPERTY(CACHE ALPAKA_HIP_COMPILER PROPERTY STRINGS "hipcc")
-            # the ;clang was removed from the property value list for the above function
+            SET_PROPERTY(CACHE ALPAKA_HIP_COMPILER PROPERTY STRINGS "hipcc") # TODO: clang?
+
             OPTION(ALPAKA_HIP_FAST_MATH "Enable fast-math" ON)
             OPTION(ALPAKA_HIP_FTZ "Set flush to zero for GPU" OFF)
             OPTION(ALPAKA_HIP_SHOW_REGISTER "Show kernel registers and create PTX" OFF)
@@ -785,6 +785,7 @@ IF(ALPAKA_ACC_HIP_ENABLE)
     HIP_INCLUDE_DIRECTORIES(
         ${_ALPAKA_INCLUDE_DIRECTORY}
         ${_ALPAKA_INCLUDE_DIRECTORIES_PUBLIC}
+        ${Boost_INCLUDE_DIRS}
         ${_ALPAKA_ROOT_DIR}/test/common/include
         )
 ENDIF()

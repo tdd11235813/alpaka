@@ -63,7 +63,7 @@ echo ALPAKA_CI_BOOST_BRANCH_MINOR: "${ALPAKA_CI_BOOST_BRANCH_MINOR}"
 
 #-------------------------------------------------------------------------------
 # CUDA
-if [ "${ALPAKA_ACC_GPU_CUDA_ENABLE}" == "ON"] || [ "${ALPAKA_ACC_HIP_ENABLE}" == "ON" ] && [ "${ALPAKA_HIP_PLATFORM}" == "nvcc" ]
+if [ "${ALPAKA_ACC_GPU_CUDA_ENABLE}" == "ON" ] || [ "${ALPAKA_ACC_HIP_ENABLE}" == "ON" ] && [ "${ALPAKA_HIP_PLATFORM}" == "nvcc" ]
 then
     if [ "${ALPAKA_CUDA_COMPILER}" == "nvcc" ]
     then
