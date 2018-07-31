@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2019 Benjamin Worpitz
+# Copyright 2018-2019 Benjamin Worpitz
 #
 # This file is part of alpaka.
 #
@@ -18,21 +18,23 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-################################################################################
-# Required CMake version.
-################################################################################
+SET(_TARGET_NAME "separableCompilation")
 
-CMAKE_MINIMUM_REQUIRED(VERSION 3.11.0)
+append_recursive_files_add_to_src_group("src/" "src/" "cpp" _FILES_SOURCE)
+append_recursive_files_add_to_src_group("include/" "include/" "hpp" _FILES_HEADER)
 
-PROJECT("alpakaIntegTest")
+ALPAKA_ADD_EXECUTABLE(
+    ${_TARGET_NAME}
+    ${_FILES_SOURCE}
+    ${_FILES_HEADER})
+TARGET_INCLUDE_DIRECTORIES(
+    ${_TARGET_NAME}
+    PRIVATE "include"
+    PRIVATE ${Boost_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(
+    ${_TARGET_NAME}
+    PRIVATE common)
 
-################################################################################
-# Add subdirectories.
-################################################################################
+SET_TARGET_PROPERTIES(${_TARGET_NAME} PROPERTIES FOLDER "test/integ")
 
-ADD_SUBDIRECTORY("axpy/")
-ADD_SUBDIRECTORY("cudaOnly/")
-ADD_SUBDIRECTORY("mandelbrot/")
-ADD_SUBDIRECTORY("matMul/")
-ADD_SUBDIRECTORY("separableCompilation/")
-ADD_SUBDIRECTORY("sharedMem/")
+ADD_TEST(NAME ${_TARGET_NAME} COMMAND ${_TARGET_NAME} ${_ALPAKA_TEST_OPTIONS})
