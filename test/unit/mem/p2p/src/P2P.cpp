@@ -1,6 +1,6 @@
 /**
  * \file
- * Copyright 2015-2017 Benjamin Worpitz
+ * Copyright 2018 Benjamin Worpitz, Matthias Werner
  *
  * This file is part of alpaka.
  *
@@ -44,6 +44,8 @@
 
 #include <type_traits>
 #include <numeric>
+
+
 
 BOOST_AUTO_TEST_SUITE(memP2P)
 

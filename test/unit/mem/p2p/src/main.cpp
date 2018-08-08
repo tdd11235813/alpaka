@@ -1,6 +1,6 @@
 /**
  * \file
- * Copyright 2015 Benjamin Worpitz
+ * Copyright 2018 Benjamin Worpitz, Matthias Werner
  *
  * This file is part of alpaka.
  *
@@ -19,7 +19,7 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE P2P
+#define BOOST_TEST_MODULE memP2P
 
 #include <boost/predef.h>
 #if BOOST_COMP_CLANG
