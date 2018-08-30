@@ -64,7 +64,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     auto operator=(QueueCpuSyncImpl &&) -> QueueCpuSyncImpl & = default;
                     //-----------------------------------------------------------------------------
-                    ~QueueCpuSyncImpl() = default;
+                    ALPAKA_FN_HOST ~QueueCpuSyncImpl() = default;
 
                 public:
                     dev::DevCpu const m_dev;            //!< The device this queue is bound to.
@@ -103,7 +103,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~QueueCpuSync() = default;
+            ALPAKA_FN_HOST ~QueueCpuSync() = default;
 
         public:
             std::shared_ptr<cpu::detail::QueueCpuSyncImpl> m_spQueueImpl;

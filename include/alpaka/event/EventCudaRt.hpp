@@ -143,7 +143,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~EventCudaRt() = default;
+            ALPAKA_FN_HOST_ACC ~EventCudaRt() = default;
 
         public:
             std::shared_ptr<cuda::detail::EventCudaImpl> m_spEventImpl;

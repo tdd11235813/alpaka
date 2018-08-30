@@ -131,7 +131,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator=(AccCpuSerial &&) -> AccCpuSerial & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~AccCpuSerial() = default;
+            /*virtual*/ ALPAKA_FN_HOST ~AccCpuSerial() = default;
 
         private:
             // getIdx

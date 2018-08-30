@@ -65,7 +65,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(IdxBtRefFiberIdMap &&) -> IdxBtRefFiberIdMap & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~IdxBtRefFiberIdMap() = default;
+                /*virtual*/ ALPAKA_FN_HOST ~IdxBtRefFiberIdMap() = default;
 
             public:
                 FiberIdToIdxMap const & m_fibersToIndices; //!< The mapping of fiber id's to fiber indices.

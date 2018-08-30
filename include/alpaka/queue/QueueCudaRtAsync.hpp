@@ -92,7 +92,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     QueueCudaRtAsyncImpl(QueueCudaRtAsyncImpl const &) = delete;
                     //-----------------------------------------------------------------------------
-                    QueueCudaRtAsyncImpl(QueueCudaRtAsyncImpl &&) = default;
+                    ALPAKA_FN_HOST QueueCudaRtAsyncImpl(QueueCudaRtAsyncImpl &&) = default;
                     //-----------------------------------------------------------------------------
                     auto operator=(QueueCudaRtAsyncImpl const &) -> QueueCudaRtAsyncImpl & = delete;
                     //-----------------------------------------------------------------------------
@@ -132,9 +132,9 @@ namespace alpaka
                 m_spQueueImpl(std::make_shared<cuda::detail::QueueCudaRtAsyncImpl>(dev))
             {}
             //-----------------------------------------------------------------------------
-            QueueCudaRtAsync(QueueCudaRtAsync const &) = default;
+            ALPAKA_FN_HOST QueueCudaRtAsync(QueueCudaRtAsync const &) = default;
             //-----------------------------------------------------------------------------
-            QueueCudaRtAsync(QueueCudaRtAsync &&) = default;
+            ALPAKA_FN_HOST QueueCudaRtAsync(QueueCudaRtAsync &&) = default;
             //-----------------------------------------------------------------------------
             auto operator=(QueueCudaRtAsync const &) -> QueueCudaRtAsync & = default;
             //-----------------------------------------------------------------------------
@@ -152,7 +152,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~QueueCudaRtAsync() = default;
+            ALPAKA_FN_HOST ~QueueCudaRtAsync() = default;
 
         public:
             std::shared_ptr<cuda::detail::QueueCudaRtAsyncImpl> m_spQueueImpl;

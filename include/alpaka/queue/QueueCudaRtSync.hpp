@@ -91,7 +91,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     QueueCudaRtSyncImpl(QueueCudaRtSyncImpl const &) = delete;
                     //-----------------------------------------------------------------------------
-                    QueueCudaRtSyncImpl(QueueCudaRtSyncImpl &&) = default;
+                    ALPAKA_FN_HOST QueueCudaRtSyncImpl(QueueCudaRtSyncImpl &&) = default;
                     //-----------------------------------------------------------------------------
                     auto operator=(QueueCudaRtSyncImpl const &) -> QueueCudaRtSyncImpl & = delete;
                     //-----------------------------------------------------------------------------
@@ -131,9 +131,9 @@ namespace alpaka
                 m_spQueueImpl(std::make_shared<cuda::detail::QueueCudaRtSyncImpl>(dev))
             {}
             //-----------------------------------------------------------------------------
-            QueueCudaRtSync(QueueCudaRtSync const &) = default;
+            ALPAKA_FN_HOST QueueCudaRtSync(QueueCudaRtSync const &) = default;
             //-----------------------------------------------------------------------------
-            QueueCudaRtSync(QueueCudaRtSync &&) = default;
+            ALPAKA_FN_HOST QueueCudaRtSync(QueueCudaRtSync &&) = default;
             //-----------------------------------------------------------------------------
             auto operator=(QueueCudaRtSync const &) -> QueueCudaRtSync & = default;
             //-----------------------------------------------------------------------------
@@ -151,7 +151,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~QueueCudaRtSync() = default;
+            ALPAKA_FN_HOST ~QueueCudaRtSync() = default;
 
         public:
             std::shared_ptr<cuda::detail::QueueCudaRtSyncImpl> m_spQueueImpl;

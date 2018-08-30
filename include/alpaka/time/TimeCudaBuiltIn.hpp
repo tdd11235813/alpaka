@@ -43,7 +43,7 @@ namespace alpaka
             using TimeBase = TimeCudaBuiltIn;
 
             //-----------------------------------------------------------------------------
-            TimeCudaBuiltIn() = default;
+            __device__ TimeCudaBuiltIn() = default;
             //-----------------------------------------------------------------------------
             __device__ TimeCudaBuiltIn(TimeCudaBuiltIn const &) = delete;
             //-----------------------------------------------------------------------------
@@ -53,7 +53,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             __device__ auto operator=(TimeCudaBuiltIn &&) -> TimeCudaBuiltIn & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~TimeCudaBuiltIn() = default;
+            /*virtual*/ __device__ ~TimeCudaBuiltIn() = default;
         };
 
         namespace traits

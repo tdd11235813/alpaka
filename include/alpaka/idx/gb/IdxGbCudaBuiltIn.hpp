@@ -63,7 +63,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 __device__ auto operator=(IdxGbCudaBuiltIn &&) -> IdxGbCudaBuiltIn & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~IdxGbCudaBuiltIn() = default;
+                /*virtual*/ ALPAKA_FN_HOST_ACC ~IdxGbCudaBuiltIn() = default;
             };
         }
     }

@@ -127,7 +127,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~QueueCpuAsync() = default;
+            ALPAKA_FN_HOST ~QueueCpuAsync() = default;
 
         public:
             std::shared_ptr<cpu::detail::QueueCpuAsyncImpl> m_spQueueImpl;

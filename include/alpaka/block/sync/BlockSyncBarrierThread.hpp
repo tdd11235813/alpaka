@@ -66,7 +66,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(BlockSyncBarrierThread &&) -> BlockSyncBarrierThread & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~BlockSyncBarrierThread() = default;
+                /*virtual*/ ALPAKA_FN_HOST ~BlockSyncBarrierThread() = default;
 
                 Barrier mutable m_barrier;
                 BarrierWithPredicate mutable m_barrierWithPredicate;

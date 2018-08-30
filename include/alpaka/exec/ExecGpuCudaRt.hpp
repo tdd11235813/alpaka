@@ -180,7 +180,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             auto operator=(ExecGpuCudaRt &&) -> ExecGpuCudaRt & = default;
             //-----------------------------------------------------------------------------
-            ~ExecGpuCudaRt() = default;
+            ALPAKA_FN_HOST_ACC ~ExecGpuCudaRt() = default;
 
             TKernelFnObj m_kernelFnObj;
             std::tuple<TArgs...> m_args;

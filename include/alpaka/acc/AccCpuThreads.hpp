@@ -135,7 +135,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator=(AccCpuThreads &&) -> AccCpuThreads & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~AccCpuThreads() = default;
+            /*virtual*/ ALPAKA_FN_HOST ~AccCpuThreads() = default;
 
         private:
             // getIdx

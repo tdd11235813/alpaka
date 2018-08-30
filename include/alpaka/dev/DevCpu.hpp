@@ -85,7 +85,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     auto operator=(DevCpuImpl &&) -> DevCpuImpl & = default;
                     //-----------------------------------------------------------------------------
-                    ~DevCpuImpl() = default;
+                    ALPAKA_FN_HOST ~DevCpuImpl() = default;
 
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST auto GetAllAsyncQueueImpls() const noexcept(false)
@@ -188,7 +188,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~DevCpu() = default;
+            ALPAKA_FN_HOST ~DevCpu() = default;
 
         public:
             std::shared_ptr<cpu::detail::DevCpuImpl> m_spDevCpuImpl;

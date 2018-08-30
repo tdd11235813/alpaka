@@ -65,7 +65,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(IdxBtRefThreadIdMap &&) -> IdxBtRefThreadIdMap & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~IdxBtRefThreadIdMap() = default;
+                /*virtual*/ ALPAKA_FN_HOST ~IdxBtRefThreadIdMap() = default;
 
             public:
                 ThreadIdToIdxMap const & m_threadToIndexMap;   //!< The mapping of thread id's to thread indices.

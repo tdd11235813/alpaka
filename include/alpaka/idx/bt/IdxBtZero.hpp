@@ -54,7 +54,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(IdxBtZero &&) -> IdxBtZero & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~IdxBtZero() = default;
+                /*virtual*/ ALPAKA_FN_HOST ~IdxBtZero() = default;
             };
         }
     }

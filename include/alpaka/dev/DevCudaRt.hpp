@@ -60,12 +60,12 @@ namespace alpaka
 
         protected:
             //-----------------------------------------------------------------------------
-            DevCudaRt() = default;
+            ALPAKA_FN_HOST_ACC DevCudaRt() = default;
         public:
             //-----------------------------------------------------------------------------
-            DevCudaRt(DevCudaRt const &) = default;
+            ALPAKA_FN_HOST_ACC DevCudaRt(DevCudaRt const &) = default;
             //-----------------------------------------------------------------------------
-            DevCudaRt(DevCudaRt &&) = default;
+            ALPAKA_FN_HOST_ACC DevCudaRt(DevCudaRt &&) = default;
             //-----------------------------------------------------------------------------
             auto operator=(DevCudaRt const &) -> DevCudaRt & = default;
             //-----------------------------------------------------------------------------
@@ -83,7 +83,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~DevCudaRt() = default;
+            ALPAKA_FN_HOST_ACC ~DevCudaRt() = default;
 
         public:
             int m_iDevice;

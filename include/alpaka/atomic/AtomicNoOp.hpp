@@ -46,7 +46,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator=(AtomicNoOp &&) -> AtomicNoOp & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~AtomicNoOp() = default;
+            /*virtual*/ ALPAKA_FN_HOST ~AtomicNoOp() = default;
         };
 
         namespace traits

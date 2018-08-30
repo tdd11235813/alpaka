@@ -122,7 +122,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             __device__ auto operator=(AccGpuCudaRt &&) -> AccGpuCudaRt & = delete;
             //-----------------------------------------------------------------------------
-            ~AccGpuCudaRt() = default;
+            __device__ ~AccGpuCudaRt() = default;
         };
     }
 

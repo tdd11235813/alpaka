@@ -66,7 +66,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST auto operator=(BlockSharedMemDynBoostAlignedAlloc &&) -> BlockSharedMemDynBoostAlignedAlloc & = delete;
                     //-----------------------------------------------------------------------------
-                    /*virtual*/ ~BlockSharedMemDynBoostAlignedAlloc() = default;
+                    /*virtual*/ ALPAKA_FN_HOST ~BlockSharedMemDynBoostAlignedAlloc() = default;
 
                 public:
                     std::unique_ptr<

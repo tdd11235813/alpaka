@@ -64,7 +64,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             __device__ auto operator=(WorkDivCudaBuiltIn &&) -> WorkDivCudaBuiltIn & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~WorkDivCudaBuiltIn() = default;
+            /*virtual*/ ALPAKA_FN_HOST_ACC ~WorkDivCudaBuiltIn() = default;
 
         public:
             // \TODO: Optimize! Add WorkDivCudaBuiltInNoElems that has no member m_threadElemExtent as well as AccGpuCudaRtNoElems.

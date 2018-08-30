@@ -46,7 +46,7 @@ namespace alpaka
         public:
 
             //-----------------------------------------------------------------------------
-            AtomicCudaBuiltIn() = default;
+            ALPAKA_FN_HOST_ACC AtomicCudaBuiltIn() = default;
             //-----------------------------------------------------------------------------
             __device__ AtomicCudaBuiltIn(AtomicCudaBuiltIn const &) = delete;
             //-----------------------------------------------------------------------------
@@ -56,7 +56,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             __device__ auto operator=(AtomicCudaBuiltIn &&) -> AtomicCudaBuiltIn & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~AtomicCudaBuiltIn() = default;
+            /*virtual*/ ALPAKA_FN_HOST_ACC ~AtomicCudaBuiltIn() = default;
         };
 
         namespace traits

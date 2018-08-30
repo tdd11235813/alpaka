@@ -49,7 +49,7 @@ namespace alpaka
                     using BlockSharedMemDynBase = BlockSharedMemDynCudaBuiltIn;
 
                     //-----------------------------------------------------------------------------
-                    BlockSharedMemDynCudaBuiltIn() = default;
+                    ALPAKA_FN_HOST_ACC BlockSharedMemDynCudaBuiltIn() = default;
                     //-----------------------------------------------------------------------------
                     __device__ BlockSharedMemDynCudaBuiltIn(BlockSharedMemDynCudaBuiltIn const &) = delete;
                     //-----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     __device__ auto operator=(BlockSharedMemDynCudaBuiltIn &&) -> BlockSharedMemDynCudaBuiltIn & = delete;
                     //-----------------------------------------------------------------------------
-                    /*virtual*/ ~BlockSharedMemDynCudaBuiltIn() = default;
+                    /*virtual*/ ALPAKA_FN_HOST_ACC ~BlockSharedMemDynCudaBuiltIn() = default;
                 };
 
                 namespace traits

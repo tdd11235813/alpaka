@@ -63,7 +63,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(BarrierThread &&) -> BarrierThread & = delete;
                 //-----------------------------------------------------------------------------
-                ~BarrierThread() = default;
+                ALPAKA_FN_HOST ~BarrierThread() = default;
 
                 //-----------------------------------------------------------------------------
                 //! Waits for all the other threads to reach the barrier.
@@ -171,7 +171,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(BarrierThreadWithPredicate &&) -> BarrierThreadWithPredicate & = delete;
                 //-----------------------------------------------------------------------------
-                ~BarrierThreadWithPredicate() = default;
+                ALPAKA_FN_HOST ~BarrierThreadWithPredicate() = default;
 
                 //-----------------------------------------------------------------------------
                 //! Waits for all the other threads to reach the barrier.
