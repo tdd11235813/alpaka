@@ -68,7 +68,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     auto operator=(EventCpuImpl &&) -> EventCpuImpl & = default;
                     //-----------------------------------------------------------------------------
-                    ~EventCpuImpl() noexcept = default;
+                    ALPAKA_FN_HOST ~EventCpuImpl() noexcept = default;
 
                     //-----------------------------------------------------------------------------
                     auto isReady() noexcept -> bool
@@ -134,7 +134,7 @@ namespace alpaka
                 return !((*this) == rhs);
             }
             //-----------------------------------------------------------------------------
-            ~EventCpu() = default;
+            ALPAKA_FN_HOST ~EventCpu() = default;
 
         public:
             std::shared_ptr<cpu::detail::EventCpuImpl> m_spEventImpl;

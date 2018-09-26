@@ -51,7 +51,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator=(TimeStdLib &&) -> TimeStdLib & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~TimeStdLib() = default;
+            /*virtual*/ ALPAKA_FN_HOST ~TimeStdLib() = default;
         };
 
         namespace traits

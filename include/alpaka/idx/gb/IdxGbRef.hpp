@@ -58,7 +58,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_FN_HOST auto operator=(IdxGbRef &&) -> IdxGbRef & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~IdxGbRef() = default;
+                /*virtual*/ ALPAKA_FN_HOST ~IdxGbRef() = default;
 
             public:
                 vec::Vec<TDim, TIdx> const & m_gridBlockIdx;

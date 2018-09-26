@@ -431,6 +431,8 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
                 IF(ALPAKA_CUDA_SHOW_REGISTER)
                     LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-Xcuda-ptxas=-v")
                 ENDIF()
+                # avoids warnings on host-device signatured, default constructors/destructors
+                LIST(APPEND CUDA_NVCC_FLAGS "-Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
 
                 IF(ALPAKA_CUDA_KEEP_FILES)
                     LIST(APPEND _ALPAKA_COMPILE_OPTIONS_PUBLIC "-save-temps")
@@ -548,6 +550,8 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
                 IF(ALPAKA_CUDA_SHOW_REGISTER)
                     LIST(APPEND CUDA_NVCC_FLAGS "-Xptxas=-v")
                 ENDIF()
+                # avoids warnings on host-device signatured, default constructors/destructors
+                LIST(APPEND CUDA_NVCC_FLAGS "-Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
 
                 IF(ALPAKA_CUDA_KEEP_FILES)
                     MAKE_DIRECTORY("${PROJECT_BINARY_DIR}/nvcc_tmp")

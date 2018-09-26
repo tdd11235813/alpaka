@@ -57,7 +57,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST auto operator=(BlockSharedMemStNoSync &&) -> BlockSharedMemStNoSync & = delete;
                     //-----------------------------------------------------------------------------
-                    /*virtual*/ ~BlockSharedMemStNoSync() = default;
+                    /*virtual*/ ALPAKA_FN_HOST ~BlockSharedMemStNoSync() = default;
 
                 public:
                     // TODO: We should add the size of the (current) allocation.

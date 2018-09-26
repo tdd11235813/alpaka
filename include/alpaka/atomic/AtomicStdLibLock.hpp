@@ -82,7 +82,7 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             ALPAKA_FN_HOST auto operator=(AtomicStdLibLock &&) -> AtomicStdLibLock & = delete;
             //-----------------------------------------------------------------------------
-            /*virtual*/ ~AtomicStdLibLock() = default;
+            /*virtual*/ ALPAKA_FN_HOST ~AtomicStdLibLock() = default;
 
             template<typename TPtr>
             std::mutex & getMutex(TPtr const * const ptr) const
