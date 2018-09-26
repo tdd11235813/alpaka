@@ -84,7 +84,7 @@ namespace alpaka
                     //-----------------------------------------------------------------------------
                     auto operator=(DevCpuImpl &&) -> DevCpuImpl & = default;
                     //-----------------------------------------------------------------------------
-                    ~DevCpuImpl() = default;
+                    ALPAKA_FN_HOST ~DevCpuImpl() = default;
 
                     //-----------------------------------------------------------------------------
                     ALPAKA_FN_HOST auto GetAllAsyncQueueImpls() const

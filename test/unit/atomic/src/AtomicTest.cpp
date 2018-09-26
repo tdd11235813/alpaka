@@ -652,6 +652,7 @@ public:
 BOOST_AUTO_TEST_SUITE(atomic)
 
 //#############################################################################
+#if defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
 template<
     typename TAcc,
     typename T>
@@ -677,6 +678,7 @@ struct TestAtomicOperations
                 value));
     }
 };
+#endif
 
 //-----------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE_TEMPLATE(

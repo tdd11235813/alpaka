@@ -45,7 +45,7 @@ namespace alpaka
                 using BlockSyncBase = BlockSyncCudaBuiltIn;
 
                 //-----------------------------------------------------------------------------
-                BlockSyncCudaBuiltIn() = default;
+                ALPAKA_FN_HOST_ACC BlockSyncCudaBuiltIn() = default;
                 //-----------------------------------------------------------------------------
                 __device__ BlockSyncCudaBuiltIn(BlockSyncCudaBuiltIn const &) = delete;
                 //-----------------------------------------------------------------------------
@@ -55,7 +55,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 __device__ auto operator=(BlockSyncCudaBuiltIn &&) -> BlockSyncCudaBuiltIn & = delete;
                 //-----------------------------------------------------------------------------
-                /*virtual*/ ~BlockSyncCudaBuiltIn() = default;
+                /*virtual*/ ALPAKA_FN_HOST_ACC ~BlockSyncCudaBuiltIn() = default;
             };
 
             namespace traits
