@@ -285,7 +285,7 @@ namespace alpaka
                     template<
                         typename TElem,
                         typename TExtent>
-                    ALPAKA_FN_HOST static auto createStaticDevMemView(
+                    ALPAKA_FN_HOST_ACC static auto createStaticDevMemView(
                         TElem * pMem,
                         dev::DevCpu const & dev,
                         TExtent const & extent)
@@ -316,7 +316,7 @@ namespace alpaka
                     template<
                         typename TElem,
                         typename TExtent>
-                    ALPAKA_FN_HOST static auto createStaticDevMemView(
+                    ALPAKA_FN_HOST_ACC static auto createStaticDevMemView(
                         TElem * pMem,
                         dev::DevCudaRt const & dev,
                         TExtent const & extent)

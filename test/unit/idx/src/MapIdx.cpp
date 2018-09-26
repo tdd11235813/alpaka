@@ -54,7 +54,7 @@ struct CreateExtentBufVal
     //-----------------------------------------------------------------------------
     template<
         typename TIdx>
-    static auto create(
+    ALPAKA_FN_HOST_ACC static auto create(
         TIdx)
     -> TIdx
     {
