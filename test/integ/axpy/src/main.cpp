@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 #ifdef ALPAKA_CI
     Idx const numElements = 1u<<9u;
 #else
-    Idx const numElements = 1u<<16u;
+    Idx const numElements = 1u<<4u;
 #endif
 
     using Val = float;

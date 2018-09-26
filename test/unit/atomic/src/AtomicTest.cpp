@@ -309,6 +309,27 @@ struct TestAtomicOperations<
 };
 #endif
 
+#if defined(ALPAKA_ACC_GPU_HIP_ENABLED) && BOOST_LANG_HIP
+//#############################################################################
+// NOTE: std::uint32_t is the only type supported by all atomic CUDA operations.
+template<
+    typename TDim,
+    typename TIdx,
+    typename T>
+struct TestAtomicOperations<
+    alpaka::acc::AccGpuHipRt<TDim, TIdx>,
+    T,
+    typename std::enable_if<!std::is_same<std::uint32_t, T>::value>::type>
+{
+    //-----------------------------------------------------------------------------
+    static auto testAtomicOperations()
+    -> void
+    {
+        // All other types are not supported by all CUDA atomic operations.
+    }
+};
+#endif
+
 //-----------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE_TEMPLATE(
     atomicOperationsWorking,
