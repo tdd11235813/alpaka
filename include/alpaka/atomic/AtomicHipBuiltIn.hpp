@@ -29,8 +29,10 @@
     #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
 #endif
 
+#include <alpaka/core/Unused.hpp>
 #include <alpaka/atomic/Op.hpp>
 #include <alpaka/atomic/Traits.hpp>
+#include <alpaka/meta/DependentFalseType.hpp>
 
 namespace alpaka
 {
@@ -277,7 +279,6 @@ namespace alpaka
                     return atomicMin(addr, value);
                 }
             };
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -295,10 +296,17 @@ namespace alpaka
                     unsigned long long int const & value)
                 -> unsigned long long int
                 {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
                     return atomicMin(addr, value);
+#else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Min, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
                 }
             };
-#endif
             //-----------------------------------------------------------------------------
             // Max.
             //-----------------------------------------------------------------------------
@@ -340,7 +348,6 @@ namespace alpaka
                     return atomicMax(addr, value);
                 }
             };
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -358,10 +365,17 @@ namespace alpaka
                     unsigned long long int const & value)
                 -> unsigned long long int
                 {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
                     return atomicMax(addr, value);
+#else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Max, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
                 }
             };
-#endif
 
             //-----------------------------------------------------------------------------
             // Exch.
@@ -535,7 +549,6 @@ namespace alpaka
                     return atomicAnd(addr, value);
                 }
             };
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -553,10 +566,17 @@ namespace alpaka
                     unsigned long long int const & value)
                 -> unsigned long long int
                 {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
                     return atomicAnd(addr, value);
+#else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::And, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
                 }
             };
-#endif
             //-----------------------------------------------------------------------------
             // Or.
 
@@ -601,7 +621,6 @@ namespace alpaka
                     return atomicOr(addr, value);
                 }
             };
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -619,10 +638,17 @@ namespace alpaka
                     unsigned long long int const & value)
                 -> unsigned long long int
                 {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
                     return atomicOr(addr, value);
+#else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Or, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
                 }
             };
-#endif
             //-----------------------------------------------------------------------------
             // Xor.
 
@@ -666,7 +692,6 @@ namespace alpaka
                     return atomicXor(addr, value);
                 }
             };
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -684,10 +709,17 @@ namespace alpaka
                     unsigned long long int const & value)
                 -> unsigned long long int
                 {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
                     return atomicXor(addr, value);
+#else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Xor, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
                 }
             };
-#endif
             //-----------------------------------------------------------------------------
             // Cas.
             //-----------------------------------------------------------------------------
@@ -751,6 +783,50 @@ namespace alpaka
                 -> unsigned long long int
                 {
                     return atomicCAS(addr, compare, value);
+                }
+            };
+
+            //#############################################################################
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename TOp,
+                typename T,
+                typename THierarchy>
+            struct AtomicOp<
+                TOp,
+                atomic::AtomicHipBuiltIn,
+                T,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const & atomic,
+                    T * const addr,
+                    T const & value)
+                -> T
+                {
+                    alpaka::ignore_unused(atomic);
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<TOp, atomic::AtomicHipBuiltIn, T>(atomic, addr, value) is not supported!");
+                }
+                //-----------------------------------------------------------------------------
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const & atomic,
+                    T * const addr,
+                    T const & compare,
+                    T const & value)
+                -> T
+                {
+                    alpaka::ignore_unused(atomic);
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(compare);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<TOp, atomic::AtomicHipBuiltIn, T>(atomic, addr, compare, value) is not supported!");
                 }
             };
         }

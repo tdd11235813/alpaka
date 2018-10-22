@@ -102,8 +102,8 @@ ENDIF()
 
 IF(ALPAKA_ACC_GPU_HIP_ENABLE AND HIP_PLATFORM MATCHES "hcc")
     MESSAGE(WARNING
-        "The HIP back-end is currently experimental. "
-        "HCC platform in alpaka has a few workarounds and does not support 3D memory, constant memory and static device memory. "
+        "The HIP back-end is currently experimental, especially for HCC. "
+        "In alpaka HIP(HCC) has a few workarounds and does not support 3D memory and constant memory. "
         )
 ENDIF()
 
