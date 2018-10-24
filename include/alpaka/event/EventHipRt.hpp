@@ -23,22 +23,24 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>               // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/dev/DevHipRt.hpp>		// DevHipRt
-#include <alpaka/dev/Traits.hpp>                // GetDev
-#include <alpaka/event/Traits.hpp>              // event::traits::Test, ...
-#include <alpaka/wait/Traits.hpp>               // CurrentThreadWaitFor
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
+#include <alpaka/dev/DevHipRt.hpp>
+#include <alpaka/dev/Traits.hpp>
+#include <alpaka/event/Traits.hpp>
+#include <alpaka/wait/Traits.hpp>
 
-#include <alpaka/queue/QueueHipRtSync.hpp>   // queue::QueueHipRtSync (as of now, only a renamed copy of it's HIP counterpart)
-#include <alpaka/queue/QueueHipRtAsync.hpp>  // queue::QueueHipRtAsync (as of now, only a renamed copy of it's HIP counterpart)
-
+#include <alpaka/queue/QueueHipRtAsync.hpp>
+#include <alpaka/queue/QueueHipRtSync.hpp>
 #include <alpaka/core/Hip.hpp>
 
-#include <stdexcept>                            // std::runtime_error
-#include <memory>                               // std::shared_ptr
-#include <functional>                           // std::bind
+#include <stdexcept>
+#include <memory>
+#include <functional>
 
 namespace alpaka
 {

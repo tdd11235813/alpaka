@@ -324,8 +324,8 @@ namespace alpaka
                     auto const threadElemExtent(
                         workdiv::getWorkDiv<Thread, Elems>(task));
 
-                    dim3 gridDim(exec::hip::detail::convertVecToHipDim(gridBlockExtent));
-                    dim3 blockDim(exec::hip::detail::convertVecToHipDim(blockThreadExtent));
+                    dim3 const gridDim(exec::hip::detail::convertVecToHipDim(gridBlockExtent));
+                    dim3 const blockDim(exec::hip::detail::convertVecToHipDim(blockThreadExtent));
                     exec::hip::detail::checkVecOnly3Dim(threadElemExtent);
 
 #if ALPAKA_DEBUG >= ALPAKA_DEBUG_FULL

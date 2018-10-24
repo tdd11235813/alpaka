@@ -40,6 +40,7 @@
 #include <alpaka/queue/QueueHipRtAsync.hpp>
 #include <alpaka/queue/QueueHipRtSync.hpp>
 
+#include <alpaka/core/Assert.hpp>
 #include <alpaka/core/Hip.hpp>
 
 #include <set>

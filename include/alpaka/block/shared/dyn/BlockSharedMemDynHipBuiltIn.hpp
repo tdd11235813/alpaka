@@ -23,11 +23,15 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>               // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/block/shared/dyn/Traits.hpp>   // AllocVar
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <type_traits>                          // std::is_trivially_default_constructible, std::is_trivially_destructible
+#include <alpaka/block/shared/dyn/Traits.hpp>
+
+#include <type_traits>
 
 namespace alpaka
 {
@@ -82,8 +86,6 @@ namespace alpaka
                         {
                             // Because unaligned access to variables is not allowed in device code,
                             // we have to use the widest possible type to have all types aligned correctly.
-                            // See: http://docs.nvidia.com/hip/hip-c-programming-guide/index.html#shared
-                            // http://docs.nvidia.com/hip/hip-c-programming-guide/index.html#vector-types
                             extern __shared__ float4 shMem[];
                             return reinterpret_cast<T *>(shMem);
                         }

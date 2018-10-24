@@ -23,12 +23,16 @@
 
 #ifdef ALPAKA_ACC_GPU_HIP_ENABLED
 
-#include <alpaka/core/Common.hpp>           // ALPAKA_FN_*, __HIPCC__
+#include <alpaka/core/Common.hpp>
 
-#include <alpaka/block/shared/st/Traits.hpp>// AllocVar
+#if !BOOST_LANG_HIP
+    #error If ALPAKA_ACC_GPU_HIP_ENABLED is set, the compiler has to support HIP!
+#endif
 
-#include <type_traits>                      // std::is_trivially_default_constructible, std::is_trivially_destructible
-#include <cstdint>                          // uint8_t
+#include <alpaka/block/shared/st/Traits.hpp>
+
+#include <type_traits>
+#include <cstdint>
 
 namespace alpaka
 {
