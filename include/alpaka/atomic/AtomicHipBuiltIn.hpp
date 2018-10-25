@@ -34,6 +34,8 @@
 #include <alpaka/atomic/Traits.hpp>
 #include <alpaka/meta/DependentFalseType.hpp>
 
+#include <climits>
+
 namespace alpaka
 {
     namespace atomic
@@ -108,6 +110,34 @@ namespace alpaka
                 -> unsigned int
                 {
                     return atomicAdd(addr, value);
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Add,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicAdd(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    return atomicAdd(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+#endif
                 }
             };
             //-----------------------------------------------------------------------------
@@ -236,6 +266,37 @@ namespace alpaka
             };
 
             //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Sub,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicSub(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Sub, atomic::AtomicHipBuiltIn, unsigned long int> is only supported when sizeof(unsigned long int) == 4");
+#endif
+                }
+            };
+
+            //-----------------------------------------------------------------------------
             // Min.
 
             //-----------------------------------------------------------------------------
@@ -282,7 +343,43 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
-               typename THierarchy>
+                typename THierarchy>
+            struct AtomicOp<
+                op::Min,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicMin(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+# if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                    return atomicMin(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+# else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Min, atomic::AtomicHipBuiltIn, unsigned long int> is only supported on sm >= 3.5");
+# endif
+#endif
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
             struct AtomicOp<
                 op::Min,
                 atomic::AtomicHipBuiltIn,
@@ -309,6 +406,7 @@ namespace alpaka
             };
             //-----------------------------------------------------------------------------
             // Max.
+
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
@@ -351,30 +449,67 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
-               typename THierarchy>
+                typename THierarchy>
             struct AtomicOp<
                 op::Max,
                 atomic::AtomicHipBuiltIn,
-                unsigned long long int,
+                unsigned long int,
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
+                //
                 __device__ static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
-                    unsigned long long int * const addr,
-                    unsigned long long int const & value)
-                -> unsigned long long int
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
                 {
-#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
-                    return atomicMax(addr, value);
-#else
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicMax(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+# if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                    return atomicMax(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+# else
                     alpaka::ignore_unused(addr);
                     alpaka::ignore_unused(value);
                     static_assert(
                         meta::DependentFalseType<THierarchy>::value,
-                        "atomicOp<op::Max, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+                        "atomicOp<op::Max, atomic::AtomicHipBuiltIn, unsigned long int> is only supported on sm >= 3.5");
+# endif
 #endif
                 }
+            };
+          //-----------------------------------------------------------------------------
+          //! The GPU HIP accelerator atomic operation.
+          template<
+            typename THierarchy>
+          struct AtomicOp<
+            op::Max,
+            atomic::AtomicHipBuiltIn,
+            unsigned long long int,
+            THierarchy>
+          {
+            //-----------------------------------------------------------------------------
+            __device__ static auto atomicOp(
+              atomic::AtomicHipBuiltIn const &,
+              unsigned long long int * const addr,
+              unsigned long long int const & value)
+              -> unsigned long long int
+              {
+#if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                return atomicMax(addr, value);
+#else
+                alpaka::ignore_unused(addr);
+                alpaka::ignore_unused(value);
+                static_assert(
+                  meta::DependentFalseType<THierarchy>::value,
+                  "atomicOp<op::Max, atomic::AtomicHipBuiltIn, unsigned long long int> is only supported on sm >= 3.5");
+#endif
+                    }
             };
 
             //-----------------------------------------------------------------------------
@@ -427,6 +562,35 @@ namespace alpaka
             struct AtomicOp<
                 op::Exch,
                 atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicExch(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    return atomicExch(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+#endif
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Exch,
+                atomic::AtomicHipBuiltIn,
                 unsigned long long int,
                 THierarchy>
             {
@@ -460,6 +624,7 @@ namespace alpaka
                     return atomicExch(addr, value);
                 }
             };
+
             //-----------------------------------------------------------------------------
             // Inc.
 
@@ -484,6 +649,38 @@ namespace alpaka
                 }
             };
             //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Inc,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicInc(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Inc, atomic::AtomicHipBuiltIn, unsigned long int> is only supported when sizeof(unsigned long int) == 4");
+#endif
+                }
+            };
+
+            //-----------------------------------------------------------------------------
             // Dec.
 
             //-----------------------------------------------------------------------------
@@ -506,6 +703,38 @@ namespace alpaka
                     return atomicDec(addr, value);
                 }
             };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Dec,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicDec(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Dec, atomic::AtomicHipBuiltIn, unsigned long int> is only supported when sizeof(unsigned long int) == 4");
+#endif
+                }
+            };
+
             //-----------------------------------------------------------------------------
             // And.
 
@@ -547,6 +776,43 @@ namespace alpaka
                 -> unsigned int
                 {
                     return atomicAnd(addr, value);
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::And,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicAnd(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+# if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                    return atomicAnd(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+# else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::And, atomic::AtomicHipBuiltIn, unsigned long int> is only supported on sm >= 3.5");
+# endif
+#endif
                 }
             };
             //-----------------------------------------------------------------------------
@@ -611,7 +877,6 @@ namespace alpaka
                 THierarchy>
             {
                 //-----------------------------------------------------------------------------
-
                 __device__ static auto atomicOp(
                     atomic::AtomicHipBuiltIn const &,
                     unsigned int * const addr,
@@ -624,7 +889,44 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
-               typename THierarchy>
+                typename THierarchy>
+            struct AtomicOp<
+                op::Or,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicOr(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+# if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                    return atomicOr(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+# else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Or, atomic::AtomicHipBuiltIn, unsigned long int> is only supported on sm >= 3.5");
+# endif
+#endif
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
             struct AtomicOp<
                 op::Or,
                 atomic::AtomicHipBuiltIn,
@@ -695,7 +997,44 @@ namespace alpaka
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
-               typename THierarchy>
+                typename THierarchy>
+            struct AtomicOp<
+                op::Xor,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicXor(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+# if BOOST_ARCH_PTX >= BOOST_VERSION_NUMBER(3, 5, 0)
+                    return atomicXor(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(value));
+# else
+                    alpaka::ignore_unused(addr);
+                    alpaka::ignore_unused(value);
+                    static_assert(
+                        meta::DependentFalseType<THierarchy>::value,
+                        "atomicOp<op::Xor, atomic::AtomicHipBuiltIn, unsigned long int> is only supported on sm >= 3.5");
+# endif
+#endif
+                }
+            };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
             struct AtomicOp<
                 op::Xor,
                 atomic::AtomicHipBuiltIn,
@@ -720,6 +1059,7 @@ namespace alpaka
 #endif
                 }
             };
+
             //-----------------------------------------------------------------------------
             // Cas.
             //-----------------------------------------------------------------------------
@@ -764,6 +1104,39 @@ namespace alpaka
                     return atomicCAS(addr, compare, value);
                 }
             };
+            //-----------------------------------------------------------------------------
+            //! The GPU HIP accelerator atomic operation.
+            template<
+                typename THierarchy>
+            struct AtomicOp<
+                op::Cas,
+                atomic::AtomicHipBuiltIn,
+                unsigned long int,
+                THierarchy>
+            {
+                //-----------------------------------------------------------------------------
+                //
+                __device__ static auto atomicOp(
+                    atomic::AtomicHipBuiltIn const &,
+                    unsigned long int * const addr,
+                    unsigned long int const & compare,
+                    unsigned long int const & value)
+                -> unsigned long int
+                {
+#if UINT_MAX == ULONG_MAX // LLP64
+                    return atomicCAS(
+                        reinterpret_cast<unsigned int *>(addr),
+                        static_cast<unsigned int>(compare),
+                        static_cast<unsigned int>(value));
+#else // ULONG_MAX == ULLONG_MAX LP64
+                    return atomicCAS(
+                        reinterpret_cast<unsigned long long int *>(addr),
+                        static_cast<unsigned long long int>(compare),
+                        static_cast<unsigned long long int>(value));
+#endif
+                }
+            };
+
             //-----------------------------------------------------------------------------
             //! The GPU HIP accelerator atomic operation.
             template<
