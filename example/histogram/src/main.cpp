@@ -67,7 +67,6 @@ auto measureKernelRunTimeMs(
 }
 
 
-ALPAKA_FN_ACC
 uint_t bitcount(uint_t n)
 {
   n = ((0xaaaaaaaa & n) >> 1) + (0x55555555 & n);
@@ -80,7 +79,6 @@ uint_t bitcount(uint_t n)
 
 template<typename TAcc>
 struct Bitcount {
-
     auto operator()(uint_t v) -> uint_t
     {
         return bitcount(v);
