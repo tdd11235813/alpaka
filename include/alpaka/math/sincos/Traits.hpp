@@ -46,7 +46,7 @@ namespace alpaka
             typename T,
             typename TArg>
         ALPAKA_FN_HOST_ACC auto sincos(
-            T const & sincos,
+            T const & sin_cos, // must not be 'sincos' (e.g. gcc4.9+nvcc8 cannot distinguish variable & function name)
             TArg const & arg,
             TArg & result_sin,
             TArg & result_cos)
@@ -56,7 +56,7 @@ namespace alpaka
                 T,
                 TArg>
                 ::sincos(
-                    sincos,
+                    sin_cos,
                     arg,
                     result_sin,
                     result_cos
@@ -83,7 +83,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_HOST_ACC static auto sincos(
-                    T const & sincos,
+                    T const & sin_cos,
                     TArg const & arg,
                     TArg & result_sin,
                     TArg & result_cos
@@ -92,7 +92,7 @@ namespace alpaka
                 {
                     // Delegate the call to the base class.
                     math::sincos(
-                        static_cast<typename T::SinCosBase const &>(sincos),
+                        static_cast<typename T::SinCosBase const &>(sin_cos),
                         arg, result_sin, result_cos);
                 }
             };

@@ -47,8 +47,8 @@ public:
     {
         // if arg is hardcoded then compiler can optimize it out
         // (PTX kernel (float) was just empty)
-        FP check_sin = sin(arg);
-        FP check_cos = cos(arg);
+        FP check_sin = std::sin(arg);
+        FP check_cos = std::cos(arg);
         FP result_sin;
         FP result_cos;
         alpaka::math::sincos(acc, arg, result_sin, result_cos);
