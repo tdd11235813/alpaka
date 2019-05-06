@@ -37,7 +37,7 @@ namespace alpaka
         //!
         //! \tparam T The type of the object specializing SinCos.
         //! \tparam TArg The arg type.
-        //! \param sincos The object specializing SinCos.
+        //! \param sin_cos The object specializing SinCos.
         //! \param arg The arg.
         //! \param result_sin result of sine
         //! \param result_cos result of cosine

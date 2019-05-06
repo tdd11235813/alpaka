@@ -49,7 +49,7 @@ namespace alpaka
         {
             //#############################################################################
 
-                        //! sincos trait specialization.
+            //! sincos trait specialization.
             template<>
             struct SinCos<SinCosHipBuiltIn, double>
             {

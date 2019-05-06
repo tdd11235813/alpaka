@@ -47,10 +47,10 @@ public:
     {
         // if arg is hardcoded then compiler can optimize it out
         // (PTX kernel (float) was just empty)
-        FP check_sin = std::sin(arg);
-        FP check_cos = std::cos(arg);
-        FP result_sin;
-        FP result_cos;
+        FP check_sin = alpaka::math::sin(acc, arg);
+        FP check_cos = alpaka::math::cos(acc, arg);
+        FP result_sin = 0.;
+        FP result_cos = 0.;
         alpaka::math::sincos(acc, arg, result_sin, result_cos);
         ALPAKA_CHECK(*success,
                      almost_equal(acc, result_sin, check_sin, 1)
