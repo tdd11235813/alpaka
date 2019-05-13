@@ -54,13 +54,13 @@ namespace alpaka
             struct SinCos<SinCosHipBuiltIn, double>
             {
                 __device__ static auto sincos(
-                    SinCosHipBuiltIn const & sin_cos,
+                    SinCosHipBuiltIn const & sincos_ctx,
                     double const & arg,
                     double & result_sin,
                     double & result_cos)
                 -> void
                 {
-                    alpaka::ignore_unused(sin_cos);
+                    alpaka::ignore_unused(sincos_ctx);
                     ::sincos(arg, &result_sin, &result_cos);
                 }
             };
@@ -70,13 +70,13 @@ namespace alpaka
             struct SinCos<SinCosHipBuiltIn, float>
             {
                 __device__ static auto sincos(
-                    SinCosHipBuiltIn const & sin_cos,
+                    SinCosHipBuiltIn const & sincos_ctx,
                     float const & arg,
                     float & result_sin,
                     float & result_cos)
                 -> void
                 {
-                    alpaka::ignore_unused(sin_cos);
+                    alpaka::ignore_unused(sincos_ctx);
                     ::sincosf(arg, &result_sin, &result_cos);
                 }
             };

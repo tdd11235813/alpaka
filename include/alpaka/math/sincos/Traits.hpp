@@ -37,7 +37,7 @@ namespace alpaka
         //!
         //! \tparam T The type of the object specializing SinCos.
         //! \tparam TArg The arg type.
-        //! \param sin_cos The object specializing SinCos.
+        //! \param sincos_ctx The object specializing SinCos.
         //! \param arg The arg.
         //! \param result_sin result of sine
         //! \param result_cos result of cosine
@@ -46,7 +46,7 @@ namespace alpaka
             typename T,
             typename TArg>
         ALPAKA_FN_HOST_ACC auto sincos(
-            T const & sin_cos, // must not be 'sincos' (e.g. gcc4.9+nvcc8 cannot distinguish variable & function name)
+            T const & sincos_ctx,
             TArg const & arg,
             TArg & result_sin,
             TArg & result_cos)
@@ -56,7 +56,7 @@ namespace alpaka
                 T,
                 TArg>
                 ::sincos(
-                    sin_cos,
+                    sincos_ctx,
                     arg,
                     result_sin,
                     result_cos
@@ -83,7 +83,7 @@ namespace alpaka
                 //-----------------------------------------------------------------------------
                 ALPAKA_NO_HOST_ACC_WARNING
                 ALPAKA_FN_HOST_ACC static auto sincos(
-                    T const & sin_cos,
+                    T const & sincos_ctx,
                     TArg const & arg,
                     TArg & result_sin,
                     TArg & result_cos
@@ -92,7 +92,7 @@ namespace alpaka
                 {
                     // Delegate the call to the base class.
                     math::sincos(
-                        static_cast<typename T::SinCosBase const &>(sin_cos),
+                        static_cast<typename T::SinCosBase const &>(sincos_ctx),
                         arg, result_sin, result_cos);
                 }
             };

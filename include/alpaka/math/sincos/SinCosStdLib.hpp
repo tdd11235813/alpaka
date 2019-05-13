@@ -41,13 +41,13 @@ namespace alpaka
                     std::is_floating_point<TArg>::value>::type>
             {
                 ALPAKA_FN_HOST static auto sincos(
-                    SinCosStdLib const & sin_cos,
+                    SinCosStdLib const & sincos_ctx,
                     TArg const & arg,
                     TArg & result_sin,
                     TArg & result_cos )
                 -> void
                 {
-                    alpaka::ignore_unused(sin_cos);
+                    alpaka::ignore_unused(sincos_ctx);
                     result_sin = std::sin(arg);
                     result_cos = std::cos(arg);
                 }

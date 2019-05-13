@@ -46,13 +46,13 @@ namespace alpaka
                 double>
             {
                 __device__ static auto sincos(
-                    SinCosCudaBuiltIn const & sin_cos, // must not be 'sincos' (e.g. gcc4.9+nvcc8 cannot distinguish variable & function name)
+                    SinCosCudaBuiltIn const & sincos_ctx,
                     double const & arg,
                     double & result_sin,
                     double & result_cos)
                 -> void
                 {
-                    alpaka::ignore_unused(sin_cos);
+                    alpaka::ignore_unused(sincos_ctx);
                     ::sincos(arg, &result_sin, &result_cos);
                 }
             };
@@ -64,13 +64,13 @@ namespace alpaka
                 float>
             {
                 __device__ static auto sincos(
-                    SinCosCudaBuiltIn const & sin_cos,
+                    SinCosCudaBuiltIn const & sincos_ctx,
                     float const & arg,
                     float & result_sin,
                     float & result_cos)
                 -> void
                 {
-                    alpaka::ignore_unused(sin_cos);
+                    alpaka::ignore_unused(sincos_ctx);
                     ::sincosf(arg, &result_sin, &result_cos);
                 }
             };
