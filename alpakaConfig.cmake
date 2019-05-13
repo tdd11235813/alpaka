@@ -587,11 +587,11 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
                     LIST(APPEND CUDA_NVCC_FLAGS "--expt-relaxed-constexpr")
                 ENDIF()
 
-                #FOREACH(_CUDA_ARCH_ELEM ${ALPAKA_CUDA_ARCH})
-                #    # set flags to create device code for the given architecture
-                #    SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
-                #        "--generate-code arch=compute_${_CUDA_ARCH_ELEM},code=sm_${_CUDA_ARCH_ELEM} --generate-code arch=compute_${_CUDA_ARCH_ELEM},code=compute_${_CUDA_ARCH_ELEM}")
-                #ENDFOREACH()
+                FOREACH(_CUDA_ARCH_ELEM ${ALPAKA_CUDA_ARCH})
+                   # set flags to create device code for the given architecture
+                   LIST(APPEND CUDA_NVCC_FLAGS
+                       --generate-code arch=compute_${_CUDA_ARCH_ELEM},code=sm_${_CUDA_ARCH_ELEM} --generate-code arch=compute_${_CUDA_ARCH_ELEM},code=compute_${_CUDA_ARCH_ELEM})
+                ENDFOREACH()
 
                 IF(NOT MSVC)
                     LIST(APPEND CUDA_NVCC_FLAGS "-std=c++${ALPAKA_CXX_STANDARD}")
@@ -629,9 +629,11 @@ IF(ALPAKA_ACC_GPU_CUDA_ENABLE)
                     LIST(APPEND CUDA_NVCC_FLAGS "-Xptxas=-v")
                 ENDIF()
                 # avoids warnings on host-device signatured, default constructors/destructors
-                #IF(CUDA_VERSION GREATER_EQUAL 9.0)
-                #    LIST(APPEND CUDA_NVCC_FLAGS "-Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
-                #ENDIF()
+                IF(CUDA_VERSION GREATER_EQUAL 9.0)
+                    LIST(APPEND CUDA_NVCC_FLAGS
+                        -Xcudafe
+                        --diag_suppress=esa_on_defaulted_function_ignored)
+                ENDIF()
 
                 IF(ALPAKA_CUDA_KEEP_FILES)
                     MAKE_DIRECTORY("${PROJECT_BINARY_DIR}/nvcc_tmp")

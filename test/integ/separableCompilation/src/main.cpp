@@ -158,7 +158,7 @@ void operator()()
     alpaka::mem::view::copy(queueAcc, memBufAccB, memBufHostB, extent);
 
     // Create the executor task.
-    auto const exec(alpaka::kernel::createTaskExec<TAcc>(
+    auto const taskKernel(alpaka::kernel::createTaskKernel<TAcc>(
         workDiv,
         kernel,
         alpaka::mem::view::getPtrNative(memBufAccA),
@@ -170,7 +170,7 @@ void operator()()
     std::cout << "Execution time: "
         << alpaka::test::integ::measureTaskRunTimeMs(
             queueAcc,
-            exec)
+            taskKernel)
         << " ms"
         << std::endl;
 
