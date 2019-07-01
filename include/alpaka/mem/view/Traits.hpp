@@ -531,10 +531,10 @@ namespace alpaka
                 struct CreatePitchBytes
                 {
                     //-----------------------------------------------------------------------------
-                    ALPAKA_NO_HOST_ACC_WARNING
+                    //ALPAKA_NO_HOST_ACC_WARNING
                     template<
                         typename TPitch>
-                    ALPAKA_FN_HOST_ACC
+                    //ALPAKA_FN_HOST_ACC
                     static auto create(
                         TPitch const & pitch)
                     -> idx::Idx<TPitch>
