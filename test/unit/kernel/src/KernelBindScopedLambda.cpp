@@ -35,7 +35,36 @@ void operator()()
     REQUIRE(
         fixture(
             alpaka::core::bindScope< alpaka::core::Scope::HostAndDevice > (
-                ALPAKA_LAMBDA
+                ALPAKA_FN_LAMBDA [=]
+                (TAcc const & acc,
+                    bool * success,
+                    std::uint32_t const & arg1)
+                -> void
+                {
+                    alpaka::ignore_unused(acc);
+
+                    ALPAKA_CHECK(*success, 42u == arg1);
+                }), arg));
+}
+};
+
+struct TestTemplateBindScopeShortcut
+{
+template< typename TAcc >
+void operator()()
+{
+    using Dim = alpaka::dim::Dim<TAcc>;
+    using Idx = alpaka::idx::Idx<TAcc>;
+
+    alpaka::test::KernelExecutionFixture<TAcc> fixture(
+        alpaka::vec::Vec<Dim, Idx>::ones());
+
+    std::uint32_t const arg = 42u;
+
+    REQUIRE(
+        fixture(
+            ALPAKA_FN_SCOPE_HOST_AND_DEVICE(
+                ALPAKA_FN_LAMBDA [=]
                 (TAcc const & acc,
                     bool * success,
                     std::uint32_t const & arg1)
@@ -54,6 +83,14 @@ TEST_CASE( "bindScopedLambdaKernelIsWorking", "[kernel]")
         alpaka::dim::DimInt<1u>,
         std::size_t>;
     alpaka::meta::forEachType< TestAccs >( TestTemplateBindScope() );
+}
+
+TEST_CASE( "bindScopeShortcutLambdaKernelIsWorking", "[kernel]")
+{
+    using TestAccs = alpaka::test::acc::EnabledAccs<
+        alpaka::dim::DimInt<1u>,
+        std::size_t>;
+    alpaka::meta::forEachType< TestAccs >( TestTemplateBindScopeShortcut() );
 }
 
 #endif

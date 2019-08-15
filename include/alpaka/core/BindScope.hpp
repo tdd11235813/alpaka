@@ -15,24 +15,6 @@
 
 #include <type_traits>
 
-// ALPAKA_LAMBDA defines compiler dependent host-device annotation and capture
-// - from: https://github.com/kokkos/kokkos/wiki/Lambda-Dispatch
-#if BOOST_COMP_NVCC || BOOST_COMP_CLANG_CUDA
-
-#if BOOST_COMP_NVCC < BOOST_VERSION_NUMBER(8, 0, 0)
-  #define ALPAKA_LAMBDA [=]__device__
-#else
-  #define ALPAKA_LAMBDA [=]__host__ __device__
-  #if ALPAKA_CXX_STANDARD>14
-    #define ALPAKA_CLASS_LAMBDA [=,*this] __host__ __device__
-  #endif
-#endif
-
-#else // HIP(HCC) and CPU backends
-  // lambdas do not require a host-device attributes
-  #define ALPAKA_LAMBDA [=]
-
-#endif
 
 namespace alpaka
 {
@@ -242,3 +224,8 @@ namespace alpaka
 
     } // core
 } // alpaka
+
+// macro definitions to provide shortcuts
+#define ALPAKA_FN_SCOPE_HOST alpaka::core::bindScope< alpaka::core::Scope::HostOnly >
+#define ALPAKA_FN_SCOPE_DEVICE alpaka::core::bindScope< alpaka::core::Scope::DeviceOnly >
+#define ALPAKA_FN_SCOPE_HOST_AND_DEVICE alpaka::core::bindScope< alpaka::core::Scope::HostAndDevice >

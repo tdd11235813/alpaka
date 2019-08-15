@@ -138,3 +138,27 @@
 #else
     #define ALPAKA_STATIC_ACC_MEM_CONSTANT
 #endif
+
+
+// ALPAKA_LAMBDA defines compiler dependent host-device annotation and capture
+// - from: https://github.com/kokkos/kokkos/wiki/Lambda-Dispatch
+#if BOOST_COMP_NVCC || BOOST_COMP_CLANG_CUDA
+
+#if BOOST_COMP_NVCC < BOOST_VERSION_NUMBER(8, 0, 0)
+  #define ALPAKA_FN_LAMBDA __device__
+#else
+  #define ALPAKA_FN_LAMBDA __host__ __device__
+  #define ALPAKA_FN_LAMBDA_DEFAULT_CAPTURE [=] __host__ __device__
+  #if ALPAKA_CXX_STANDARD>=17
+    #define ALPAKA_FN_LAMBDA_CLASS_CAPTURE [=,*this] __host__ __device__
+  #endif
+#endif
+
+#else // HIP(HCC) and CPU backends
+  // lambdas do not require a host-device attributes
+  #define ALPAKA_FN_LAMBDA
+  #define ALPAKA_FN_LAMBDA_DEFAULT_CAPTURE [=]
+  #if ALPAKA_CXX_STANDARD>=17
+    #define ALPAKA_FN_LAMBDA_CLASS_CAPTURE [=,*this] //TODO: test it
+  #endif
+#endif
