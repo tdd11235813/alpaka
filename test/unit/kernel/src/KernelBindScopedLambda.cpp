@@ -35,7 +35,7 @@ void operator()()
     REQUIRE(
         fixture(
             alpaka::core::bindScope< alpaka::core::Scope::HostAndDevice > (
-                ALPAKA_FN_LAMBDA [=]
+                ALPAKA_FN_LAMBDA
                 (TAcc const & acc,
                     bool * success,
                     std::uint32_t const & arg1)
@@ -64,7 +64,7 @@ void operator()()
     REQUIRE(
         fixture(
             ALPAKA_FN_SCOPE_HOST_AND_DEVICE(
-                ALPAKA_FN_LAMBDA [=]
+                ALPAKA_FN_LAMBDA
                 (TAcc const & acc,
                     bool * success,
                     std::uint32_t const & arg1)
