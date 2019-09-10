@@ -102,6 +102,7 @@ namespace alpaka
             ALPAKA_FN_HOST_ACC
             auto operator()(TArgs&&... args) const -> void { // void, otherwise callable() must be invoked for decltype()
                 ALPAKA_ASSERT(false);
+                alpaka::ignore_unused(args...);
             }
 #else
             ALPAKA_NO_HOST_ACC_WARNING
@@ -128,6 +129,7 @@ namespace alpaka
             ALPAKA_FN_HOST_ACC
             auto operator()(TArgs&&... args) const -> void { // void, otherwise callable() must be invoked for decltype()
                 ALPAKA_ASSERT(false);
+                alpaka::ignore_unused(args...);
             }
 #else
             ALPAKA_NO_HOST_ACC_WARNING
@@ -195,6 +197,7 @@ namespace alpaka
             __device__
             auto operator()(T&&, TArgs&&... args) const -> void { // void, otherwise callable() must be invoked for decltype()
                 ALPAKA_ASSERT(false);
+                alpaka::ignore_unused(args...);
             }
 
             ALPAKA_FN_HOST_ACC ~BindScope(){} // destructor must reflect host-device annotation of constructors
@@ -211,6 +214,7 @@ namespace alpaka
             ALPAKA_FN_HOST
             auto operator()(TArgs&&... args) const -> void { // void, otherwise callable() must be invoked for decltype()
                 ALPAKA_ASSERT(false);
+                alpaka::ignore_unused(args...);
             }
             template<typename... TArgs>
             __device__
