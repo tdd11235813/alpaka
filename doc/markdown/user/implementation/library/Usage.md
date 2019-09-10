@@ -129,7 +129,7 @@ auto alpaka_callable =
 ALPAKA_FN_SCOPE_HOST(
   ALPAKA_FN_LAMBDA (/* args */) { /*code*/ } );
 
-// explicitly set captures (uncaptured variables will use [=])
+// explicitly set captures
 ALPAKA_FN_SCOPE_HOST(
   ALPAKA_FN_LAMBDA_CAPTURE(&my_capture) (/* args */) { /*code*/ } );
 ```
