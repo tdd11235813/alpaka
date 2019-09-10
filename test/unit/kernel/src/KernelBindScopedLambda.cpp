@@ -12,7 +12,8 @@
     ( defined(__NVCC__) && defined(__CUDACC_EXTENDED_LAMBDA__) )
 
 
-#include <alpaka/alpaka.hpp>
+#include <alpaka/core/BindScope.hpp>
+
 #include <alpaka/test/acc/TestAccs.hpp>
 #include <alpaka/test/KernelExecutionFixture.hpp>
 
