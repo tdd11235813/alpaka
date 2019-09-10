@@ -170,7 +170,7 @@ namespace alpaka
                             {
                                 meta::ndLoopIncIdx(
                                     extentWithoutInnermost,
-                                    ALPAKA_FN_SCOPE_HOST( ALPAKA_FN_LAMBDA (vec::Vec<DimMin1, ExtentSize> const & idx) {
+                                    ALPAKA_FN_SCOPE_HOST( ALPAKA_FN_LAMBDA_CAPTURE(&) (vec::Vec<DimMin1, ExtentSize> const & idx) {
                                             std::memcpy(
                                                 reinterpret_cast<void *>(this->m_dstMemNative + (vec::cast<DstSize>(idx) * dstPitchBytesWithoutOutmost).foldrAll(std::plus<DstSize>())),
                                                 reinterpret_cast<void const *>(this->m_srcMemNative + (vec::cast<SrcSize>(idx) * srcPitchBytesWithoutOutmost).foldrAll(std::plus<SrcSize>())),
