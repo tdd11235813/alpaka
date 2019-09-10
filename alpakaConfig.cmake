@@ -1016,8 +1016,6 @@ IF(NOT TARGET "alpaka")
         INTERFACE cxx_std_${ALPAKA_CXX_STANDARD}
     )
 
-    target_compile_definitions("alpaka" INTERFACE ALPAKA_CXX_STANDARD=${ALPAKA_CXX_STANDARD})
-
     # Compile options.
     IF(${ALPAKA_DEBUG} GREATER 1)
         MESSAGE(STATUS "_ALPAKA_COMPILE_OPTIONS_PUBLIC: ${_ALPAKA_COMPILE_OPTIONS_PUBLIC}")
