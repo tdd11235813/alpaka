@@ -132,9 +132,7 @@
 // - more information: https://github.com/kokkos/kokkos/wiki/Lambda-Dispatch
 #if BOOST_COMP_NVCC || BOOST_COMP_CLANG_CUDA
     #define ALPAKA_FN_LAMBDA [=] __host__ __device__
-    #define ALPAKA_FN_LAMBDA_CAPTURE(...) [__VA_ARGS__] __host__ __device__
 #else // HIP(HCC) and CPU backends
     // lambdas do not require a host-device attributes
     #define ALPAKA_FN_LAMBDA [=]
-    #define ALPAKA_FN_LAMBDA_CAPTURE(...) [__VA_ARGS__]
 #endif
