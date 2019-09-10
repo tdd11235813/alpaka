@@ -26,7 +26,7 @@ namespace alpaka
         enum class Scope {
             HostOnly,
             DeviceOnly,
-            HostAndDevice,
+            HostDevice,
             Default
         };
 
@@ -160,9 +160,9 @@ namespace alpaka
             ALPAKA_FN_HOST_ACC ~BindScope(){} // destructor must reflect host-device annotation of constructors
         };
 
-        // HostAndDevice HIP/HCC: explicitly define host+device context
+        // HostDevice HIP/HCC: explicitly define host+device context
         template<typename TFunc>
-        struct BindScope<TFunc, Scope::HostAndDevice> {
+        struct BindScope<TFunc, Scope::HostDevice> {
             const TFunc m_callable;
 
             ALPAKA_FN_HOST_ACC
@@ -228,4 +228,4 @@ namespace alpaka
 // macro definitions to provide shortcuts
 #define ALPAKA_FN_SCOPE_HOST alpaka::core::bindScope< alpaka::core::Scope::HostOnly >
 #define ALPAKA_FN_SCOPE_DEVICE alpaka::core::bindScope< alpaka::core::Scope::DeviceOnly >
-#define ALPAKA_FN_SCOPE_HOST_AND_DEVICE alpaka::core::bindScope< alpaka::core::Scope::HostAndDevice >
+#define ALPAKA_FN_SCOPE_HOST_DEVICE alpaka::core::bindScope< alpaka::core::Scope::HostDevice >

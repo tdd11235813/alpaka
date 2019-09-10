@@ -138,13 +138,13 @@ The scope options for bindScope:
 
 - `HostOnly`: callable is only compiled on host side
 - `DeviceOnly`: callable is only compiled on device side
-- `HostAndDevice`: callable is compiled for host and device
+- `HostDevice`: callable is compiled for host and device
 - `Default`:
-  - HIP(Nvidia): equals `HostAndDevice`
+  - HIP(Nvidia): equals `HostDevice`
   - HIP(AMD): no explicit context information, leave it to compiler
 
 The scope shortcuts:
 
 - `ALPAKA_FN_SCOPE_HOST`: `alpaka::core::bindScope< alpaka::core::Scope::HostOnly >`
 - `ALPAKA_FN_SCOPE_DEVICE`: `alpaka::core::bindScope< alpaka::core::Scope::DeviceOnly >`
-- `ALPAKA_FN_SCOPE_HOST_AND_DEVICE`: `alpaka::core::bindScope< alpaka::core::Scope::HostAndDevice >`
+- `ALPAKA_FN_SCOPE_HOST_DEVICE`: `alpaka::core::bindScope< alpaka::core::Scope::HostDevice >`
