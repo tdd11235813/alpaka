@@ -21,7 +21,8 @@
 
 namespace test
 {
-    auto generateSeed () -> unsigned long{
+    auto generateSeed () -> unsigned long
+    {
         std::random_device rd {};
         auto seed = rd();
         return seed;
@@ -44,7 +45,7 @@ namespace test
         );
 
         // Initiate the arguments.
-        for( size_t i( 0 ); i < size / 2 - 1; ++i )
+        for( size_t i = 0; i < size / 2 - 1; ++i )
         {
             buffer[i] = dist( eng );
 
@@ -55,7 +56,7 @@ namespace test
         buffer[size / 2] = -0.0;
 
         // Change the Range for the random arguments to [-randomRange, 0].
-        for( size_t i( size / 2 + 1 ); i < size; ++i )
+        for( size_t i = size / 2 + 1; i < size; ++i )
         {
             buffer[i] = dist( eng ) - range;
         }

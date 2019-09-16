@@ -8,28 +8,15 @@
  */
 
 /* list of all operators
- * operator  | in std | definition |  range | notes
- * abs       | Y | R
- * acos      | Y | [-1, 1]
- * asin      | Y | [-1, 1]
- * atan      | Y | R
- * cbrt      | Y | R | third root of arg
- * ceil      | Y | R
- * cos       | Y | R
- * erf       | Y | R | error function for arg
- * exp       | Y | R | e^arg
- * floor     | Y | R
- * log       | Y | N\{0}
- * round     | Y | R
- * rsqrt     | X | N\{0} | inverse square root
- * sin       | Y | R
- * sqrt      | Y | N
- * tan       | Y | [x | x \= pi/2 + k*pi, k in Z]
- * trunc     | Y | R | round towards zero
+ * atan2     | Y | R^2\{(0,0)}
+ * fmod      | Y | R^2\{(x,0)|x in R}
+ * max       | Y | R^2
+ * min       | Y | R^2
+ * remainder | Y | R^2\{(x,0)|x in R}
  */
 
 #include "../../dataGen.hpp"
-#include "../include/unaryOps.hpp"
+#include "../include/binaryOps.hpp"
 #include <alpaka/test/acc/TestAccs.hpp>
 #include <alpaka/test/queue/Queue.hpp>
 #include <catch2/catch.hpp>
@@ -39,60 +26,51 @@ class TestKernel
 public:
     ALPAKA_NO_HOST_ACC_WARNING
     template<
-            typename TAcc,
-            typename TData,
-            typename TFunctor
+        typename TAcc,
+        typename TData,
+        typename TFunctor
     >
     ALPAKA_FN_ACC auto operator()(
-            TAcc const & acc,
-            size_t const & sizeBuf,
-            TData const * const args,
-            TData * results,
-            TFunctor const & opFunctor) const
-            -> void
+        TAcc const & acc,
+        size_t const & sizeBuf,
+        TData const * const argsX,
+        TData const * const argsY,
+        TData * results,
+        TFunctor const & opFunctor) const
+    -> void
     {
-        if( opFunctor.range == Range::ONE_NEIGHBOURHOOD )
+        TData argX;
+        TData argY;
+        for( size_t i = 0; i < sizeBuf; ++i )
         {
-            TData argsOneNeighbourhood[5]
-                {
-                    -1,
-                    -0.5,
-                    0,
-                    0.5,
-                    1
-                };
-            for( size_t i = 0; i < 5; ++i )
+            argX = argsX[i];
+            argY = argsY[i];
+            // If range == Range::UNRESTRICTED all args are used.
+            switch( opFunctor.range )
             {
-                results[i] =
-                    opFunctor(
-                        acc,
-                        argsOneNeighbourhood[i]
-                    );
+                case Range::POSITIVE_ONLY:
+                    if( i >= sizeBuf / 2 - 1 )
+                        return;
+                    break;
+                case Range::NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        continue;
+                    break;
+                case Range::X_NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        argX = 1;
+                    break;
+                case Range::Y_NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        argY = 1;
+                default:
+                    break;
             }
-        }
-        else
-        {
-            for( size_t i = 0; i < sizeBuf; ++i )
-            {
-                // If range == Range::UNRESTRICTED all args are used.
-                switch( opFunctor.range )
-                {
-                    case Range::POSITIVE_ONLY:
-                        if( i >= sizeBuf / 2 - 1 )
-                            return;
-                        break;
-                    case Range::POSITIVE_AND_ZERO:
-                        if( i >= sizeBuf / 2 )
-                            return;
-                        break;
-                    default:
-                        break;
-                }
-                results[i] = opFunctor(
-                    acc,
-                    args[i]
-                );
-            }
+            results[i] = opFunctor(
+                acc,
+                argX,
+                argY
+            );
         }
     }
 };
@@ -100,12 +78,14 @@ public:
 template <typename TAcc, typename TData>
 struct OpFunctorTemplate
 {
-    template <
-            typename T_OpFunctor>
+    template<
+        typename T_OpFunctor
+    >
     auto operator()(
-        TData * const & argArray,
-        size_t const & sizeBuf)
-        -> void
+        TData * const & argXArray,
+        TData * const & argYArray,
+        size_t const & sizeBuf
+    ) -> void
     {
         using Dim = alpaka::dim::Dim< TAcc >;
         using Idx = alpaka::idx::Idx< TAcc >;
@@ -152,7 +132,16 @@ struct OpFunctorTemplate
         );
 
         // Allocate host memory buffers.
-        auto memBufHostArgs(
+        auto memBufHostArgsX(
+            alpaka::mem::buf::alloc<
+                TData,
+                Idx
+            >(
+                devHost,
+                sizeBuf
+            )
+        );
+        auto memBufHostArgsY(
             alpaka::mem::buf::alloc<
                 TData,
                 Idx
@@ -171,8 +160,11 @@ struct OpFunctorTemplate
             )
         );
         TData
-            * const pBufHostArgs =
-            alpaka::mem::view::getPtrNative( memBufHostArgs );
+            * const pBufHostArgsX =
+            alpaka::mem::view::getPtrNative( memBufHostArgsX );
+        TData
+            * const pBufHostArgsY =
+            alpaka::mem::view::getPtrNative( memBufHostArgsY );
 
         TData
             * const pBufHostRes =
@@ -182,11 +174,21 @@ struct OpFunctorTemplate
         for( size_t i = 0; i < sizeBuf; ++i )
         {
             pBufHostRes[i] = -1;
-            pBufHostArgs[i] = argArray[i];
+            pBufHostArgsX[i] = argXArray[i];
+            pBufHostArgsY[i] = argYArray[i];
         }
 
         // Allocate the buffer on the accelerator.
-        auto memBufAccArgs(
+        auto memBufAccArgsX(
+            alpaka::mem::buf::alloc<
+                TData,
+                Idx
+            >(
+                devAcc,
+                sizeBuf
+            )
+        );
+        auto memBufAccArgsY(
             alpaka::mem::buf::alloc<
                 TData,
                 Idx
@@ -207,18 +209,21 @@ struct OpFunctorTemplate
         // Copy Host -> Acc.
         alpaka::mem::view::copy(
             queue,
-            memBufAccArgs,
-            memBufHostArgs,
+            memBufAccArgsX,
+            memBufHostArgsX,
             sizeBuf
         );
         alpaka::mem::view::copy(
             queue,
-            memBufAccRes,
-            memBufHostRes,
+            memBufAccArgsY,
+            memBufHostArgsY,
             sizeBuf
         );
 
-        auto pMemBufAccArgs = alpaka::mem::view::getPtrNative( memBufAccArgs );
+        auto
+            pMemBufAccArgsX = alpaka::mem::view::getPtrNative( memBufAccArgsX );
+        auto
+            pMemBufAccArgsY = alpaka::mem::view::getPtrNative( memBufAccArgsY );
         auto pMemBufAccRes = alpaka::mem::view::getPtrNative( memBufAccRes );
         // Create the kernel execution task.
         auto const taskKernel(
@@ -226,7 +231,8 @@ struct OpFunctorTemplate
                 workDiv,
                 kernel,
                 sizeBuf,
-                pMemBufAccArgs,
+                pMemBufAccArgsX,
+                pMemBufAccArgsY,
                 pMemBufAccRes,
                 opFunctor
             )
@@ -250,50 +256,45 @@ struct OpFunctorTemplate
 
         TData res;
         TData stdRes;
-        if( opFunctor.range == Range::ONE_NEIGHBOURHOOD )
+        TData argX;
+        TData argY;
+        for( size_t i = 0; i < sizeBuf; ++i )
         {
-            TData argsOneNeighbourhood[5] {
-                -1,
-                -0.5,
-                0,
-                0.5,
-                1
-            };
-            for( size_t i = 0; i < 5; ++i )
+            argX = pBufHostArgsX[i];
+            argY = pBufHostArgsY[i];
+            // If range == Range::UNRESTRICTED all args are used.
+            switch( opFunctor.range )
             {
-                stdRes = opFunctor( argsOneNeighbourhood[i] );
-                res = pBufHostRes[i];
-                INFO( "op: " << opFunctor )
-                INFO( "index: " << i )
-                REQUIRE( stdRes == Approx( res ) );
+                case Range::POSITIVE_ONLY:
+                    if( i >= sizeBuf / 2 - 1 )
+                        return;
+                    break;
+                case Range::NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        continue;
+                    break;
+                case Range::X_NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        argX = 1; // Hardcoded, see TestKernel
+                    break;
+                case Range::Y_NOT_ZERO:
+                    if( i == sizeBuf / 2 || i == sizeBuf / 2 - 1 )
+                        argY = 1; // Hardcoded, see TestKernel
+                    break;
+                default:
+                    break;
             }
-        }
-        else
-        {
-            for( size_t i = 0; i < sizeBuf; ++i )
-            {
-                switch( opFunctor.range )
-                {
-                    case Range::POSITIVE_ONLY:
-                        if( i >= sizeBuf / 2 - 1 )
-                            return;
-                        break;
-                    case Range::POSITIVE_AND_ZERO:
-                        if( i >= sizeBuf / 2 )
-                            return;
-                        break;
-                    default:
-                        break;
-                }
-                stdRes = opFunctor( pBufHostArgs[i] );
-                res = pBufHostRes[i];
-                INFO( "Op: " << opFunctor )
-                INFO( "Index: " << i )
-                INFO( "Exp: " << stdRes )
-                INFO( "Got: " << res )
-                INFO( "Type: " << typeid( res ).name() )
-                REQUIRE( Approx( res ) == stdRes );
-            }
+            stdRes = opFunctor(
+                argX,
+                argY
+            );
+            res = pBufHostRes[i];
+            INFO( "Op: " << opFunctor )
+            INFO( "Index: " << i )
+            INFO( "Exp: " << stdRes )
+            INFO( "Got: " << res )
+            INFO( "Type: " << typeid( res ).name( ) )
+            REQUIRE( Approx( res ) == stdRes );
         }
     }
 };
@@ -304,7 +305,8 @@ struct AccTemplate
 public:
     template< typename TAcc >
     auto operator()(
-        TData * const & argArray,
+        TData * const & argXArray,
+        TData * const & argYArray,
         size_t const & sizeBuf)
         -> void
     {
@@ -314,14 +316,17 @@ public:
                 TAcc,
                 TData
             >( ),
-            argArray,
+            argXArray,
+            argYArray,
             sizeBuf
         );
     }
 };
 
 template < typename TData >
-void runTest( unsigned long seed )
+void runTest(
+    unsigned long seedX,
+    unsigned long seedY )
 {
     // Gets all acc-types.
     using TestAccs = alpaka::test::acc::EnabledAccs<
@@ -332,26 +337,35 @@ void runTest( unsigned long seed )
     // All tests are using the same arguments.
     size_t const sizeBuf = 100u;
     size_t const randomRange = 100u;
-    TData argArray[sizeBuf];
+    TData argXArray[sizeBuf];
+    TData argYArray[sizeBuf];
+
     test::fillWithRndArgs< TData>(
-        argArray,
+        argXArray,
         sizeBuf,
         randomRange,
-        seed
+        seedX
+    );
+    test::fillWithRndArgs< TData>(
+        argYArray,
+        sizeBuf,
+        randomRange,
+        seedY
     );
 
     alpaka::meta::forEachType< TestAccs >(
         AccTemplate< TData >( ),
-        argArray,
+        argXArray,
+        argYArray,
         sizeBuf
     );
 }
 
 
-TEST_CASE("unaryOps", "[math] [unaryOps]")
+TEST_CASE("binaryOps", "[math] [binaryOps]")
 {
     /*
-     * TEST_CASE        | generates seed    | specifies datatype
+     * TEST_CASE        | generates seeds    | specifies datatype
      * runTest          | generates Buffer  | specifies AccTypes
      * AccTemplate      |       -           | specifies operators (from hpp)
      *  -> OpFunctorTemplate : device, kernel, buff-copy usw.
@@ -363,10 +377,12 @@ TEST_CASE("unaryOps", "[math] [unaryOps]")
     std::cout.precision(10);
 
     // Using only one seed for all test-cases.
-    auto seed = test::generateSeed();
-    std::cout << "Using seed: " << seed << std::endl;
+    auto seedX = test::generateSeed();
+    auto seedY = test::generateSeed();
+    std::cout << "Using seed: " << seedX << "for x-args" << std::endl;
+    std::cout << "Using seed: " << seedY << "for y-args" << std::endl;
 
     // Testing all unary operators on all devices.
-    runTest< double >(seed);
-    runTest< float >(seed);
+    runTest< double >(seedX, seedY);
+    runTest< float >(seedX, seedY);
 }

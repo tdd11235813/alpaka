@@ -36,7 +36,6 @@ return out;\
 }\
 };
 
-
 //! @enum Range
 //! @brief Possible definition ranges.
 enum class Range
@@ -54,24 +53,90 @@ T rsqrt(T t){
 }
 
 // Generate all unary functors.
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncAbs,   std::abs,   alpaka::math::abs,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncAcos,  std::acos,  alpaka::math::acos,   Range::ONE_NEIGHBOURHOOD)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncAsin,  std::asin,  alpaka::math::asin,   Range::ONE_NEIGHBOURHOOD)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncAtan,  std::atan,  alpaka::math::atan,   Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncCbrt,  std::cbrt,  alpaka::math::cbrt,   Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncCeil,  std::ceil,  alpaka::math::ceil,   Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncCos,   std::cos,   alpaka::math::cos,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncErf,   std::erf,   alpaka::math::erf,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncExp,   std::exp,   alpaka::math::exp,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncFloor, std::floor, alpaka::math::floor,  Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncLog,   std::log,   alpaka::math::log,    Range::POSITIVE_ONLY)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncRound, std::round, alpaka::math::round,  Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncRsqrt, rsqrt,      alpaka::math::rsqrt,  Range::POSITIVE_ONLY)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncSin,   std::sin,   alpaka::math::sin,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncSqrt,  std::sqrt,  alpaka::math::sqrt,   Range::POSITIVE_AND_ZERO)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncTan,   std::tan,   alpaka::math::tan,    Range::UNRESTRICTED)
-ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY(OpFuncTrunc, std::trunc, alpaka::math::trunc,  Range::UNRESTRICTED)
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncAbs,
+    std::abs,
+    alpaka::math::abs,
+    Range::UNRESTRICTED )
 
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncAcos,
+    std::acos,
+    alpaka::math::acos,
+    Range::ONE_NEIGHBOURHOOD )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncAsin,
+    std::asin,
+    alpaka::math::asin,
+    Range::ONE_NEIGHBOURHOOD )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncAtan,
+    std::atan,
+    alpaka::math::atan,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncCbrt,
+    std::cbrt,
+    alpaka::math::cbrt,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncCeil,
+    std::ceil,
+    alpaka::math::ceil,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncCos,
+    std::cos,
+    alpaka::math::cos,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncErf,
+    std::erf,
+    alpaka::math::erf,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncExp,
+    std::exp,
+    alpaka::math::exp,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncFloor,
+    std::floor,
+    alpaka::math::floor,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncLog,
+    std::log,
+    alpaka::math::log,
+    Range::POSITIVE_ONLY )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncRound,
+    std::round,
+    alpaka::math::round,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncRsqrt,
+    rsqrt,
+    alpaka::math::rsqrt,
+    Range::POSITIVE_ONLY )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncSin,
+    std::sin,
+    alpaka::math::sin,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncSqrt,
+    std::sqrt,
+    alpaka::math::sqrt,
+    Range::POSITIVE_AND_ZERO )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncTan,
+    std::tan,
+    alpaka::math::tan,
+    Range::UNRESTRICTED )
+
+ALPAKA_TEST_MATH_OP_FUNCTOR_UNARY( OpFuncTrunc,
+    std::trunc,
+    alpaka::math::trunc,
+    Range::UNRESTRICTED )
 
 using Operators = std::tuple<
     OpFuncAbs,
@@ -92,5 +157,3 @@ using Operators = std::tuple<
     OpFuncTan,
     OpFuncTrunc
     >;
-
-
