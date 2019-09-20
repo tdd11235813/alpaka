@@ -12,6 +12,7 @@
  * fmod      | Y | R^2\{(x,0)|x in R}
  * max       | Y | R^2
  * min       | Y | R^2
+ * pow       | Y | R^2
  * remainder | Y | R^2\{(x,0)|x in R}
  */
 
