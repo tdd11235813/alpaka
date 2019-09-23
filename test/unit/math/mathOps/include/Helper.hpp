@@ -10,12 +10,12 @@
 template<
     typename TAcc,
     typename TData,
+    typename Dim,
+    typename Idx,
     Arity arity>
 struct Helper
 {
-    static constexpr size_t extentBuf = 5;
-    using Dim = alpaka::dim::DimInt< 1u >;
-    using Idx = std::size_t;
+    static constexpr size_t extentBuf = 100;
 
         using ArgsBuf = Buffer<
             TAcc,
@@ -35,6 +35,7 @@ struct Helper
 
     ArgsBuf argsBuf;
     ResBuf resBuf;
+
     template<
         typename DevHost,
         typename DevAcc>

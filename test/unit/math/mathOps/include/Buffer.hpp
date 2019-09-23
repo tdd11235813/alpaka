@@ -4,6 +4,7 @@
 #include <alpaka/test/acc/TestAccs.hpp>
 #include <alpaka/test/queue/Queue.hpp>
 #include <catch2/catch.hpp>
+#include <ostream>
 
 
 template<
@@ -91,7 +92,9 @@ struct Buffer
    template<
        typename TAccIn = std::nullptr_t,
        size_t offset = 0,
-       typename std::enable_if<std::is_same<TAccIn,std::nullptr_t>::value, int>::type = 0>
+       typename std::enable_if<
+           std::is_same<
+               TAccIn,std::nullptr_t>::value, int>::type = 0>
    ALPAKA_FN_HOST
    auto getArg(size_t idx) const -> TData
    {
@@ -100,7 +103,10 @@ struct Buffer
    template<
        typename TAccIn = std::nullptr_t,
        size_t offset = 0,
-       typename std::enable_if<!std::is_same<TAccIn,std::nullptr_t>::value, int>::type = 0>
+       typename std::enable_if<
+           std::is_same<
+              TAccIn,
+              TAcc>::value, int>::type = 0>
    ALPAKA_FN_ACC
    auto getArg(size_t idx) const -> TData
    {
@@ -111,5 +117,21 @@ struct Buffer
     auto setArg(TData arg, size_t idx, size_t offset=0) -> void
     {
         pHostBuffer[offset * extent + idx] = arg;
+    }
+    ALPAKA_FN_HOST \
+ friend std::ostream & operator<<(
+        std::ostream & os,
+        const Buffer & buffer
+    )
+    {
+        os << "count: " << count
+            << ", extent: " << extent
+            << ", size: " << size << "\n";
+        os << "printing hostBuffer:\n";
+        for(size_t i = 0; i < size; ++i)
+        {
+            os << "elem at i = " << i << ": " << buffer.pHostBuffer[i] << "\n";
+        }
+        return os;
     }
 };

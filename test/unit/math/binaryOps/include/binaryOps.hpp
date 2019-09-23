@@ -76,7 +76,7 @@ ALPAKA_TEST_MATH_OP_FUNCTOR_BINARY(
     OpFuncMax,
     std::max,
     alpaka::math::max,
-    Range::Y_NOT_ZERO )
+    Range::UNRESTRICTED )
 
 ALPAKA_TEST_MATH_OP_FUNCTOR_BINARY(
     OpFuncMin,

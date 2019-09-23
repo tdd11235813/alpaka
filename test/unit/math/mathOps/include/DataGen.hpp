@@ -10,6 +10,7 @@
 #include "Defines.hpp"
 #include "Buffer.hpp"
 #include <random>
+#include <limits>
 
 /**
  * @namespace test
@@ -23,6 +24,7 @@
 
 namespace test
 {
+    unsigned long generateSeed();
     auto generateSeed () -> unsigned long
     {
         std::random_device rd {};
@@ -41,43 +43,70 @@ namespace test
     ) -> void
     {
         static_assert( TBuffer::count == static_cast<int>(TFunctor::arity), "");
-
+        auto max = std::numeric_limits<TData>::max();
+        auto low = std::numeric_limits<TData>::lowest();
         std::default_random_engine eng { seed };
         // These pseudo-random numbers are implementation/platform specific!
-        int const distRange = 10;
         std::uniform_real_distribution< TData > dist(
             0,
-            distRange
+            1000
         );
+
+        std::uniform_real_distribution< TData > distOne(
+            -1,
+            1
+        );
+
         for(size_t i = 0; i < TBuffer::count; ++i)
         {
             switch( functor.ranges[i] )
             {
+                case Range::ONE_NEIGHBOURHOOD:
+                    buffer.setArg( 0, 0, i);
+                    for( size_t j = 1; j < TBuffer::extent; ++j)
+                        buffer.setArg( distOne( eng ), j, i );
+                break;
+
                 case Range::POSITIVE_ONLY:
-                    for( size_t j = 0; j < TBuffer::extent; ++j )
+                    buffer.setArg( max, 0, i);
+                    for( size_t j = 1; j < TBuffer::extent; ++j )
                         buffer.setArg( dist(eng) + 1, j , i );
                 break;
 
                 case Range::POSITIVE_AND_ZERO:
-                    for( size_t j = 0; j < TBuffer::extent; ++j )
+                    buffer.setArg( 0, 0, i);
+                    buffer.setArg( max, 1, i);
+                    for( size_t j = 2; j < TBuffer::extent; ++j )
                         buffer.setArg( dist(eng), j , i );
                 break;
 
                 case Range::NOT_ZERO:
-                    for( size_t j = 0; j < TBuffer::extent; ++j )
+                    buffer.setArg( max, 0, i );
+                    buffer.setArg( low, 1, i );
+                    for( size_t j = 2; j < TBuffer::extent; ++j )
                     {
                         TData arg;
-                        do{
-                            arg = dist(eng);
-                        }while(arg == 0);
-                        buffer.setArg( arg, j , i );
+                        do
+                        {
+                            arg = dist( eng );
+                        } while( static_cast<int>(arg) == 0 );
+                        if(j % 2 == 0)
+                            buffer.setArg( arg, j , i );
+                        else
+                            buffer.setArg( -arg, j, i );
                     }
                 break;
 
                 case Range::UNRESTRICTED:
+                    buffer.setArg( 0, 0, i);
+                    buffer.setArg( max, 1, i);
+                    buffer.setArg( low, 2, i);
                     for( size_t j = 0; j < TBuffer::extent; ++j )
                     {
-                        buffer.setArg( dist(eng)- distRange / 2, j , i );
+                        if(j % 2 == 0)
+                            buffer.setArg( dist(eng), j , i );
+                        else
+                            buffer.setArg( -dist(eng), j, i );
                     }
                 break;
 
@@ -85,6 +114,5 @@ namespace test
                     throw std::runtime_error( "Unsupported Range" );
             }
         }
-
     }
 }
