@@ -9,6 +9,9 @@
 
 #pragma once
 
+
+#include <cmath>
+
 // New types need to be added to the switch-case in DataGen.hpp
 enum class Range
 {
@@ -25,3 +28,12 @@ enum class Arity
     UNARY = 1,
     BINARY = 2
 };
+
+namespace test
+{
+    template< typename T >
+    auto rsqrt( T const & arg ) -> decltype( std::sqrt( arg ) )
+    {
+        return 1 / std::sqrt( arg );
+    }
+}

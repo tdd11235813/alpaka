@@ -144,8 +144,14 @@ ALPAKA_TEST_MATH_OP_FUNCTOR( OpRound,
     std::round,
     alpaka::math::round,
     Range::UNRESTRICTED )
-//ALPAKA_TEST_MATH_OP_FUNCTOR( OpRsqrt, Arity::UNARY, rsqr ,Range::UNRESTRICTED )
-ALPAKA_TEST_MATH_OP_FUNCTOR( OpSin,
+
+ALPAKA_TEST_MATH_OP_FUNCTOR( OpRsqrt,
+    Arity::UNARY,
+    test::rsqrt, // There is no std implementation look in Defines.
+    alpaka::math::rsqrt,
+    Range::POSITIVE_ONLY )
+
+    ALPAKA_TEST_MATH_OP_FUNCTOR( OpSin,
     Arity::UNARY,
     std::sin,
     alpaka::math::sin,
@@ -212,14 +218,13 @@ ALPAKA_TEST_MATH_OP_FUNCTOR( OpRemainder,
     Range::UNRESTRICTED,
     Range::NOT_ZERO )
 
-
 using BinaryFunctors = std::tuple<
     OpAtan2,
     OpFmod,
     OpMax,
     OpMin,
     OpPow,
-  OpRemainder
+    OpRemainder
     >;
 
 using UnaryFunctors = std::tuple<
@@ -235,6 +240,7 @@ using UnaryFunctors = std::tuple<
     OpFloor,
     OpLog,
     OpRound,
+    OpRsqrt,
     OpSin,
     OpSqrt,
     OpTan,
