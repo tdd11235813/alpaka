@@ -7,8 +7,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "../include/Helper.hpp"
 #include "../include/Defines.hpp"
+#include "../include/Buffer.hpp"
 #include "../include/Functor.hpp"
 #include "../include/DataGen.hpp"
 
@@ -23,111 +23,27 @@
 //! @param acc Accelerator given from alpaka.
 //! @param helper Used to encapsulate argBuf/resBuf.
 //! @param functor Accesible with operator().
-class TestKernel
+struct TestKernel
 {
-public:
     ALPAKA_NO_HOST_ACC_WARNING
-    template<
-        typename TAcc,
-        typename THelper,
-        typename TFunctor>
+    template<typename TAcc,
+             typename TResults,
+             typename TFunctor,
+             typename TArgs>
     ALPAKA_FN_ACC auto operator()(
         TAcc const & acc,
-        THelper const & helper,
-        TFunctor const & functor) const
+        TResults const & results,
+        TFunctor const & functor,
+        TArgs const & args) const
         -> void
     {
-        for( size_t i = 0; i < THelper::ResBuf::size; ++i )
+        for( size_t i = 0; i < TArgs::capacity; ++i )
         {
-            helper.resBuf.pDevBuffer[i] =
-                compute(
-                    functor,
-                    helper.argsBuf,
-                    i,
-                    acc
-                );
+          results(i, acc) = functor(args(i, acc), acc);
         }
     }
 };
 
-//#############################################################################
-// For each Arity in Defines.hpp/Arity needs to be a compute function!
-// The compute function calls the correct operator() functor-function
-// and collects all needed arguments from the buffer.
-ALPAKA_NO_HOST_ACC_WARNING
-// SFINAE: Enabled if functors needs TWO args.
-template<
-    typename TFunctor,
-    typename TBuffer,
-    typename TAcc = std::nullptr_t, typename std::enable_if<
-        TFunctor::arity == Arity::BINARY,
-        std::nullptr_t
-    >::type = nullptr
->
-ALPAKA_FN_HOST_ACC
-auto compute(
-    TFunctor const & opFunctor,
-    TBuffer const & buffer,
-    size_t const & i,
-    TAcc const & acc = nullptr
-) -> decltype( opFunctor(
-        acc,
-        buffer.template getArg<
-            TAcc,
-            0
-        >( i ),
-        buffer.template getArg<
-            TAcc,
-            1
-        >( i )
-    ) )
-{
-    return opFunctor(
-        acc,
-        buffer.template getArg<
-            TAcc,
-            0
-        >( i ),
-        buffer.template getArg<
-            TAcc,
-            1
-        >( i )
-    );
-}
-
-
-ALPAKA_NO_HOST_ACC_WARNING
-// SFINAE: Enabled if functors needs ONE arg.
-template<
-    typename TFunctor,
-    typename TBuffer,
-    typename TAcc = std::nullptr_t, typename std::enable_if<
-        TFunctor::arity == Arity::UNARY,
-        std::nullptr_t
-    >::type = nullptr
->
-ALPAKA_FN_HOST_ACC
-auto compute(
-    TFunctor const & opFunctor,
-    TBuffer const & buffer,
-    size_t const & i,
-    TAcc const & acc = nullptr
-) -> decltype( opFunctor(
-    acc,
-    buffer.template getArg<
-        TAcc,
-        0
-    >( i )
-) )
-{
-    return opFunctor(
-        acc,
-        buffer.template getArg<
-            TAcc,
-            0
-        >( i )
-    );
-}
 
 //#############################################################################
 // The TestTemplate runs the main code and the tests (Dev,Helper,Functor).
@@ -152,31 +68,30 @@ struct TestTemplate
         using Idx = std::size_t;
         using WorkDiv = alpaka::workdiv::WorkDivMembers<Dim, Idx>;
         using QueueAcc = alpaka::test::queue::DefaultQueue< DevAcc >;
+        using TArgsItem = alpaka::test::unit::math::ArgsItem<TData, TFunctor::arity>;
 
-        using OpHelper = Helper<
-            TAcc,
-            TData,
-            Dim,
-            Idx,
-            TFunctor::arity
-        >;
+        static constexpr size_t capacity = 10;
+        using Args = alpaka::test::unit::math::Buffer< TAcc,
+                                                       TArgsItem,
+                                                       capacity >;
+        using Results = alpaka::test::unit::math::Buffer< TAcc,
+                                                          TData,
+                                                          capacity
+                                                          >;
 
         // Every functor is executed individual on one kernel.
         static constexpr size_t elementsPerThread = 1u;
         static constexpr size_t sizeExtent = 1u;
 
-        DevAcc const devAcc{ alpaka::pltf::getDevByIdx< PltfAcc >( 0u )};
-        DevHost const devHost{ alpaka::pltf::getDevByIdx< PltfHost >( 0u )};
+        DevAcc const devAcc{ alpaka::pltf::getDevByIdx< PltfAcc >( 0u ) };
+        DevHost const devHost{ alpaka::pltf::getDevByIdx< PltfHost >( 0u ) };
 
         QueueAcc queue{ devAcc };
 
         TestKernel kernel;
         TFunctor functor;
-        OpHelper helper
-            {
-                devHost,
-                devAcc
-            };
+        Args args{ devAcc };
+        Results results{ devAcc };
 
         WorkDiv const workDiv{
             alpaka::workdiv::getValidWorkDiv< TAcc >(
@@ -189,47 +104,37 @@ struct TestTemplate
 
         // SETUP COMPLETED.
         // Fill the buffer with random test-numbers and copy them to the device.
-        test::fillWithRndArgs<TData>
-            ( helper.argsBuf, functor, seed );
+        alpaka::test::unit::math::fillWithRndArgs<TData>( args, functor, seed );
+        for( size_t i = 0; i < Results::capacity; ++i )
+            results(i) = std::nan( "" );
         // Copy both buffer to the device
-        helper.copyToDevice(queue);
+        args.copyToDevice(queue);
+        results.copyToDevice(queue);
 
         auto const taskKernel(
             alpaka::kernel::createTaskKernel< TAcc >(
                 workDiv,
                 kernel,
-                helper,
-                functor
+                results,
+                functor,
+                args
             )
         );
         // Enqueue the kernel execution task.
-        alpaka::queue::enqueue(
-            queue,
-            taskKernel
-        );
+        alpaka::queue::enqueue( queue, taskKernel );
         // Copy back the results (encapsulated in the buffer class).
-        helper.resBuf.copyFromDevice( queue );
-
+        results.copyFromDevice( queue );
         alpaka::wait::wait( queue );
 
-        std::cout.precision(32);
+        std::cout.precision(32); // TODO: why 32?
 
         INFO("Operator: " << functor)
         INFO("Type: " << typeid( TData ).name() ) // Compiler specific.
-        for( size_t i = 0; i < OpHelper::ResBuf::size; ++i )
+        for( size_t i = 0; i < Args::capacity; ++i )
         {
             INFO("Idx i: " << i)
-            TData std_res = compute(
-                functor,
-                helper.argsBuf,
-                i
-            );
-            REQUIRE(
-                helper.resBuf.getArg(i)
-                == Approx(
-                    std_res
-                )
-            );
+            TData std_result = functor(args(i));
+            REQUIRE( results(i) == Approx(std_result) );
         }
     }
 };
@@ -240,7 +145,7 @@ struct ForEachFunctor
     template< typename TAcc >
     auto operator()( unsigned long seed ) -> void
     {
-        alpaka::meta::forEachType < UnaryFunctors >(
+        alpaka::meta::forEachType < alpaka::test::unit::math::UnaryFunctors >(
             TestTemplate<
                 TAcc,
                 TData
@@ -248,7 +153,7 @@ struct ForEachFunctor
             seed
         );
 
-        alpaka::meta::forEachType< BinaryFunctors >(
+        alpaka::meta::forEachType< alpaka::test::unit::math::BinaryFunctors >(
             TestTemplate<
                 TAcc,
                 TData
@@ -311,7 +216,7 @@ TEST_CASE("mathOps", "[math] [operator]")
         alpaka::dim::DimInt< 1u >,
         std::size_t
     >;
-    const auto seed = test::generateSeed( );
+    const auto seed = 1337;
     std::cout << "using seed: " << seed << "\n\n";
     alpaka::meta::forEachType< TestAccs >(
         ForEachFunctor< double >( ),

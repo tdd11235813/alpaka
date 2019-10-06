@@ -1,4 +1,4 @@
-/** Copyright 2019 Axel Huebl, Benjamin Worpitz
+/** Copyright 2019 Jakob Krude, Benjamin Worpitz
  *
  * This file is part of Alpaka.
  *
@@ -13,30 +13,28 @@
 #include <random>
 #include <limits>
 
-namespace test
-{
-    unsigned long generateSeed(); // Avoid clang, undeclared-function-warning.
-    auto generateSeed () -> unsigned long
-    {
-        std::random_device rd {};
-        auto seed = rd();
-        return seed;
-    }
-/*+
- * @fn fillWithRndArgs
- * @tparam TData The used data-type.
- * @tparam TBuffer Buffer from custom Buffer-class.
- * @tparam TFunctor The used Functor-type.
- * @param buffer The buffer that should be filled.
- * @param functor The Functor, needed for ranges.
- * @param seed The used seed.
- */
+namespace alpaka {
+namespace test {
+namespace unit {
+namespace math {
+
+
+    /**
+     * Fills buffer with random numbers (host-only).
+     *
+     * @tparam TData The used data-type.
+     * @tparam TBuffer Buffer from custom Buffer-class.
+     * @tparam TFunctor The used Functor-type.
+     * @param buffer The buffer that should be filled.
+     * @param functor The Functor, needed for ranges.
+     * @param seed The used seed.
+     */
     template<
         typename TData,
-        typename TBuffer,
+        typename TArgs,
         typename TFunctor>
     auto fillWithRndArgs(
-        TBuffer  & buffer,
+        TArgs  & args,
         TFunctor functor,
         unsigned long const & seed
     ) -> void
@@ -50,75 +48,67 @@ namespace test
          * This function is easily extendable. It is only necessary to add extra
          * definitions in the switch case, for more Range-types.
          */
-        static_assert( TBuffer::count == static_cast< int >(
-            TFunctor::arity ),
-                "Each sub-buffer needs a range of type Range::");
+        static_assert( TArgs::value_type::arity == TFunctor::arity,
+                       "Buffer properties must match TFunctor::arity" );
+        static_assert( TArgs::capacity > 2, "Set of args must provide >2 entries." );
         constexpr auto max = std::numeric_limits< TData >::max();
         constexpr auto low = std::numeric_limits< TData >::lowest();
         std::default_random_engine eng{ seed };
 
         // These pseudo-random numbers are implementation/platform specific!
-        std::uniform_real_distribution< TData > dist(
-            0,
-            1000
-        );
+        std::uniform_real_distribution< TData > dist(0,1000);
+        std::uniform_real_distribution< TData > distOne(-1,1);
 
-        std::uniform_real_distribution< TData > distOne(
-            -1,
-            1
-        );
-
-        for(size_t i = 0; i < TBuffer::count; ++i)
+        for(size_t k = 0; k < TFunctor::arity_nr; ++k)
         {
-            switch( functor.ranges[i] )
+            switch( functor.ranges[k] )
             {
                 case Range::ONE_NEIGHBOURHOOD:
-                    buffer.setArg( 0, 0, i );
-                    for( size_t j = 1; j < TBuffer::extent; ++j )
-                        buffer.setArg( distOne( eng ), j, i );
+                    for(size_t i = 0; i < TArgs::capacity; ++i) {
+                        args(i).arg[k] = distOne( eng );
+                    }
                 break;
 
                 case Range::POSITIVE_ONLY:
-                    buffer.setArg( max, 0, i );
-                    for( size_t j = 1; j < TBuffer::extent; ++j )
-                        buffer.setArg( dist( eng ) + 1, j , i );
+                    args(0).arg[k] = max;
+                    for(size_t i = 1; i < TArgs::capacity; ++i) {
+                        args(i).arg[k] = dist( eng )+1.0;
+                    }
                 break;
 
                 case Range::POSITIVE_AND_ZERO:
-                    buffer.setArg( 0, 0, i );
-                    buffer.setArg( max, 1, i );
-                    for( size_t j = 2; j < TBuffer::extent; ++j )
-                        buffer.setArg( dist( eng ), j , i );
+                    args(0).arg[k] = 0.0;
+                    args(1).arg[k] = max;
+                    for(size_t i = 2; i < TArgs::capacity; ++i) {
+                        args(i).arg[k] = dist( eng );
+                    }
                 break;
 
                 case Range::NOT_ZERO:
-                    buffer.setArg( max, 0, i );
-                    buffer.setArg( low, 1, i );
-                    for( size_t j = 2; j < TBuffer::extent; ++j )
-                    {
+                    args(0).arg[k] = max;
+                    args(1).arg[k] = low;
+                    for(size_t i = 2; i < TArgs::capacity; ++i) {
                         TData arg;
                         do
                         {
                             arg = dist( eng );
-                          // Avoid comparing floats/doubles warning.
-                        } while( static_cast< int > ( arg ) == 0 );
-                        if(j % 2 == 0)
-                            buffer.setArg( arg, j , i );
+                        } while( arg == static_cast<TData>(0.0) );
+                        if(i % 2 == 0)
+                            args(i).arg[k] = arg;
                         else
-                            buffer.setArg( -arg, j, i );
+                            args(i).arg[k] = -arg;
                     }
                 break;
 
                 case Range::UNRESTRICTED:
-                    buffer.setArg( 0, 0, i );
-                    buffer.setArg( max, 1, i );
-                    buffer.setArg( low, 2, i );
-                    for( size_t j = 3; j < TBuffer::extent; ++j )
-                    {
-                        if( j % 2 == 0 )
-                            buffer.setArg( dist( eng ), j , i );
+                    args(0).arg[k] = 0.0;
+                    args(1).arg[k] = max;
+                    args(2).arg[k] = low;
+                    for(size_t i = 3; i < TArgs::capacity; ++i) {
+                        if(i % 2 == 0)
+                            args(i).arg[k] = dist(eng);
                         else
-                            buffer.setArg( -dist( eng ), j, i );
+                            args(i).arg[k] = -dist(eng);
                     }
                 break;
 
@@ -127,4 +117,8 @@ namespace test
             }
         }
     }
-}
+
+} // math
+} // unit
+} // test
+} // alpaka

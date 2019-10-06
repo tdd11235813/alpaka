@@ -1,5 +1,5 @@
 #
-# Copyright 2017-2019 Benjamin Worpitz, Axel Huebl, Matthias Werner
+# Copyright 2017-2019 Benjamin Worpitz, Jakob Krude
 #
 # This file is part of Alpaka.
 #
@@ -13,7 +13,14 @@ SET(_TARGET_NAME "mathOps")
 
 append_recursive_files_add_to_src_group("src/" "src/" "cpp" _FILES_SOURCE)
 
-set(ALPAKA_CUDA_FAST_MATH OFF CACHE BOOL "deactive for math related tests" FORCE)
+if(ALPAKA_ACC_GPU_CUDA_ENABLE)
+    set(ALPAKA_CUDA_FAST_MATH OFF CACHE BOOL "" FORCE)
+    message(STATUS "fast-math option for math test for CUDA backend is disabled")
+endif()
+if(ALPAKA_ACC_GPU_HIP_ENABLE)
+    set(ALPAKA_HIP_FAST_MATH OFF CACHE BOOL "" FORCE)
+    message(STATUS "fast-math option for math test for HIP backend is disabled")
+endif()
 
 ALPAKA_ADD_EXECUTABLE(
     ${_TARGET_NAME}

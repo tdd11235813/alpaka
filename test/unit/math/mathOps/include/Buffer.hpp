@@ -1,4 +1,4 @@
-/** Copyright 2019 Axel Huebl, Benjamin Worpitz
+/** Copyright 2019 Jakob Krude, Benjamin Worpitz
  *
  * This file is part of Alpaka.
  *
@@ -13,31 +13,36 @@
 #include <alpaka/test/acc/TestAccs.hpp>
 #include <ostream>
 
-//! Provides Alpaka-style 2 dimensional Buffer
-//! @brief Encapsulates initialisation and communication with Device.
+namespace alpaka {
+namespace test {
+namespace unit {
+namespace math {
+
+//! Provides Alpaka-style two-dimensional buffer for arguments' data.
+//!
+//! @brief Encapsulates buffer initialisation and communication with Device.
 //! @tparam TAcc Used accelerator, not interchangeable
 //! @tparam TData The Data-type, only restricted by the alpaka-interface.
 //! @tparam Idx Typically std::size_t, only used for alpaka-interface.
 //! @tparam Dim Typically and tested for: alpaka::dim::DimInt...
-//! @tparam extentBuf Size of each individual buffer.
-//! @tparam dimBuf Number of individual Buffer, default value is one.
+//! @tparam Targ_count Number of arguments.
+//! @tparam Tdata_count Number of individual Buffer, default value is one.
 template<
     typename TAcc,
     typename TData,
-    typename Idx,
-    typename Dim,
-    size_t extentBuf, // how many elements pro dimension
-    size_t dimBuf = 1 // number of sub-buffer (n-dimensional)
+    size_t Tcapacity
 >
 struct Buffer
 {
-    static constexpr size_t count = dimBuf;
-    static constexpr size_t extent = extentBuf;
-    static constexpr size_t size = dimBuf * extentBuf;
+    using value_type = TData;
+    static constexpr size_t capacity = Tcapacity;
+    using Dim = typename alpaka::dim::traits::DimType<TAcc>::type;
+    using Idx = typename alpaka::idx::traits::IdxType<TAcc>::type;
 
-    // Defines used for alpaka-buffer.
+    // Defines usings for alpaka-buffer.
     using DevAcc = alpaka::dev::Dev< TAcc >;
     using DevHost = alpaka::dev::DevCpu;
+    using PltfHost = alpaka::pltf::Pltf< DevHost >;
 
     using BufHost = alpaka::mem::buf::Buf<
         DevHost,
@@ -52,9 +57,8 @@ struct Buffer
         Idx
     >;
 
-    // Alpaka style Buffer.
-    // Example memory Layout with 3 buffer of size 2:
-    // [1.1,1.2, 2.1,2.2, 3.1,3.2]
+    DevHost devHost;
+
     BufHost hostBuffer;
     BufAcc devBuffer;
 
@@ -62,37 +66,24 @@ struct Buffer
     TData * const pHostBuffer;
     TData * const pDevBuffer;
 
+
     // This constructor cant be used,
     // because BufHost and BufAcc need to be initialised.
     Buffer( ) = delete;
 
     // Constructor needs to initialize all Buffer.
-    Buffer(
-        const DevHost & devHost,
-        const DevAcc & devAcc
-    ) :
-        hostBuffer(
-            alpaka::mem::buf::alloc<
-                TData,
-                Idx
-            >(
-                devHost,
-                dimBuf * extentBuf
-            )
-        ),
-        devBuffer(
-            alpaka::mem::buf::alloc<
-                TData,
-                Idx
-            >(
-                devAcc,
-                dimBuf * extentBuf
-            )
-        ),
-        pHostBuffer( alpaka::mem::view::getPtrNative( hostBuffer ) ),
-        pDevBuffer( alpaka::mem::view::getPtrNative( devBuffer ) )
+    Buffer(const DevAcc & devAcc)
+      :
+        devHost{ alpaka::pltf::getDevByIdx< PltfHost >( 0u ) },
+        hostBuffer{
+            alpaka::mem::buf::alloc<TData, Idx>(devHost, Tcapacity)
+        },
+        devBuffer{
+            alpaka::mem::buf::alloc<TData, Idx>(devAcc, Tcapacity)
+        },
+        pHostBuffer{ alpaka::mem::view::getPtrNative( hostBuffer ) },
+        pDevBuffer{ alpaka::mem::view::getPtrNative( devBuffer ) }
     {}
-
 
     // Copy Host -> Acc.
     template< typename Queue >
@@ -102,7 +93,7 @@ struct Buffer
             queue,
             devBuffer,
             hostBuffer,
-            dimBuf * extentBuf
+            Tcapacity
         );
     }
 
@@ -114,51 +105,21 @@ struct Buffer
             queue,
             hostBuffer,
             devBuffer,
-            dimBuf * extentBuf
+            Tcapacity
         );
     }
 
-    // Getter:
-    // TAccIn is mainly an indicator with buffer should be used.
-    template<
-        typename TAccIn = std::nullptr_t, size_t offset = 0, typename std::enable_if<
-            std::is_same<
-                TAccIn,
-                std::nullptr_t
-            >::value,
-            int
-        >::type = 0
-    >
-    ALPAKA_FN_HOST
-    auto getArg( size_t idx ) const -> TData
+    ALPAKA_FN_ACC
+    auto operator()( size_t idx, TAcc const & acc ) const -> TData&
     {
-        return pHostBuffer[offset * extent + idx];
+        alpaka::ignore_unused(acc);
+        return pDevBuffer[idx];
     }
 
-    template<
-        typename TAccIn = std::nullptr_t, size_t offset = 0, typename std::enable_if<
-            std::is_same<
-                TAccIn,
-                TAcc
-            >::value,
-            int
-        >::type = 0
-    >
-    ALPAKA_FN_ACC
-    auto getArg( size_t idx ) const -> TData
-    {
-        return pDevBuffer[offset * extent + idx];
-    }
-    // Setter:
-    // There is no Function for kernel, because those need to be const.
     ALPAKA_FN_HOST
-    auto setArg(
-        TData arg,
-        size_t idx,
-        size_t offset = 0
-    ) -> void
+    auto operator()( size_t idx, std::nullptr_t acc = nullptr ) const -> TData&
     {
-        pHostBuffer[offset * extent + idx] = arg;
+        return pHostBuffer[idx];
     }
 
     ALPAKA_FN_HOST
@@ -167,19 +128,19 @@ struct Buffer
         const Buffer & buffer
     )
     {
-        os << "count: " << count
-           << ", extent: " << extent
-           << ", size: " << size
+        os << "capacity: " << capacity
            << "\n";
-        for( size_t i = 0; i < count; ++i )
+        for( size_t i = 0; i < capacity; ++i )
         {
-            os << "buffer at offset - " << i << "\n";
-            for( size_t j = 0; j < extent; ++j)
-            {
-                os << "elem at idx = " << j << ": "
-                   << buffer.pHostBuffer[i * extent + j] << "\n";
-            }
+            os << i
+               << ": " << buffer.pHostBuffer[i]
+               << "\n";
         }
         return os;
     }
 };
+
+} // math
+} // unit
+} // test
+} // alpaka

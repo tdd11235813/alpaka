@@ -1,4 +1,4 @@
-/** Copyright 2019 Axel Huebl, Benjamin Worpitz
+/** Copyright 2019 Jakob Krude, Benjamin Worpitz
  *
  * This file is part of Alpaka.
  *
@@ -10,68 +10,99 @@
 #pragma once
 
 #include "Defines.hpp"
+#include <alpaka/alpaka.hpp>
+#include <type_traits>
+
+namespace alpaka {
+namespace test {
+namespace unit {
+namespace math {
 
 //! @param NAME The Name used for the Functor, e.g. OpAbs
 //! @param ARITY Enum-type can be one ... n
 //! @param STD_OP Function used for the host side, e.g. std::abs
 //! @param ALPAKA_OP Function used for the device side, e.g. alpaka::math::abs.
 //! @param ... List of Ranges. Needs to match the arity.
-#define ALPAKA_TEST_MATH_OP_FUNCTOR(NAME, ARITY, STD_OP, ALPAKA_OP, ...)\
-class NAME\
-{\
-public:\
-    /* ranges is not a constexpr, so that its accessible via for loop*/ \
-    const Range ranges [ static_cast< int >( ARITY ) ] = {__VA_ARGS__};\
-    static constexpr Arity arity = ARITY;\
-    \
-    template<\
-        typename TAcc,\
-        typename... TArgs,\
-        typename std::enable_if< /* SFINAE: Enables if called from device. */ \
-            !std::is_same<\
-                TAcc,\
-                std::nullptr_t>::value,\
-            int>::type = 0>\
-    ALPAKA_FN_ACC\
-    auto operator()(\
-        TAcc const & acc,\
-        TArgs const & ... args ) const\
-    -> decltype(\
-        ALPAKA_OP(\
-            acc,\
-            args... ) )\
-    {\
-        return ALPAKA_OP(\
-            acc,\
-            args... );\
-    }\
-    \
-    template<\
-        typename TAcc = std::nullptr_t,\
-        typename... TArgs,\
-        typename std::enable_if< /* SFINAE: Enables if called from host. */ \
-            std::is_same<\
-                TAcc,\
-                std::nullptr_t>::value,\
-            int>::type = 0>\
-    ALPAKA_FN_HOST\
-    auto operator()(\
-        TAcc const & acc,\
-        TArgs const &... args ) const\
-    -> decltype( STD_OP( args... ) )\
-    {\
-        alpaka::ignore_unused( acc );\
-        return STD_OP( args... );\
-    }\
-    friend std::ostream & operator << (\
-        std::ostream &out,\
-        const NAME &op) \
-    {\
-        out << #NAME;\
-        alpaka::ignore_unused( op ); \
-        return out;\
-    }\
-};
+#define ALPAKA_TEST_MATH_OP_FUNCTOR(NAME, ARITY, STD_OP, ALPAKA_OP, ...) \
+  struct NAME                                                            \
+  {                                                                     \
+    /* ranges is not a constexpr, so that it's accessible via for loop*/\
+    static constexpr Arity arity = ARITY;                               \
+    static constexpr size_t arity_nr = static_cast<size_t>(ARITY);      \
+    const Range ranges[ arity_nr ] = {__VA_ARGS__};                     \
+                                                                        \
+    template<typename TAcc,                                             \
+             typename... TArgs,                                         \
+             /* SFINAE: Enables if called from device. */               \
+             typename std::enable_if<                                   \
+                 !std::is_same<TAcc, std::nullptr_t>::value,            \
+                 int>::type = 0>                                        \
+    ALPAKA_FN_ACC                                                   \
+    auto execute(                                                   \
+        TAcc const & acc,                                               \
+        TArgs const & ... args ) const                                  \
+    -> decltype( ALPAKA_OP(acc, args... ) )                         \
+    {                                                                   \
+        return ALPAKA_OP(acc, args... );                                \
+    }                                                                   \
+                                                                        \
+    template<typename TAcc = std::nullptr_t,                            \
+             typename... TArgs,                                         \
+             typename std::enable_if< /* SFINAE: Enables if called from host. */ \
+                 std::is_same< TAcc, std::nullptr_t>::value,            \
+                 int>::type = 0>                                        \
+    ALPAKA_FN_HOST                                                      \
+    auto execute(                                                       \
+        TAcc const & acc,                                               \
+        TArgs const &... args ) const                                   \
+    -> decltype( STD_OP( args... ) )                                    \
+    {                                                                   \
+      alpaka::ignore_unused( acc );                                     \
+      return STD_OP( args... );                                         \
+    }                                                                   \
+                                                                        \
+    /* assigns args by arity */                                         \
+    ALPAKA_NO_HOST_ACC_WARNING                                          \
+    template<                                                           \
+        typename TArgsItem,                                                 \
+        typename TAcc = std::nullptr_t,                                 \
+        Arity Tarity = arity,                                           \
+        typename std::enable_if< Tarity == Arity::UNARY,  \
+                                 int>::type = 0                         \
+        >                                                               \
+    ALPAKA_FN_HOST_ACC                                                  \
+    auto operator()(TArgsItem const & args, TAcc const & acc = nullptr) const         \
+    -> decltype(execute(acc, args.arg[0]))                                  \
+    {                                                                   \
+        return execute(acc, args.arg[0]);                                   \
+    }                                                                   \
+                                                                        \
+    /* assigns args by arity */                                         \
+    ALPAKA_NO_HOST_ACC_WARNING                                          \
+    template<                                                           \
+        typename TArgsItem,                                                 \
+        typename TAcc = std::nullptr_t,                                 \
+        Arity Tarity = arity,                                           \
+        typename std::enable_if< Tarity == Arity::BINARY, \
+                                 int>::type = 0                         \
+        >                                                               \
+    ALPAKA_FN_HOST_ACC                                                  \
+    auto operator()(TArgsItem const & args, TAcc const & acc = nullptr) const         \
+    -> decltype(execute(acc, args.arg[0], args.arg[1]))                         \
+    {                                                                   \
+        return execute(acc, args.arg[0], args.arg[1]);                          \
+    }                                                                   \
+                                                                        \
+    friend std::ostream & operator << (                                 \
+      std::ostream &out,                                                \
+      const NAME &op)                                                   \
+    {                                                                   \
+      out << #NAME;                                                     \
+      alpaka::ignore_unused( op );                                      \
+      return out;                                                       \
+    }                                                                   \
+  };
+
 
 ALPAKA_TEST_MATH_OP_FUNCTOR( OpAbs,
     Arity::UNARY,
@@ -147,7 +178,7 @@ ALPAKA_TEST_MATH_OP_FUNCTOR( OpRound,
 
 ALPAKA_TEST_MATH_OP_FUNCTOR( OpRsqrt,
     Arity::UNARY,
-    test::rsqrt, // There is no std implementation look in Defines.
+    alpaka::test::unit::math::rsqrt, // There is no std implementation look in Defines.
     alpaka::math::rsqrt,
     Range::POSITIVE_ONLY )
 
@@ -246,3 +277,8 @@ using UnaryFunctors = std::tuple<
     OpTan,
     OpTrunc
     >;
+
+} // math
+} // unit
+} // test
+} // alpaka

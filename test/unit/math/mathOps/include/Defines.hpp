@@ -9,31 +9,45 @@
 
 #pragma once
 
-
 #include <cmath>
 
-// New types need to be added to the switch-case in DataGen.hpp
-enum class Range
-{
-    ONE_NEIGHBOURHOOD,
-    POSITIVE_ONLY,
-    POSITIVE_AND_ZERO,
-    NOT_ZERO,
-    UNRESTRICTED
-};
+namespace alpaka {
+namespace test {
+namespace unit {
+namespace math {
 
-// New types need to be added to the compute function in mathOps.cpp
-enum class Arity
-{
-    UNARY = 1,
-    BINARY = 2
-};
+    // New types need to be added to the switch-case in DataGen.hpp
+    enum class Range
+    {
+        ONE_NEIGHBOURHOOD,
+        POSITIVE_ONLY,
+        POSITIVE_AND_ZERO,
+        NOT_ZERO,
+        UNRESTRICTED
+    };
 
-namespace test
-{
+    // New types need to be added to the compute function in mathOps.cpp
+    enum class Arity
+    {
+        UNARY = 1,
+        BINARY = 2
+    };
+
+    template<typename T, Arity Tarity>
+    struct ArgsItem{
+        static constexpr Arity arity = Tarity;
+        static constexpr int arity_nr = static_cast<int>(Tarity);
+
+        T arg[arity_nr]; // represents arg0, arg1, ...
+    };
+
     template< typename T >
     auto rsqrt( T const & arg ) -> decltype( std::sqrt( arg ) )
     {
         return 1 / std::sqrt( arg );
     }
-}
+
+} // math
+} // unit
+} // test
+} // alpaka
