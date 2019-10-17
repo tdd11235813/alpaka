@@ -13,13 +13,14 @@ SET(_TARGET_NAME "mathOps")
 
 append_recursive_files_add_to_src_group("src/" "src/" "cpp" _FILES_SOURCE)
 
+message(STATUS "Disabling fast math options for math operation tests only.")
 if(ALPAKA_ACC_GPU_CUDA_ENABLE)
-    set(ALPAKA_CUDA_FAST_MATH OFF CACHE BOOL "" FORCE)
-    message(STATUS "fast-math option for math test for CUDA backend is disabled")
+    list(REMOVE_ITEM
+        CUDA_NVCC_FLAGS "--ftz=true" "--prec-div=false" "--prec-sqrt=false" "--fmad=true" "--use_fast_math" "-use_fast_math")
 endif()
 if(ALPAKA_ACC_GPU_HIP_ENABLE)
-    set(ALPAKA_HIP_FAST_MATH OFF CACHE BOOL "" FORCE)
-    message(STATUS "fast-math option for math test for HIP backend is disabled")
+    list(REMOVE_ITEM
+        HIP_NVCC_FLAGS "--ftz=true" "--prec-div=false" "--prec-sqrt=false" "--fmad=true" "--use_fast_math" "-use_fast_math")
 endif()
 
 ALPAKA_ADD_EXECUTABLE(
@@ -31,7 +32,12 @@ TARGET_INCLUDE_DIRECTORIES(
 TARGET_LINK_LIBRARIES(
     ${_TARGET_NAME}
     PRIVATE common)
-
+SET_TARGET_PROPERTIES(
+    ${_TARGET_NAME}
+    PROPERTIES
+    COMPILE_OPTIONS
+    $<$<CXX_COMPILER_ID:clang>:"-ffp-contract=off"> # ffp-contract: https://llvm.org/docs/CompileCudaWithLLVM.html#id5
+    )
 SET_TARGET_PROPERTIES(${_TARGET_NAME} PROPERTIES FOLDER "test/unit")
 
 ADD_TEST(NAME ${_TARGET_NAME} COMMAND ${_TARGET_NAME} ${_ALPAKA_TEST_OPTIONS})
