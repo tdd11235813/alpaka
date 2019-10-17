@@ -13,10 +13,21 @@
 #include <alpaka/alpaka.hpp>
 #include <type_traits>
 
+// HCC requires no host-device flags, to match AMP context.
+// TODO: This can be removed when hip-clang will replace HCC
+#if BOOST_COMP_HCC
+#define ALPAKA_FN_ACC_NO_HCC
+#define ALPAKA_FN_HOST_NO_HCC
+#else
+#define ALPAKA_FN_ACC_NO_HCC ALPAKA_FN_ACC
+#define ALPAKA_FN_HOST_NO_HCC ALPAKA_FN_HOST
+#endif
+
 namespace alpaka {
 namespace test {
 namespace unit {
 namespace math {
+
 
 //! @param NAME The Name used for the Functor, e.g. OpAbs
 //! @param ARITY Enum-type can be one ... n
@@ -37,11 +48,11 @@ namespace math {
              typename std::enable_if<                                   \
                  !std::is_same<TAcc, std::nullptr_t>::value,            \
                  int>::type = 0>                                        \
-    ALPAKA_FN_ACC                                                   \
-    auto execute(                                                   \
+    ALPAKA_FN_ACC_NO_HCC                                                \
+    auto execute(                                                       \
         TAcc const & acc,                                               \
         TArgs const & ... args ) const                                  \
-    -> decltype( ALPAKA_OP(acc, args... ) )                         \
+    -> decltype( ALPAKA_OP(acc, args... ) )                             \
     {                                                                   \
         return ALPAKA_OP(acc, args... );                                \
     }                                                                   \
@@ -51,7 +62,7 @@ namespace math {
              typename std::enable_if< /* SFINAE: Enables if called from host. */ \
                  std::is_same< TAcc, std::nullptr_t>::value,            \
                  int>::type = 0>                                        \
-    ALPAKA_FN_HOST                                                      \
+    ALPAKA_FN_HOST_NO_HCC                                               \
     auto execute(                                                       \
         TAcc const & acc,                                               \
         TArgs const &... args ) const                                   \
@@ -64,33 +75,26 @@ namespace math {
     /* assigns args by arity */                                         \
     ALPAKA_NO_HOST_ACC_WARNING                                          \
     template<                                                           \
-        typename TArgsItem,                                                 \
-        typename TAcc = std::nullptr_t,                                 \
-        Arity Tarity = arity,                                           \
-        typename std::enable_if< Tarity == Arity::UNARY,  \
-                                 int>::type = 0                         \
+        typename T,                                                     \
+        typename TAcc = std::nullptr_t                                  \
         >                                                               \
     ALPAKA_FN_HOST_ACC                                                  \
-    auto operator()(TArgsItem const & args, TAcc const & acc = nullptr) const         \
-    -> decltype(execute(acc, args.arg[0]))                                  \
+    auto operator()(ArgsItem<T, Arity::UNARY> const & args, TAcc const & acc = nullptr) const \
+    -> decltype(execute(acc, args.arg[0]))                              \
     {                                                                   \
-        return execute(acc, args.arg[0]);                                   \
+        return execute(acc, args.arg[0]);                               \
     }                                                                   \
                                                                         \
     /* assigns args by arity */                                         \
-    ALPAKA_NO_HOST_ACC_WARNING                                          \
-    template<                                                           \
-        typename TArgsItem,                                                 \
-        typename TAcc = std::nullptr_t,                                 \
-        Arity Tarity = arity,                                           \
-        typename std::enable_if< Tarity == Arity::BINARY, \
-                                 int>::type = 0                         \
+   template<                                                            \
+        typename T,                                                     \
+        typename TAcc = std::nullptr_t                                  \
         >                                                               \
     ALPAKA_FN_HOST_ACC                                                  \
-    auto operator()(TArgsItem const & args, TAcc const & acc = nullptr) const         \
-    -> decltype(execute(acc, args.arg[0], args.arg[1]))                         \
+    auto operator()(ArgsItem<T, Arity::BINARY> const & args, TAcc const & acc = nullptr) const \
+    -> decltype(execute(acc, args.arg[0], args.arg[1]))                 \
     {                                                                   \
-        return execute(acc, args.arg[0], args.arg[1]);                          \
+        return execute(acc, args.arg[0], args.arg[1]);                  \
     }                                                                   \
                                                                         \
     friend std::ostream & operator << (                                 \
