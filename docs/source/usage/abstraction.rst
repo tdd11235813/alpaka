@@ -1,14 +1,12 @@
-[:arrow_up: Up](../Index.md)
-
 Abstraction
 ===========
 
-<!---
-Objective of the abstraction is to separate the parallelization strategy from the algorithm itself.
-Algorithm code written by users should not depend on any parallelization library or specific strategy.
-This would allow to exchange the parallelization back-end without any changes to the algorithm itself.
-Besides allowing to test different parallelization strategies this also makes it possible to port algorithms to new, yet unsupported, platforms.
--->
+.. note::
+
+   Objective of the abstraction is to separate the parallelization strategy from the algorithm itself.
+   Algorithm code written by users should not depend on any parallelization library or specific strategy.
+   This would allow to exchange the parallelization back-end without any changes to the algorithm itself.
+   Besides allowing to test different parallelization strategies this also makes it possible to port algorithms to new, yet unsupported, platforms.
 
 Parallelism and memory hierarchies at all levels need to be exploited in order to achieve performance portability across various types of accelerators.
 Within this chapter an abstraction will be derivated that tries to provide a maximum of parallelism while simultaneously considering implementability and applicability in hardware.
@@ -56,7 +54,7 @@ Depending on the size of the graph and the number of edges this can be a huge ov
 *OpenCL* allows to define a task graph in a somewhat different way.
 Tasks can be enqueued into an out-of-order command queue combined with events that have to be finished before the newly enqueued task can be started.
 Tasks in the command queue with unmet dependencies are skipped and subsequent ones are executed.
-The `CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE` property of a command queue is an optional feature only supported by few vendors.
+The ``CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE`` property of a command queue is an optional feature only supported by few vendors.
 Therefore, it can not be assumed to be available on all systems.
 
 *CUDA* on the other hand does currently (version 7.5) not support such out-of-order queues in any way.
@@ -99,29 +97,39 @@ However, the abstraction does not try to automatically optimize memory accesses 
 
 The individual levels are explained on the following pages:
 
-1. [Thread](abstraction/Thread.md)
-2. [Block](abstraction/Block.md)
-3. [Warp](abstraction/Warp.md)
-4. [Element](abstraction/Element.md)
+1. :doc:`Thread <abstraction/Thread>`
+2. :doc:`Block <abstraction/Block>`
+3. :doc:`Warp <abstraction/Warp>`
+4. :doc:`Element <abstraction/Element>`
 
 Summary
 -------
 
 This abstraction is called *Redundant Hierarchical Parallelism*.
-This term is inspired by the paper *The Future of Accelerator Programming: Abstraction, Performance or Can We Have Both?* [PDF](http://olab.is.s.u-tokyo.ac.jp/~kamil.rocki/rocki_burtscher_sac14.pdf) [DOI](http://dx.doi.org/10.1109/ICPADS.2013.76).
+This term is inspired by the paper *The Future of Accelerator Programming: Abstraction, Performance or Can We Have Both?*
+`PDF <http://olab.is.s.u-tokyo.ac.jp/~kamil.rocki/rocki_burtscher_sac14.pdf>`_
+`DOI <http://dx.doi.org/10.1109/ICPADS.2013.76>`_
 It investigates a similar *concept of copious parallel programming* reaching 80%-90% of the native performance while comparing CPU and GPU centric versions of an *OpenCL* n-body simulation with a general version utilizing parallelism on multiple hierarchy levels.
 
 The *CUDA* or *OpenCL* abstractions themselves are very similar to the one designed in the previous sections and consists of all but the Element level.
 However, as has been shown, all five abstraction hierarchy levels are necessary to fully utilize current architectures.
 By emulating unsupported or ignoring redundant levels of parallelism, algorithms written with this abstraction can always be mapped optimally to all supported accelerators. The following table summarizes the characteristics of the proposed hierarchy levels.
 
-| Hierarchy Level | Parallelism | Synchronizable |
-| --- | --- | --- |
-| grid | sequential / parallel | :x: / :white_check_mark: |
-| block | parallel | :x: |
-| warp | parallel | :white_check_mark: |
-| thread | parallel / lock-step| :white_check_mark: |
-| element | sequential | :x: |
+    +-----------------+-----------------------+----------------+
+    | Hierarchy Level | Parallelism           | Synchronizable |
+    +-----------------+-----------------------+----------------+
+    | ---             | ---                   | ---            |
+    +-----------------+-----------------------+----------------+
+    | grid            | sequential / parallel | -- / X         |
+    +-----------------+-----------------------+----------------+
+    | block           | parallel              | --             |
+    +-----------------+-----------------------+----------------+
+    | warp            | parallel              | X              |
+    +-----------------+-----------------------+----------------+
+    | thread          | parallel / lock-step  | X              |
+    +-----------------+-----------------------+----------------+
+    | element         | sequential            | --             |
+    +-----------------+-----------------------+----------------+
 
 Depending on the queue a task is enqueued into, grids will either run in sequential order within the same queue or in parallel in different queues.
 They can be synchronized by using events.

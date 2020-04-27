@@ -1,7 +1,7 @@
-/doc/doxygen/*
-!/doc/doxygen/Doxyfile
-!/doc/doxygen/alpaka_doxygen.png
-/doc/latex/*
+/docs/doxygen/*
+!/docs/doxygen/Doxyfile
+!/docs/doxygen/alpaka_doxygen.png
+/docs/latex/*
 **/build
 
 # tmp files

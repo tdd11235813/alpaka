@@ -1,5 +1,3 @@
-[:arrow_up: Up](../Index.md)
-
 Introduction
 ============
 
@@ -10,7 +8,7 @@ All hardware types (multi- and many-core CPUs, GPUs and other accelerators) are 
 The *alpaka* library provides back-ends for *CUDA*, *OpenMP*, *Boost.Fiber* and other methods.
 The policy-based C++ template interface provided allows for straightforward user-defined extension of the library to support other accelerators.
 
-The library name *alpaka* is an acronym standing for **A**bstraction **L**ibrary for **Pa**rallel **K**ernel **A**cceleration.
+The library name *alpaka* is an acronym standing for **A**\ bstraction **L**\ ibrary for **Pa**\ rallel **K**\ ernel **A**\ cceleration.
 
 
 Motivation
@@ -28,10 +26,10 @@ Nevertheless, the underlying physical algorithms as well as the need for heterog
 Current highly parallel GPUs are optimized for throughput and hide latency and data dependencies by always keeping a ready pool of work.
 This allows to sustain the performance at a high percent of peak.
 CPUs in turn are designed to optimize the execution time of a single thread.
-Features like branch prediction, speculative execution, register renaming and many more *[...] would cost far too much energy to be replicated for thousands of parallel GPU threads but [...] are entirely appropriate for CPUs.* ([State-of-the-art in Heterogeneous Computing](http://dx.doi.org/10.1155/2010/540159))
-Even more specialized architectures will appear and find their way into HPC.
+Features like branch prediction, speculative execution, register renaming and many more *[...] would cost far too much energy to be replicated for thousands of parallel GPU threads but [...] are entirely appropriate for CPUs.* (`State-of-the-art in Heterogeneous Computing`_)
+Even more specialized architectures will appear and find their way into HPC
 
-*The essence of the heterogeneous computing model is that one size does not fit all. Parallel and serial segments of the workload execute on the best-suited processor delivering faster overall performance, greater efficiency, and lower energy and cost per unit of computation.* ([State-of-the-art in Heterogeneous Computing](http://dx.doi.org/10.1155/2010/540159))
+  *The essence of the heterogeneous computing model is that one size does not fit all. Parallel and serial segments of the workload execute on the best-suited processor delivering faster overall performance, greater efficiency, and lower energy and cost per unit of computation.* (`State-of-the-art in Heterogeneous Computing`_)
 
 New hardware will not only allow to execute faster or calculate more but will furthermore enable the usage of new algorithms for more precise simulations.
 For example, some tasks may require random searches for only a few values in a lookup table of up to hundreds of gigabytes.
@@ -43,9 +41,10 @@ Porting a complicated simulation code from *CUDA* to x86 and possibly to other h
 A lot of developer time could be saved if this task would not have to be done repeatedly for every new hardware, but rather only once.
 Therefore, *alpaka* tries to solve the problems in porting highly scalable simulation codes on various multi-core architectures.
 
+.. _State-of-the-art in Heterogeneous Computing: http://dx.doi.org/10.1155/2010/540159
 
 Problems in Porting Performant HPC Codes
-----------
+----------------------------------------
 
 Porting a highly performant code to a new architecture is a non-trivial task that poses many problems.
 Often it is a requirement to keep the simulation operative on the previous platform as well.
@@ -57,14 +56,18 @@ Each newly supported platform would have to duplicate the API specific kernel an
 
 The following paragraphs will summarize problems that arise when performant HPC codes have to be ported:
 
-### Sustainability
+Sustainability
+~~~~~~~~~~~~~~
+
 Because the underlying HPC hardware is constantly changing, every new generation will require an adaption of the simulation.
 Even to deliver the performance reached on previous architectures is a tough task for programmers.
 Furthermore, nobody can guarantee the lifespan of the parallelization technique used.
 *OpenMP*, *CUDA*, *OpenACC* and all the other possibilities could be discontinued or get deprecated for any reason at any time.
 Therefore, an abstract interface is required that hides the particular back-end and allows to port the interface implementation and not the application using the interface itself.
 
-### Heterogeneity
+Heterogeneity
+~~~~~~~~~~~~~
+
 Some parts of a simulation perfectly map to current GPUs while other parts are better computed on CPUs or other accelerators.
 Furthermore, by letting one part of the heterogeneous cluster hardware idle, a lot of computing power is wasted.
 It is essential, especially for future architectures, that those resources are utilized to reach the peak performance of the systems.
@@ -75,7 +78,9 @@ Many projects only allow to switch the back-end of the whole simulation at once 
 This will not be enough on future architectures where the ability to mix the back-ends is required to optimally utilize different cluster architectures or to dynamically load balance tasks across a diverse set of (possibly failing) accelerator devices.
 Therefore, an abstract interface unifying the abilities of all the back-ends is required to let the application express parallelism of the different back-ends in a unified algorithm that can then be mapped to the device currently in use.
 
-### Maintainability
+Maintainability
+~~~~~~~~~~~~~~~
+
 Looking at the software engineering aspects, duplication is a bad solution because this leads to maintainability issues.
 In many projects such copies result in a large growth in the number of lines of code while only minimal new functionality is implemented.
 Most of the new code only executes things that have already been implemented for the initial platform.
@@ -85,7 +90,9 @@ Especially for open-source projects that rely on contributions from the communit
 In the end good maintainability is what keeps a software project alive and what ensures a steady development progress.
 Therefore, an interface hiding the differences between all the back-ends is required to let the application express parallelism in a unified algorithm.
 
-### Testability
+Testability
+~~~~~~~~~~~
+
 Code duplication, being the easiest way to port a simulation, exacerbates testing.
 Each new kernel has to be tested separately because different bugs could have been introduced into the distinct implementations.
 If the versions can be mixed, it is even harder because all combinations have to be tested.
@@ -93,7 +100,9 @@ Often the tests (continuous integration tests, unit tests, etc.) have to run on 
 For example, *CUDA* compile tests are possible without appropriate hardware but it is not feasible to execute even simple runtime tests due to the missing CPU emulation support.
 An interface allowing to switch between acceleration back-ends, which are tested for compatibility among each other, enables easy testing on development and test systems.
 
-### Optimizability
+Optimizability
+~~~~~~~~~~~~~~
+
 Even if the simulation code has encapsulated the APIs used, the optimal way to write performant algorithms often differs between distinct parallelization frameworks.
 It is necessary to allow the user to fine-tune the algorithm to run optimally on each different accelerator device by compile time specialization or policy based abstractions without the need to duplicate the kernel.
 Within the kernel there has to be knowledge about the underlying platform to adaptively use data structures that map optimally onto the current architecture.
@@ -115,7 +124,8 @@ Furthermore, many of the libraries do not satisfy the requirement for full singl
 This is essential because many simulation codes heavily rely on template meta-programming for method specialization and compile time optimizations.
 
 
-### CUDA - Compute Unified Device Architecture
+CUDA - Compute Unified Device Architecture
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *CUDA* is a parallel computing platform and programming model developed by *NVIDIA*.
 It is used in science and research as well as in consumer software to compute highly parallel workloads on GPUs starting from image and video editing up to simulations on high-performance computers.
@@ -138,7 +148,8 @@ After the compilation steps both binaries are linked together to form the final 
 Functions that should be offloaded to the GPU are called kernels.
 As can be seen in the figure below a grid of such kernels is executed in parallel by multiple threads organized in blocks.
 Threads within a block can synchronize, while blocks are executed independently and possibly in sequential order depending on the underlying hardware.
-![grid-of-thread-blocks](https://docs.nvidia.com/cuda/cuda-c-programming-guide/graphics/grid-of-thread-blocks.png)
+
+.. image:: https://docs.nvidia.com/cuda/cuda-c-programming-guide/graphics/grid-of-thread-blocks.png
 
 The global device memory is the slowest but largest memory accessible by all threads.
 It can be accessed from host code via methods provided by the *CUDA* API.
@@ -150,7 +161,9 @@ Additionally there are special purpose memory sections for constant and texture 
 The *CUDA* C/C++ language gives full control over memory, caches and the execution of kernels.
 
 
-### [PGI CUDA-X86](https://www.pgroup.com/resources/cuda-x86.htm)
+`PGI CUDA-X86 <https://www.pgroup.com/resources/cuda-x86.htm>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is a compiler technology that allows to generate x86-64 binary code from *CUDA* C/C++ applications using the *CUDA Runtime API* but does not support the *CUDA Driver API*.
 At run-time *CUDA* C programs compiled for x86 execute each *CUDA* thread block using a single host core, eliminating synchronization where possible.
 Multiple kernel threads are combined to be executed together via the CPUs SIMD (Single Instruction Multiple Data) capabilities for vectorized execution.
@@ -160,8 +173,9 @@ Furthermore, the compiler seems not to be developed actively since *NVIDIA* acqu
 Since 2012 no news were published and nothing could be found in the yearly release notes of the *PGI* compiler suite.
 
 
-### [GPU Ocelot](http://gpuocelot.gatech.edu/)
-<!--- https://github.com/gtcasl/gpuocelot --->
+`GPU Ocelot <http://gpuocelot.gatech.edu/>`_ (`github <https://github.com/gtcasl/gpuocelot>`_)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is an open-source dynamic JIT compilation framework.
 It allows to execute native *CUDA* binaries by dynamically translating the *NVIDIA PTX* virtual instruction set architecture to other instruction sets.
 It supports *NVIDIA* and *AMD* GPUs as well as multicore CPUs via a PTX to LLVM (Low Level Virtual Machine) translator.
@@ -169,35 +183,41 @@ The project is not in active development anymore.
 It only supports PTX up to version 3.1 (current version is 5.0).
 
 
-### [OpenMP](http://openmp.org//)
+`OpenMP <http://openmp.org/>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is an open specification for vendor agnostic shared memory parallelization.
 By adding annotations (pragmas in C/C++) to loops or regions, it allows to easily parallelize existing sequential C/C++/Fortran code in an incremental manner.
 Due to the nature of pragmas, these hints are ignored if the compiler does not support them or thinks they are inappropriate.
 This allows those programs to be compiled as sequential or parallel versions by only changing a compiler flag.
-In C/C++ the syntax for *OpenMP* directives is `#pragma omp` followed by multiple clauses.
-For example, with the directive `#pragma omp parallel for`, the compiler will automatically distribute the iterations of the directly following loop across the available cores.
+In C/C++ the syntax for *OpenMP* directives is ``#pragma omp`` followed by multiple clauses.
+For example, with the directive ``#pragma omp parallel for``, the compiler will automatically distribute the iterations of the directly following loop across the available cores.
 *OpenMP* 4.0 introduced support for offloading computations to accelerator devices, substantially improved the task support and extended the SIMD capabilities.
-By embedding code within a `#pragma omp target` block, the contained code will be executed on the selected device.
+By embedding code within a ``#pragma omp target`` block, the contained code will be executed on the selected device.
 *OpenMP* 4.0 is missing the ability for unstructured data movement and only implements structured data movement from and to devices.
-The compiler directive `#pragma omp target data map(...) ...` at the begin of a code block will define which data is copied to, copied back from and is created on the device.
+The compiler directive ``#pragma omp target data map(...) ...`` at the begin of a code block will define which data is copied to, copied back from and is created on the device.
 At the end of the code block the memory is copied back or gets deleted.
 There is no way to allocate device memory that is persistent between kernel calls in different methods because it is not possible to create a device data region spanning both functions in the general case.
-*OpenMP* 4.1, expected for the end of 2015, is likely to introduce `#pragma omp target enter data`, `#pragma omp target exit data` and other unstructured data movement directives that allow to pass and obtain pointers of already resident memory to and from offloaded kernels.
+*OpenMP* 4.1, expected for the end of 2015, is likely to introduce ``#pragma omp target enter data``, ``#pragma omp target exit data`` and other unstructured data movement directives that allow to pass and obtain pointers of already resident memory to and from offloaded kernels.
 Currently *OpenMP* does not provide a way to control the hierarchical memory because its main assumption is a shared memory for all threads.
 Therefore, the block shared memory on *CUDA* devices can not be explicitly utilized.
 
 
-### [OpenACC](http://www.openacc-standard.org/)
+`OpenACC <http://www.openacc-standard.org/>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is a pragma based programming standard for heterogeneous computing.
 It is very similar to *OpenMP* and provides annotations for parallel execution and data movement as well as run-time functions for accelerator and device management.
 In contrast to *OpenMP* it allows limited access to *CUDA* block shared memory.
 Current compiler implementations support *NVIDA*, *AMD* and *Intel* accelerators.
 Only as of *OpenACC* 2.0 explicit memory management and tiling is supported.
-*OpenACC* does not support dynamic allocation of memory (`new`, `delete`) in kernel code.
+*OpenACC* does not support dynamic allocation of memory (``new``, ``delete``) in kernel code.
 It is aimed to be fully merged with *OpenMP* at some point, but for now *OpenMP* 4.0 only introduced some parts of it.
 
 
-### [OpenCL](https://www.khronos.org/opencl/)
+`OpenCL <https://www.khronos.org/opencl/>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is a programming framework for heterogeneous platforms.
 It is fully hardware independent and can utilize CPUs and GPUs of nearly all vendors.
 This is achieved by compiling the *OpenCL* kernel code (or the standardized *SPIR* intermediate representation) at run-time by the platform driver into the native instruction set.
@@ -207,70 +227,77 @@ Version 2.1 introduced a subset of C++14.
 This is a precondition for templated kernels which are required for policy based generic programming.
 It is necessary to note that *NVIDIA* seems to neglect their *OpenCL* implementation.
 Support for version 1.2 has just been added in April 2015 after only three and a half years after the publication of the standard.
-*OpenCL* does not support dynamic allocation of memory (`new`, `delete`) in kernel code.
+*OpenCL* does not support dynamic allocation of memory (``new``, ``delete``) in kernel code.
 
 
-### [SYCL](https://www.khronos.org/sycl/)
+`SYCL <https://www.khronos.org/sycl>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is a cross-platform abstraction layer based on *OpenCL*.
 The main advantage over *OpenCL* itself is that it allows to write single-source heterogeneous programs.
 It enables the usage of a single C++ template function for host and device code.
 As of now there is no usable free compiler implementation available that has good support for multiple accelerator devices.
 
 
-### [C++ AMP (Accelerated Massive Parallelism)](https://msdn.microsoft.com/en-us/library/hh265136.aspx)
+`C++ AMP (Accelerated Massive Parallelism) <https://msdn.microsoft.com/en-us/library/hh265136.aspx>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is an open specification from *Microsoft* currently implemented on top of *DirectX 11*.
 It is a language extension requiring compiler support that allows to annotate C++ code that can then be run on multiple accelerators.
-*C++ AMP* requires the usage of the `array` data structure or the `array_view` wrapper responsible for copying data to and from the accelerator devices.
-The `parallel_for_each` function is responsible for offloading the provided function object whose `operator()` has to be annotated with `restrict(amp)`.
+*C++ AMP* requires the usage of the ``array`` data structure or the ``array_view`` wrapper responsible for copying data to and from the accelerator devices.
+The ``parallel_for_each`` function is responsible for offloading the provided function object whose ``operator()`` has to be annotated with ``restrict(amp)``.
 The threads can access shared memory and synchronize.
 The range of supported accelerator devices, plaforms and compilers is currently very limited.
 
 
-### [KOKKOS](https://github.com/kokkos)
-<!---
-https://www.xsede.org/documents/271087/586927/Edwards-2013-XSCALE13-Kokkos.pdf
-http://trilinos.org/oldsite/events/trilinos_user_group_2013/presentations/2013-11-TUG-Kokkos-Tutorial.pdf
-http://on-demand.gputechconf.com/supercomputing/2013/presentation/SC3103\_Towards-Performance-Portable-Applications-Kokkos.pdf
-http://dx.doi.org/10.3233/SPR-2012-0343
---->
+`KOKKOS <https://github.com/kokkos>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. seealso::
+   * https://www.xsede.org/documents/271087/586927/Edwards-2013-XSCALE13-Kokkos.pdf
+   * http://trilinos.org/oldsite/events/trilinos_user_group_2013/presentations/2013-11-TUG-Kokkos-Tutorial.pdf
+   * http://on-demand.gputechconf.com/supercomputing/2013/presentation/SC3103\_Towards-Performance-Portable-Applications-Kokkos.pdf
+   * http://dx.doi.org/10.3233/SPR-2012-0343
+
 provides an abstract interface for portable, performant shared memory-programming.
-It is a C++ library that offers `parallel_for`, `parallel_reduce` and similar functions for describing the pattern of the parallel tasks.
+It is a C++ library that offers ``parallel_for``, ``parallel_reduce`` and similar functions for describing the pattern of the parallel tasks.
 The execution policy determines how the threads are executed.
 For example, this influences the sizes of blocks of threads or if static or dynamic scheduling should be used.
-The library abstracts the kernel as a function object that can not have any user defined parameters for its `operator()`.
+The library abstracts the kernel as a function object that can not have any user defined parameters for its ``operator()``.
 Inconveniently, arguments have to be stored in members of the function object coupling algorithm and data together.
 *KOKKOS* provides both, abstractions for parallel execution of code and data management.
 Multidimensional arrays with a neutral indexing and an architecture dependent layout are available, which can be used, for example, to abstract the underlying hardwares preferred memory access scheme that could be row-major, column-major or even blocked.
 
 
-### [Thrust](https://thrust.github.io/)
+`Thrust <https://thrust.github.io/>`_
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 is a parallel algorithms library resembling the C++ Standard Template Library (STL).
 It allows to select either the *CUDA*, *TBB* or *OpenMP* back-end at make-time.
-Because it is based on generic `host_vector` and `device_vector` container objects, it is tightly coupling the data structure and the parallelization strategy.
-There exist many similar libraries such as [ArrayFire](http://www.arrayfire.com/) (*CUDA*, *OpenCL*, native C++), [VexCL](https://github.com/ddemidov/vexcl/) (*OpenCL*, *CUDA*), [ViennaCL](http://viennacl.sourceforge.net/) (*OpenCL*, *CUDA*, *OpenMP*) and [hemi](https://github.com/harrism/hemi/) (*CUDA*, native C++).
+Because it is based on generic ``host_vector`` and ``device_vector`` container objects, it is tightly coupling the data structure and the parallelization strategy.
+There exist many similar libraries such as `ArrayFire <http://www.arrayfire.com/>`_ (*CUDA*, *OpenCL*, native C++), `VexCL <https://github.com/ddemidov/vexcl/>`_ (*OpenCL*, *CUDA*), `ViennaCL <http://viennacl.sourceforge.net/>`_ (*OpenCL*, *CUDA*, *OpenMP*) and `hemi <https://github.com/harrism/hemi/>`_ (*CUDA*, native C++).
 
-<!---
-Phalanx
-See [here](http://www.mgarland.org/files/papers/phalanx-sc12-preprint.pdf).
-It is very similar to *alpaka* in the way it abstracts the accelerators.
-C++ Interface provides CUDA, OpenMP, and GASNet back-ends
+.. seealso::
+   * Phalanx
+     See `here <http://www.mgarland.org/files/papers/phalanx-sc12-preprint.pdf>`_
+     It is very similar to *alpaka* in the way it abstracts the accelerators.
+     C++ Interface provides CUDA, OpenMP, and GASNet back-ends
+   * Aura
+   * Intel TBB
+   * U\PC++
 
-Aura
-
-Intel TBB
-
-U\PC++
---->
 
 Distinction of the *alpaka* Library
-------------------------------------------
+-----------------------------------
 
 In the section about the problems we saw that all portability problems of current HPC codes could be solved with an abstract interface unifying the underlying accelerator back-ends.
 The previous section showed that there is currently no project available that could solve all of the problems highlighted.
 The C++ interface library proposed to solve all those problems is called *alpaka*.
 The subsequent enumeration will summarize the purpose of the library:
 
-### *alpaka* is ...
+*alpaka* is ...
+~~~~~~~~~~~~~~~
+
 * an **abstract interface** describing parallel execution on multiple hierarchy levels. It allows to implement a mapping to various hardware architectures but **is no optimal mapping itself**.
 
 * sustainably solving portability (50% on the way to reach full performance portability)
@@ -287,7 +314,8 @@ The subsequent enumeration will summarize the purpose of the library:
 
 * **data structure agnostic**. The user can use and define arbitrary data structures.
 
-### *alpaka* is not ...
+*alpaka* is not ...
+~~~~~~~~~~~~~~~~~~~
 
 * an automatically **optimal mapping** of algorithms / kernels to various acceleration platforms. Except in trivial examples an optimal execution always depends on suitable selected data structure. An adaptive selection of data structures is a separate topic that has to be implemented in a distinct library.
 
@@ -309,18 +337,32 @@ Comparison
 
 The following table summarizes which of the problems mentioned in section about the problems can be solved by current intra-node parallelization frameworks and the proof-of-concept *alpaka* abstraction library.
 
-| Framework / API | Open-Source | Free | Single-Source C++ | Portability | Heterogenity | Maintainability | Testability | Optimizability | Data structure agnostic |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CUDA			| :x:              	| :white_check_mark: | :white_check_mark: | :x:               | :x:               | :x:               | :x:               | :white_check_mark: | :white_check_mark: |
-| PGI CUDA-x86	| :x:             	| :x:               | :white_check_mark: | :white_check_mark: | :large_orange_diamond: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| GPU Ocelot		| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :large_orange_diamond: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| OpenMP			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| OpenACC			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| OpenCL			| :white_check_mark:	| :white_check_mark: | :x:               | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| SYCL			| :white_check_mark:	| (:ballot_box_with_check:) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | (:ballot_box_with_check:) | :white_check_mark: |
-| C++AMP			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | (:ballot_box_with_check:) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:               | :white_check_mark: |
-| KOKKOS			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:               | :large_orange_diamond: |
-| Thrust			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :large_orange_diamond: | :white_check_mark: | :white_check_mark: | :x:               | :x:               |
-| **alpaka**			| :white_check_mark:	| :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 
-Properties of intra-node parallelization frameworks and their ability to solve the problems in porting performant HPC codes. :white_check_mark: : yes / fully solved, :large_orange_diamond: : partially solved, :x: : no / not solved
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | Framework / API | Open-Source | Free | Single-Source C++ | Portability | Heterogenity | Maintainability | Testability | Optimizability | Data structure agnostic |
+    +=================+=============+======+===================+=============+==============+=================+=============+================+=========================+
+    | CUDA            | --          | X    | X                 | --          | --           | --              | --          | X              | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | PGI CUDA-x86    | --          | --   | X                 | X           | ~~           | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | GPU Ocelot      | X           | X    | X                 | X           | ~~           | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | OpenMP          | X           | X    | X                 | X           | X            | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | OpenACC         | X           | X    | X                 | X           | X            | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | OpenCL          | X           | X    | --                | X           | X            | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | SYCL            | X           | {X}  | X                 | X           | X            | X               | X           | {X}            | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | C++AMP          | X           | X    | X                 | {X}         | X            | X               | X           | --             | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | KOKKOS          | X           | X    | X                 | X           | X            | X               | X           | --             | ~~                      |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | Thrust          | X           | X    | X                 | X           | ~~           | X               | X           | --             | --                      |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+    | ****alpaka****  | X           | X    | X                 | X           | X            | X               | X           | X              | X                       |
+    +-----------------+-------------+------+-------------------+-------------+--------------+-----------------+-------------+----------------+-------------------------+
+
+
+Properties of intra-node parallelization frameworks and their ability to solve the problems in porting performant HPC codes. X = yes/fully solved, ~~ = partially solved, -- = no / not solved
