@@ -64,6 +64,7 @@ Development
    :hidden:
 
    dev/style
+   dev/sphinx
 
 
 

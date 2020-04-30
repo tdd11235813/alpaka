@@ -1,7 +1,10 @@
 .. highlight:: cpp
 
-Coding Guide Lines
+Coding Guidelines
 ==================
+
+.. attention::
+   The Coding Guidelines are currently revised
 
 Naming
 ------
