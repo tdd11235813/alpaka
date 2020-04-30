@@ -33,6 +33,8 @@ rm -rf *
 
 cd ..
 
+# enable HTML output in our Doxyfile
+sed -i 's/GENERATE_HTML.*=.*NO/GENERATE_HTML     = YES/' Doxyfile
 doxygen Doxyfile
 
 cd ../..
