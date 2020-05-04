@@ -3,7 +3,7 @@
 SPHINXOPTS    ?= --color
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = source
-BUILDDIR      = _build
+BUILDDIR      = build
 
 # Put it first so that "make" without argument is like "make help".
 help:
@@ -17,6 +17,6 @@ help:
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 checklinks:
-	$(SPHINXBUILD) -b linkcheck $(SPHINXOPTS) $(BUILDDIR)
-  @echo
-  @echo "Check finished. Report is in $(BUILDDIR)."
+	$(SPHINXBUILD) -b linkcheck $(SPHINXOPTS) "$(SOURCEDIR)" "$(BUILDDIR)"
+	@echo
+	@echo "Check finished. Report is in $(BUILDDIR)."
