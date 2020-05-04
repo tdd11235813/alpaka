@@ -19,7 +19,7 @@ Types
 -----
 
 * Always use integral types with known width (``int32_t``, ``uint64_t``, ...).
-Never use ``int``, ``unsigned long``, etc.
+  Never use ``int``, ``unsigned long``, etc.
 
 
 Type Qualifiers
@@ -37,12 +37,12 @@ Variables
 ---------
 
 * Variables should always be initialized on construction because this can produce hard to debug errors.
-This can (nearly) always be done even in performance critical code without sacrificing speed by using a functional programming style.
+  This can (nearly) always be done even in performance critical code without sacrificing speed by using a functional programming style.
 * Variables should (nearly) always be ``const`` to make the code more easy to understand.
-This is equivalent to functional programming and the SSA (static single assignment) style used by LLVM.
-This should have no speed implication as every half baked compiler analyses the usage of variables and reuses registers.
+  This is equivalent to functional programming and the SSA (static single assignment) style used by LLVM.
+  This should have no speed implication as every half baked compiler analyses the usage of variables and reuses registers.
 * Variable definitions should be differentiated from assignments by using either ``(...)`` or ``{...}`` but never ``=`` for definitions.
-Use ``uint32_t const iUsageOfThisVariable(42);`` instead of ``uint32_t const iUsageOfThisVariable = 42;``
+  Use ``uint32_t const iUsageOfThisVariable(42);`` instead of ``uint32_t const iUsageOfThisVariable = 42;``
 
 
 Comments
@@ -77,8 +77,8 @@ Spaces
 
 * Trailing white-spaces are forbidden.
 * There is no space between keywords (if, for, ...) and the opening parenthesis.
-* There is no space after the opening ``(`` or ``<`` and before the closing ``)`` ``>``.
-* There is a space before and after binary operators (=, *, +, ...)
+* There is no space after the opening ``(`` or ``<`` and before the closing ``)`` or ``>``.
+* There is a space before and after binary operators (=, \*, +, ...)
 * There is no space after the unary operators !, ~, ...
 
 
@@ -152,5 +152,5 @@ Includes
 --------
 
 * The order of includes is from the most specialized header to the most general one.
-This order helps to find missing includes in more specialized headers because the general ones are always included afterwards.
+  This order helps to find missing includes in more specialized headers because the general ones are always included afterwards.
 * A comment with the types or functions included by a include file make it easier to find out why a special header is included.

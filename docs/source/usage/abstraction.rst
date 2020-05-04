@@ -97,10 +97,13 @@ However, the abstraction does not try to automatically optimize memory accesses 
 
 The individual levels are explained on the following pages:
 
-1. :doc:`Thread <abstraction/thread>`
-2. :doc:`Block <abstraction/block>`
-3. :doc:`Warp <abstraction/warp>`
-4. :doc:`Element <abstraction/element>`
+.. toctree::
+   :maxdepth: 1
+
+   abstraction/thread
+   abstraction/block
+   abstraction/warp
+   abstraction/element
 
 Summary
 -------

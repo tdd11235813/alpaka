@@ -17,6 +17,9 @@ The scheduler can always execute multiple kernel grids from multiple queues in p
 However, this will only ever simplify the mapping due to less available processing units.
 Furthermore, being restricted to less resources automatically improves the locality of data due to spatial and temporal locality properties of the caching hierarchy.
 
-#. :doc:`CUDA GPUs <mapping/CUDA>`
-#. :doc:`x86 CPUS <mapping/x86>`
-#. :doc:`Accelerators <mapping/accelerators>`
+.. toctree::
+   :maxdepth: 1
+
+   mapping/CUDA
+   mapping/x86
+   mapping/accelerators

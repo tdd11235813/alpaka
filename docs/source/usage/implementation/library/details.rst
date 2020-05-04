@@ -75,8 +75,9 @@ A partial function template specialization is not allowed by the standard.
 Another problem can emerge due to users carelessly overloading the template functions instead of specializing them.
 Mixing function overloading and function template specialization on the same base template function can result in unexpected results.
 The reasons and effects of this are described more closely in an article from H. Sutter (currently convener of the ISO C++ committee) called *Sutter's Mill: Why Not Specialize Function Templates?* in the *C/C++ Users Journal* in July 2001.
-.. note::
-   `different way <https://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/>`_
+
+.. seealso::
+   `different way <http://ericniebler.com/2014/10/21/customization-point-design-in-c11-and-beyond/>`_
 
 The solution given in the article is to provide *"a single function template that should never be specialized or overloaded"*.
 This function simply forwards its arguments *"to a class template containing a static function with the same signature"*.
@@ -95,7 +96,7 @@ For example, the corresponding pitch and memory pinning template types can be sp
 After doing this, the ``std::vector`` can be used everywhere a buffer is accepted as argument throughout the whole *alpaka* library without ever touching its definition.
 
 A simple function allowing arbitrary tasks to be enqueued into a queue can be implemented in the way shown in the following code.
-The ``TSfinae`` template parameter will be explained in a [following section](#Template-Specialization-Selection-on-Arbitrary-Conditions).
+The ``TSfinae`` template parameter will be explained in a `following section <#Template-Specialization-Selection-on-Arbitrary-Conditions>`_.
 
 .. code-block::
 

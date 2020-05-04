@@ -1,8 +1,11 @@
+.. highlight:: cpp
+   :linenothreshold: 5
+
 Rationale
 =========
 
 Interface Distinction
---------------------
+---------------------
 
 The *alpaka* library is different from other similar libraries (especially *CUDA*) in that it refrains from using implicit or hidden state.
 This and other interface design decisions will be explained int the following paragraphs.
@@ -211,37 +214,41 @@ Requirements
 - For usage with CUDA, the kernel methods have to be attributed with ``__device__ __host__``.
 - The user kernel has to fulfill std::is_trivially_copyable because only such objects can be copied into CUDA device memory.
   A trivially copyable class is a class that
-   1. Has no non-trivial copy constructors(this also requires no virtual functions or virtual bases)
-   2. Has no non-trivial move constructors
-   3. Has no non-trivial copy assignment operators
-   4. Has no non-trivial move assignment operators
-   5. Has a trivial destructor
+  #. Has no non-trivial copy constructors(this also requires no virtual functions or virtual bases)
+  #. Has no non-trivial move constructors
+  #. Has no non-trivial copy assignment operators
+  #. Has no non-trivial move assignment operators
+  #. Has a trivial destructor
 
 Implementation Variants
 +++++++++++++++++++++++
 
 There are two possible ways to tell the kernel about the accelerator type:
- 1. The kernel is templated on the accelerator type ...
-  * + This allows users to specialize them for different accelerators. (Is this is really necessary or desired?)
-  * - The kernel has to be a class template. This does not allow C++ lambdas to be used as kernels because they are no templates themselves (but only their ``operator()`` can be templated).
-  * - This prevents the user from instantiating an accelerator independent kernel before executing it.
-  Because the memory layout in inheritance hierarchies is undefined a simple copy of the user kernel or its members to its specialized type is not possible platform independently.
-  This would require a copy from UserKernel<TDummyAcc> to UserKernel<TAcc> to be possible.
-  The only way to allow this would be to require the user to implement a templated copy constructor for every kernel.
-  This is not allowed for kernels that should be copyable to a CUDA device because std::is_trivially_copyable requires the kernel to have no non-trivial copy constructors.
-  * a) ... and inherits from the accelerator.
-    * - The kernel itself has to inherit at least protected from the accelerator to allow the KernelExecutor to access the Accelerator.
-    * - How do accelerator functions called from the kernel (and not within the kernel class itself) access the accelerator methods?
-    Casting this to the accelerator type and giving it as parameter is too much to require from the user.
-  * b) ... and the ``operator()`` has a reference to the accelerator as parameter.
-    * + This allows to use the accelerator in functions called from the kernel (and not within the kernel class itself) to access the accelerator methods in the same way the kernel entry point function can.
-    * - This would require an additional object (the accelerator) in device memory taking up valuable CUDA registers (opposed to the inheritance solution). At least on CUDA all the accelerator functions could be inlined nevertheless.
- 2. The ``operator()`` is templated on the accelerator type and has a reference to the accelerator as parameter.
-  * + The kernel can be an arbitrary function object with ``ALPAKA_FN_HOST_ACC`` attributes.
-  * + This would allow to instantiate the accelerator independent kernel and set its members before execution.
-  * +/- usable with polymorphic lambdas.
-  * - The ``operator()`` could be overloaded on the accelerator type but there is no way to specialize the whole kernel class itself, so it always has the same members.
-  * - This would require an additional object (the accelerator) in device memory taking up valuable CUDA registers (opposed to the inheritance solution). At least on CUDA all the accelerator functions could be inlined nevertheless.
+
+#. The kernel is templated on the accelerator type ...
+
+   * (+) This allows users to specialize them for different accelerators. (Is this is really necessary or desired?)
+   * (-) The kernel has to be a class template. This does not allow C++ lambdas to be used as kernels because they are no templates themselves (but only their ``operator()`` can be templated).
+   * (-) This prevents the user from instantiating an accelerator independent kernel before executing it.
+     Because the memory layout in inheritance hierarchies is undefined a simple copy of the user kernel or its members to its specialized type is not possible platform independently.
+     This would require a copy from UserKernel<TDummyAcc> to UserKernel<TAcc> to be possible.
+     The only way to allow this would be to require the user to implement a templated copy constructor for every kernel.
+     This is not allowed for kernels that should be copyable to a CUDA device because std::is_trivially_copyable requires the kernel to have no non-trivial copy constructors.
+   * a) ... and inherits from the accelerator.
+     * (-) The kernel itself has to inherit at least protected from the accelerator to allow the KernelExecutor to access the Accelerator.
+     * (-) How do accelerator functions called from the kernel (and not within the kernel class itself) access the accelerator methods?
+     Casting this to the accelerator type and giving it as parameter is too much to require from the user.
+   * b) ... and the ``operator()`` has a reference to the accelerator as parameter.
+     * (+) This allows to use the accelerator in functions called from the kernel (and not within the kernel class itself) to access the accelerator methods in the same way the kernel entry point function can.
+     * (-) This would require an additional object (the accelerator) in device memory taking up valuable CUDA registers (opposed to the inheritance solution). At least on CUDA all the accelerator functions could be inlined nevertheless.
+
+#. The ``operator()`` is templated on the accelerator type and has a reference to the accelerator as parameter.
+
+  * (+) The kernel can be an arbitrary function object with ``ALPAKA_FN_HOST_ACC`` attributes.
+  * (+) This would allow to instantiate the accelerator independent kernel and set its members before execution.
+  * (+/-) usable with polymorphic lambdas.
+  * (-) The ``operator()`` could be overloaded on the accelerator type but there is no way to specialize the whole kernel class itself, so it always has the same members.
+  * (-) This would require an additional object (the accelerator) in device memory taking up valuable CUDA registers (opposed to the inheritance solution). At least on CUDA all the accelerator functions could be inlined nevertheless.
 
 Currently we implement version 2.
 
@@ -264,11 +271,12 @@ Access to accelerator dependent functionality
 +++++++++++++++++++++++++++++++++++++++++++++
 
 There are two possible ways to implement access to accelerator dependent functionality inside a kernel:
+
 * Making the functions/templates members of the accelerator (maybe by inheritance) and calling them like ``acc.syncThreads()`` or ``acc.template getIdx<Grid, Thread, Dim1>()``.
-This would require the user to know and understand when to use the template keyword inside dependent type  object function calls.
+  This would require the user to know and understand when to use the template keyword inside dependent type  object function calls.
 * The functions are only light wrappers around traits that can be specialized taking the accelerator as first value (it can not be the last value because of the potential use of variadic arguments).
-The resulting code would look like ``sync(acc)`` or ``getIdx<Grid, Thread, Dim1>(acc)``.
-Internally these wrappers would call trait templates that are specialized for the specific accelerator e.g. ``template<typename TAcc> Sync{...};``
+  The resulting code would look like ``sync(acc)`` or ``getIdx<Grid, Thread, Dim1>(acc)``.
+  Internally these wrappers would call trait templates that are specialized for the specific accelerator e.g. ``template<typename TAcc> Sync{...};``
 
 The second version is easier to understand and usually shorter to use in user code.
 
@@ -298,5 +306,6 @@ Dynamic Block Shared Memory
 The size of the external block shared memory is obtained from a trait that can be specialized for each kernel.
 The trait is called with the current kernel invocation parameters and the block-element extent prior to each kernel execution.
 Because the block shared memory size is only ever constant or dependent on the block-element extent or the parameters of the invocation this has multiple advantages:
+
 * It forces the separation of the kernel invocation from the calculation of the required block shared memory size.
 * It lets the user write this calculation once instead of multiple times spread across the code.
