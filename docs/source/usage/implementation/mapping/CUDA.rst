@@ -73,7 +73,7 @@ Programming Interface
 CUDA Runtime API
 ----------------
 
-The following tables list the functions available in the `CUDA Runtime API <http://docs.nvidia.com/cuda/cuda-runtime-api/modules.html#modules>`_ and their equivalent alpaka functions:
+The following tables list the functions available in the `CUDA Runtime API <https://docs.nvidia.com/cuda/cuda-runtime-api/modules.html#modules>`_ and their equivalent alpaka functions:
 
 *Device Management*
 

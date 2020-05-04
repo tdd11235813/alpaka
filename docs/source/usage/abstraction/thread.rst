@@ -12,7 +12,7 @@ The following figure shows an hypothetical processing unit that could optimally 
 The threads are mapped one-to-one to the cores of the processor.
 For a time optimal execution, the cores have to have an all-to-all equal length connection for communication and synchronization.
 
-.. image:: thread.png
+.. image:: ../../../images/thread.png
 
 The only difference between the threads is their positional index into the grid which allows each thread to compute a different part of the solution.
 Threads can always access their private registers and the global memory.

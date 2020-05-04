@@ -5,7 +5,7 @@ The *alpaka* library allows offloading of computations from the host execution d
 
 In the abstraction hierarchy the library code is interleaved with user supplied code as is depicted in the following figure.
 
-.. image:: execution_domain.png
+.. image:: ../../../../images/execution_domain.png
    :alt: Execution Domains
 
 User code invokes library functions, which in turn execute the user provided thread function (kernel) in parallel on the accelerator.
@@ -17,7 +17,7 @@ These type constraints are called concepts in C++.
 
 *A concept is a set of requirements consisting of valid expressions, associated types, invariants, and complexity guarantees.
 A type that satisfies the requirements is said to model the concept.
-A concept can extend the requirements of another concept, which is called refinement.* `BoostConcepts <http://www.boost.org/community/generic_programming.html>`_
+A concept can extend the requirements of another concept, which is called refinement.* `BoostConcepts <https://www.boost.org/community/generic_programming.html>`_
 
 Concepts allow to safely define polymorphic algorithms that work with objects of many different types.
 
@@ -25,7 +25,7 @@ The *alpaka* library implements a stack of concepts and their interactions model
 Furthermore, default implementations for various devices and accelerators modeling those are included in the library.
 The interaction of the main user facing concepts can be seen in the following figure.
 
-.. image:: structure_assoc.png
+.. image:: ../../../../images/structure_assoc.png
    :alt: user / alpaka code interaction
 
 

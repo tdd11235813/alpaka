@@ -7,7 +7,7 @@ It uses C++ because it is one of the most performant languages available on near
 Furthermore, C++11 allows to describe the concepts in a very abstract way that is not possible with many other languages.
 The *alpaka* library extensively makes use of advanced functional C++ template meta-programming techniques.
 The Implementation Details  section discusses the C++ library and the way it provides extensibility and optimizability.
-#. :doc:`Structure <library/structure>`
+1. :doc:`Structure <library/structure>`
 #. :doc:`Usage <library/usage>`
 #. :doc:`Rationale <library/rationale>`
 #. :doc:`Details <library/details>`

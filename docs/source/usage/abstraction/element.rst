@@ -9,13 +9,13 @@ In varying degree, they allow to process multiple 32 bit and 64 bit floating poi
 
 *CUDA* capable GPUs do not have vector registers where multiple values of type ``float`` or ``double`` can be manipulated by one instruction.
 Nevertheless, newer *CUDA* capable devices implement basic SIMD instructions on pairs of 16 bit values and quads of 8-bit values.
-They are described in the documentation of the `PTX instruction set architecture <https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#axzz4OTzGGwcJ>`_ chapter 8.7.13 but are only of any use in very special problem domains, for example for deep learning.
+They are described in the documentation of the `PTX instruction set architecture <https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#warp-level-matrix-instructions>`_ chapter 9.7.13 but are only of any use in very special problem domains, for example for deep learning.
 
 It would be optimal if the compiler could automatically vectorize our kernels when they are called in a loop and vectorization is supported by the underlying accelerator.
 However, besides full blown vector processors, mainstream CPUs do not support predicated execution or similar complex things within vector registers.
 At most, there is support for masking operations which allow to emulate at least some conditional branching.
 Therefore, this missing hardware capability has to be circumvented by the compiler.
-There are scientific research projects such as the work done by Ralf Karrenberg et al [`1 <https://www.cdl.uni-saarland.de/publications/theses/karrenberg_msc.pdf>`_, `2 <http://www.cdl.uni-saarland.de/projects/wfv/wfv_cgo11_slides.pdf>`_, `3 <http://www.cdl.uni-saarland.de/papers/karrenberg_opencl.pdf>`_ ] building on the *LLVM* compiler infrastructure supporting such whole-function vectorization.
+There are scientific research projects such as the work done by Ralf Karrenberg et al [`1 <https://compilers.cs.uni-saarland.de/publications/theses/karrenberg_msc.pdf>`_, `2 <https://compilers.cs.uni-saarland.de/projects/wfv/wfv_cgo11_slides.pdf>`_, `3 <https://compilers.cs.uni-saarland.de/papers/karrenberg_opencl.pdf>`_ ] building on the *LLVM* compiler infrastructure supporting such whole-function vectorization.
 However, current mainstream compilers do not support automatic vectorization of basic, non trivial loops containing control flow statements (``if``, ``else``, ``for``, etc.) or other non-trivial memory operations.
 Therefore, it has to be made easier for the compiler to recognize the vectorization possibilities by making it more explicit.
 

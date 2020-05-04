@@ -41,7 +41,7 @@ Porting a complicated simulation code from *CUDA* to x86 and possibly to other h
 A lot of developer time could be saved if this task would not have to be done repeatedly for every new hardware, but rather only once.
 Therefore, *alpaka* tries to solve the problems in porting highly scalable simulation codes on various multi-core architectures.
 
-.. _State-of-the-art in Heterogeneous Computing: http://dx.doi.org/10.1155/2010/540159
+.. _State-of-the-art in Heterogeneous Computing: https://dx.doi.org/10.1155/2010/540159
 
 Problems in Porting Performant HPC Codes
 ----------------------------------------
@@ -173,7 +173,7 @@ Furthermore, the compiler seems not to be developed actively since *NVIDIA* acqu
 Since 2012 no news were published and nothing could be found in the yearly release notes of the *PGI* compiler suite.
 
 
-`GPU Ocelot <http://gpuocelot.gatech.edu/>`_ (`github <https://github.com/gtcasl/gpuocelot>`_)
+`GPU Ocelot <https://gpuocelot.gatech.edu/>`_ (`github <https://github.com/gtcasl/gpuocelot>`_)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is an open-source dynamic JIT compilation framework.
@@ -183,7 +183,7 @@ The project is not in active development anymore.
 It only supports PTX up to version 3.1 (current version is 5.0).
 
 
-`OpenMP <http://openmp.org/>`_
+`OpenMP <https://www.openmp.org/>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is an open specification for vendor agnostic shared memory parallelization.
@@ -203,7 +203,7 @@ Currently *OpenMP* does not provide a way to control the hierarchical memory bec
 Therefore, the block shared memory on *CUDA* devices can not be explicitly utilized.
 
 
-`OpenACC <http://www.openacc-standard.org/>`_
+`OpenACC <https://www.openacc.org/>`_
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is a pragma based programming standard for heterogeneous computing.
@@ -255,9 +255,9 @@ The range of supported accelerator devices, plaforms and compilers is currently 
 
 .. seealso::
    * https://www.xsede.org/documents/271087/586927/Edwards-2013-XSCALE13-Kokkos.pdf
-   * http://trilinos.org/oldsite/events/trilinos_user_group_2013/presentations/2013-11-TUG-Kokkos-Tutorial.pdf
-   * http://on-demand.gputechconf.com/supercomputing/2013/presentation/SC3103\_Towards-Performance-Portable-Applications-Kokkos.pdf
-   * http://dx.doi.org/10.3233/SPR-2012-0343
+   * https://trilinos.org/oldsite/events/trilinos_user_group_2013/presentations/2013-11-TUG-Kokkos-Tutorial.pdf
+   * https://on-demand.gputechconf.com/supercomputing/2013/presentation/SC3103\_Towards-Performance-Portable-Applications-Kokkos.pdf
+   * https://dx.doi.org/10.3233/SPR-2012-0343
 
 provides an abstract interface for portable, performant shared memory-programming.
 It is a C++ library that offers ``parallel_for``, ``parallel_reduce`` and similar functions for describing the pattern of the parallel tasks.
@@ -275,11 +275,11 @@ Multidimensional arrays with a neutral indexing and an architecture dependent la
 is a parallel algorithms library resembling the C++ Standard Template Library (STL).
 It allows to select either the *CUDA*, *TBB* or *OpenMP* back-end at make-time.
 Because it is based on generic ``host_vector`` and ``device_vector`` container objects, it is tightly coupling the data structure and the parallelization strategy.
-There exist many similar libraries such as `ArrayFire <http://www.arrayfire.com/>`_ (*CUDA*, *OpenCL*, native C++), `VexCL <https://github.com/ddemidov/vexcl/>`_ (*OpenCL*, *CUDA*), `ViennaCL <http://viennacl.sourceforge.net/>`_ (*OpenCL*, *CUDA*, *OpenMP*) and `hemi <https://github.com/harrism/hemi/>`_ (*CUDA*, native C++).
+There exist many similar libraries such as `ArrayFire <https://arrayfire.com/>`_ (*CUDA*, *OpenCL*, native C++), `VexCL <https://github.com/ddemidov/vexcl/>`_ (*OpenCL*, *CUDA*), `ViennaCL <http://viennacl.sourceforge.net/>`_ (*OpenCL*, *CUDA*, *OpenMP*) and `hemi <https://github.com/harrism/hemi/>`_ (*CUDA*, native C++).
 
 .. seealso::
    * Phalanx
-     See `here <http://www.mgarland.org/files/papers/phalanx-sc12-preprint.pdf>`_
+     See `here <https://www.mgarland.org/files/papers/phalanx-sc12-preprint.pdf>`_
      It is very similar to *alpaka* in the way it abstracts the accelerators.
      C++ Interface provides CUDA, OpenMP, and GASNet back-ends
    * Aura

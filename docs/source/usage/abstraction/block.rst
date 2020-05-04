@@ -11,7 +11,7 @@ The whole grid is subdivided into equal sized blocks with a fast but small share
 Current accelerator abstractions (*CUDA* and *OpenCL*) only support equal sized blocks.
 This restriction could possibly be lifted to support future accelerators with heterogeneous block sizes.
 
-.. image:: block.png
+.. image:: ../../../images/block.png
 
 There is another reason why independent blocks are necessary.
 Threads that can communicate and synchronize require either a one-to-one mapping of threads to cores, which is impossible because the number of data elements is theoretically unlimited, or at least a space to store the state of each thread.
@@ -23,7 +23,7 @@ Within a block of cores there still has to be enough memory to store all registe
 The independence of blocks allows applications to scale well across diverse devices.
 As can be seen in the following figure, the accelerator can assign blocks of the task grid to blocks of cores in arbitrary order depending on availability and workload.
 
-.. image:: block_scale.png
+.. image:: ../../../images/block_scale.png
 
 Shared Memory
 -------------

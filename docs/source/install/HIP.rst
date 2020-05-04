@@ -83,7 +83,7 @@ Verifying HIP installation
 - Compile and run the `square sample`_, as pointed out in the original `HIP install guide`_.
 
 .. _square sample: https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/0_Intro/square
-.. _HIP install guide: https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md#verify-your-installation
+.. _HIP install guide: https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md#user-content-verify-your-installation
 
 Compiling examples with HIP back-end
 ````````````````````````````````````

@@ -8,7 +8,7 @@ Multiple threads can be executed in perfect synchronicity, which is also called 
 A group of such threads executing the same instruction at the same time is called a warp .
 All threads within a warp share a single instruction pointer (IP), and all cores executing the threads share one instruction fetch (IF) and instruction decode (ID) unit.
 
-.. image:: warp.png
+.. image:: ../../../images/warp.png
 
 Even threads with divergent control flows can be executed within one warp.
 *CUDA*, for example, solves this by supporting predicated execution and warp voting.
