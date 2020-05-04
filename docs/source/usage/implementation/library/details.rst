@@ -1,7 +1,9 @@
+.. highlight:: cpp
+
 Details
 =======
 
-.. image:: ../../../../images/structure.png
+.. image:: /images/structure.png
    :alt: Overview of the structure of the *alpaka* library with concepts and implementations.
 
 The full stack of concepts defined by the *alpaka* library and their inheritance hierarchy is shown in the third column of the preceding figure.

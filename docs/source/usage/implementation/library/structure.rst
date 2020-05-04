@@ -5,7 +5,7 @@ The *alpaka* library allows offloading of computations from the host execution d
 
 In the abstraction hierarchy the library code is interleaved with user supplied code as is depicted in the following figure.
 
-.. image:: ../../../../images/execution_domain.png
+.. image:: /images/execution_domain.png
    :alt: Execution Domains
 
 User code invokes library functions, which in turn execute the user provided thread function (kernel) in parallel on the accelerator.
@@ -25,7 +25,7 @@ The *alpaka* library implements a stack of concepts and their interactions model
 Furthermore, default implementations for various devices and accelerators modeling those are included in the library.
 The interaction of the main user facing concepts can be seen in the following figure.
 
-.. image:: ../../../../images/structure_assoc.png
+.. image:: /images/structure_assoc.png
    :alt: user / alpaka code interaction
 
 

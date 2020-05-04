@@ -5,7 +5,7 @@ There are multiple possible ways to map the *alpaka* abstraction to x86 CPUs.
 The following figure shows the compute and memory hierarchy of a dual-socket (package) node with dual-core CPUs and symmetric multithreading (Hyper-Threading).
 Through symmetric multithreading (Hyper-Threading) each core represents two processing units.
 
-.. image:: ../../../../images/x86_cpu.png
+.. image:: /images/x86_cpu.png
 
 Thread
 ------

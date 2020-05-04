@@ -28,7 +28,8 @@ Due to current compilers being unable to vectorize whole functions and the expli
 By creating a grid of data elements, where multiple elements are processed per thread and threads are pooled in independent blocks, as it is shown in the figure below, the user is free to loop sequentially over the elements or to use vectorization for selected expressions within the kernel.
 Even the sequential processing of multiple elements per thread can be useful depending on the architecture.
 For example, the *NVIDIA cuBLAS* general matrix-matrix multiplication (GEMM) internally executes only one thread for each second matrix data element to better utilize the registers available per thread.
-![element](element/element.png)
+
+.. image:: /images/element.png
 
 .. note::
    The best solution to vectorization would be one, where the user does not have to do anything.

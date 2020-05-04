@@ -1,4 +1,5 @@
 :orphan:
+
 .. only:: html
 
   .. image:: ../logo/alpaka.svg
