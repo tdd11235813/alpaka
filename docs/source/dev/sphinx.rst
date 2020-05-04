@@ -33,6 +33,7 @@ The following requirements need to be installed (once) to build our documentatio
     # from the homepage, your package manager, conda, etc.
     # example:
     sudo apt-get install doxygen
+    # sudo pacman -S doxygen
 
     # python tools & style theme
     pip install -r requirements.txt # --user
@@ -49,7 +50,7 @@ Please check your documentation build is successful and renders as you expected 
     # parse the C++ API documentation,
     #   enjoy the doxygen warnings!
     doxygen
-    # render the `.rst` files and replace their macros within
+    # render the '.rst' files with sphinx
     #   enjoy the breathe errors on things it does not understand from doxygen :)
     make html
 
@@ -62,10 +63,16 @@ Please check your documentation build is successful and renders as you expected 
     # open it, e.g. with okular
     build/latex/PIConGPU.pdf
 
+readthedocs
+-----------
+
+To maintain or import a github project an account on `ReadTheDocs`_ is required.
+Further instructions can be found on `readthedocs on github <https://github.com/readthedocs/readthedocs.org>`_ and `readthedocs import guide <https://docs.readthedocs.io/en/stable/intro/import-guide.html>`_.
 
 Useful Links
 ------------
 
- * `A primer on writing restFUL files for sphinx <http://www.sphinx-doc.org/en/stable/rest.html>`_
- * `Why You Shouldn't Use "Markdown" for Documentation <http://ericholscher.com/blog/2016/mar/15/dont-use-markdown-for-technical-docs/>`_
- * `Markdown Limitations in Sphinx <https://docs.readthedocs.io/en/latest/getting_started.html#in-markdown>`_
+ * `A primer on writing reStructuredText files for sphinx <https://www.sphinx-doc.org/en/stable/rest.html>`_
+ * `Why You Shouldn't Use "Markdown" for Documentation <https://www.ericholscher.com/blog/2016/mar/15/dont-use-markdown-for-technical-docs/>`_
+ * `reStructuredText vs. Markdown <https://eli.thegreenplace.net/2017/restructuredtext-vs-markdown-for-technical-documentation/>`_
+ * `Markdown Limitations in Sphinx <https://docs.readthedocs.io/en/latest/intro/getting-started-with-sphinx.html#using-markdown-with-sphinx>`_
