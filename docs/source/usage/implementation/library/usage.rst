@@ -27,6 +27,7 @@ Kernel Definition
 -----------------
 
 A kernel is a special function object which has to conform to the following requirements:
+
 * it has to fulfill the ``std::is_trivially_copyable`` trait (has to be copyable via memcpy)
 * the ``operator()`` is the kernel entry point
   * it has to be an accelerator executable function
