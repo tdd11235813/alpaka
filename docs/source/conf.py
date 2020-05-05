@@ -134,7 +134,7 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 
-breathe_projects = { "alpaka": "./doxygen/xml" }
+breathe_projects = { "alpaka": "../doxygen/xml" }
 breathe_default_project = "alpaka"
 
 breathe_domain_by_extension = {
