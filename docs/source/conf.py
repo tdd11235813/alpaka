@@ -15,6 +15,9 @@ version = u'0.5.0'
 # The full version, including alpha/beta/rc tags.
 release = u'0.5.0'
 
+# The master toctree document.
+master_doc = 'index'
+
 # -- General configuration ---------------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'

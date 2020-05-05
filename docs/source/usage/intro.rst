@@ -174,7 +174,7 @@ Since 2012 no news were published and nothing could be found in the yearly relea
 
 
 `GPU Ocelot <https://gpuocelot.gatech.edu/>`_ (`github <https://github.com/gtcasl/gpuocelot>`_)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is an open-source dynamic JIT compilation framework.
 It allows to execute native *CUDA* binaries by dynamically translating the *NVIDIA PTX* virtual instruction set architecture to other instruction sets.
@@ -184,7 +184,7 @@ It only supports PTX up to version 3.1 (current version is 5.0).
 
 
 `OpenMP <https://www.openmp.org/>`_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is an open specification for vendor agnostic shared memory parallelization.
 By adding annotations (pragmas in C/C++) to loops or regions, it allows to easily parallelize existing sequential C/C++/Fortran code in an incremental manner.
@@ -204,7 +204,7 @@ Therefore, the block shared memory on *CUDA* devices can not be explicitly utili
 
 
 `OpenACC <https://www.openacc.org/>`_
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 is a pragma based programming standard for heterogeneous computing.
 It is very similar to *OpenMP* and provides annotations for parallel execution and data movement as well as run-time functions for accelerator and device management.

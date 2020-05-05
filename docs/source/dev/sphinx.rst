@@ -61,7 +61,21 @@ Please check your documentation build is successful and renders as you expected 
     make latexpdf
 
     # open it, e.g. with okular
-    build/latex/PIConGPU.pdf
+    build/latex/alpaka.pdf
+
+.. hint::
+
+   Run `make clean` to clean the build directory before executing actual make. This is necessary to reflect changes outside the rst files.
+
+.. hint::
+
+   There is a checklinks target to check links in the rst files on availability:
+
+   .. code-block:: bash
+
+      # check existence of links
+      # cd docs/
+      make checklinks
 
 readthedocs
 -----------
