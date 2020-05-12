@@ -44,7 +44,7 @@ Documentation
 
 The alpaka documentation can be found in the [online manual](https://alpaka.readthedocs.io).
 The documentation files in [`.rst` (reStructuredText)](https://www.sphinx-doc.org/en/stable/rest.html) format are located in the `docs` subfolder of this repository.
-The [source code documentation](http://alpaka-group.github.io/alpaka/) is generated with [doxygen](http://www.doxygen.org).
+The [source code documentation](https://alpaka-group.github.io/alpaka/) is generated with [doxygen](http://www.doxygen.org).
 
 
 Accelerator Back-ends

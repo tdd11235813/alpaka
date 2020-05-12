@@ -27,14 +27,12 @@ source ./script/set.sh
 # Clone the gh-pages branch into the docs/doxygen/html folder.
 git clone -b gh-pages https://x-access-token:${2}@github.com/${1}.git docs/doxygen/html
 
-cd docs/doxygen/html
+cd docs/
 
-rm -rf *
-
-cd ..
+rm -rf doxygen/*
 
 # enable HTML output in our Doxyfile
-sed -i 's/GENERATE_HTML.*=.*NO/GENERATE_HTML     = YES/' Doxyfile
+sed -i -E 's/(GENERATE_HTML\s*=\s*)NO/\1YES/g' Doxyfile
 doxygen Doxyfile
 
-cd ../..
+cd ../

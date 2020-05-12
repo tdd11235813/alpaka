@@ -68,6 +68,8 @@ Development
    dev/sphinx
 
 
+.. toctree::
+   API Reference <https://alpaka-group.github.io/alpaka>
 
 Indices and tables
 ==================

@@ -7,7 +7,7 @@ In the following section we explain how to contribute to this documentation.
 
 If you are reading the `HTML version <https://alpaka.readthedocs.io>`_ and want to improve or correct existing pages, check the "*Edit on GitHub*" link on the right upper corner of each document.
 
-Alternatively, go to `/docs/source` in our source code and follow the directory structure of `reStructuredText`_ (``.rst``) files there.
+Alternatively, go to `docs/source` in our source code and follow the directory structure of `reStructuredText`_ (``.rst``) files there.
 For intrusive changes, like structural changes to chapters, please open an issue to discuss them beforehand.
 
 .. _reStructuredText: https://www.sphinx-doc.org/en/stable/rest.html
@@ -47,11 +47,10 @@ Please check your documentation build is successful and renders as you expected 
     # skip this if you are still in docs/
     cd docs/
 
-    # parse the C++ API documentation,
-    #   enjoy the doxygen warnings!
-    doxygen
+    # parse the C++ API documentation (default: xml format)
+    doxygen Doxyfile
+
     # render the '.rst' files with sphinx
-    #   enjoy the breathe errors on things it does not understand from doxygen :)
     make html
 
     # open it, e.g. with firefox :)
@@ -76,6 +75,16 @@ Please check your documentation build is successful and renders as you expected 
       # check existence of links
       # cd docs/
       make checklinks
+
+.. hint::
+
+   The Doxyfile for doxygen is configured to output in xml format per default.
+   Another targets can be configured in the Doxyfile. The final documentations are stored in ``docs/doxygen/``.
+
+   .. code-block:: bash
+
+      # run in docs/doxygen/
+      sed -i -E 's/(GENERATE_HTML\s*=\s*)NO/\1YES/g' Doxyfile
 
 readthedocs
 -----------
