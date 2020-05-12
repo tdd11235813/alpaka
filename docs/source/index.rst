@@ -69,6 +69,7 @@ Development
 
 
 .. toctree::
+   :hidden:
    API Reference <https://alpaka-group.github.io/alpaka>
 
 Indices and tables
