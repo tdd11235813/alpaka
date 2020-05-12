@@ -33,49 +33,32 @@ Individual chapters are based on the information of the chapters before.
    - See https://alpaka-group.github.io/alpaka/
 
 
-************
-Installation
-************
 .. toctree::
    :caption: INSTALLATION
    :maxdepth: 1
-   :hidden:
 
    install/instructions
    install/HIP
 
-*****
-Usage
-*****
 .. toctree::
    :caption: USAGE
    :maxdepth: 1
-   :hidden:
 
    usage/intro
    usage/abstraction
    usage/implementation
 
-***********
-Development
-***********
 .. toctree::
    :caption: DEVELOPMENT
    :maxdepth: 1
-   :hidden:
 
    dev/style
    dev/sphinx
-
-
-.. toctree::
-   :hidden:
    API Reference <https://alpaka-group.github.io/alpaka>
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
 
